@@ -16,7 +16,7 @@ import java.util.Date;
 @Table(name = "item", indexes = {
         @Index(name = "idx_item_product", columnList = "productId"),
         @Index(name = "idx_item_brand", columnList = "brandId"),
-        @Index(name = "idx_item_user", columnList = "supplierId"),
+
         @Index(name = "idx_item_order", columnList = "orderId")
 })
 public class Item {
@@ -33,8 +33,9 @@ public class Item {
     private Brand brand;
 
     @ManyToOne
-    @JoinColumn(name = "supplierId", nullable = false)
-    private User supplier;
+    @JoinColumn(name = "warehouseId", nullable = false)
+    private Warehouse warehouse; // Kho mà sản phẩm này đang lưu trữ
+
 
     @ManyToOne
     @JoinColumn(name = "orderId", nullable = false)

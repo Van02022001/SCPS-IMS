@@ -24,8 +24,6 @@ public class Role {
     @Column(name = "title", length = 75, nullable = false)
     private String title;
 
-    @Column(name = "slug", length = 100, nullable = false, unique = true)
-    private String slug;
 
     @Column(name = "description", columnDefinition = "TINYTEXT")
     private String description;

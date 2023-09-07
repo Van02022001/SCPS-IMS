@@ -22,12 +22,7 @@ public class Category {
 
     @Column(name = "title", length = 75, nullable = false)
     private String title;
-
-    @Column(name = "metaTitle", length = 100)
-    private String metaTitle;
-
-    @Column(name = "slug", length = 100, nullable = false)
-    private String slug;
+;
 
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;

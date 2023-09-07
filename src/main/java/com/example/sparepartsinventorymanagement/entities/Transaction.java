@@ -14,7 +14,7 @@ import java.util.Date;
 @Getter
 @Setter
 @Table(name = "transaction", indexes = {
-        @Index(name = "idx_transaction_user", columnList = "userId"),
+
         @Index(name = "idx_transaction_order", columnList = "orderId")
 })
 public class Transaction {
@@ -22,9 +22,6 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "userId", nullable = false)
-    private User user;
 
     @ManyToOne
     @JoinColumn(name = "orderId", nullable = false)

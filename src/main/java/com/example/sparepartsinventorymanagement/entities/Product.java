@@ -25,9 +25,6 @@ public class Product {
     @Column(name = "summary", columnDefinition = "TINYTEXT")
     private String summary;
 
-    @Column(name = "type", nullable = false)
-    private int type;
-
     @Column(name = "createdAt", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;

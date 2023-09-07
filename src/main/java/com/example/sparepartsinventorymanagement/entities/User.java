@@ -64,5 +64,9 @@ public class User {
     @JoinColumn(name = "roleId", nullable = false)
     private Role role;
 
+    @ManyToOne
+    @JoinColumn(name = "warehouseId")
+    private Warehouse warehouse; // Kho mà người dùng này quản lý
+
     // Getters and setters (omitted for brevity)
 }

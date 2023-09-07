@@ -13,17 +13,11 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "orders", indexes = {
-        @Index(name = "idx_order_user", columnList = "userId")
-})
+@Table(name = "orders")
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "userId", nullable = false)
-    private User user;
 
     @Column(name = "type", nullable = false)
     private int type;

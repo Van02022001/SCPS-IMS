@@ -14,16 +14,13 @@ import java.util.Date;
 @Getter
 @Setter
 @Table(name = "orders", indexes = {
-        @Index(name = "idx_order_user", columnList = "userId")
+        @Index(name = "idx_order_user", columnList = "user_id")
 })
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "userId", nullable = false)
-    private User user;
 
     @Column(name = "type", nullable = false)
     private int type;
@@ -31,17 +28,15 @@ public class Order {
     @Column(name = "status", nullable = false)
     private int status;
 
-    @Column(name = "subTotal", nullable = false)
+    @Column(name = "sub_total", nullable = false)
     private float subTotal;
 
-    @Column(name = "itemDiscount", nullable = false)
+    @Column(name = "item_discount", nullable = false)
     private float itemDiscount;
 
     @Column(name = "tax", nullable = false)
     private float tax;
 
-    @Column(name = "shipping", nullable = false)
-    private float shipping;
 
     @Column(name = "total", nullable = false)
     private float total;
@@ -52,19 +47,27 @@ public class Order {
     @Column(name = "discount", nullable = false)
     private float discount;
 
-    @Column(name = "grandTotal", nullable = false)
+    @Column(name = "grand_total", nullable = false)
     private float grandTotal;
 
-    @Column(name = "createdAt", nullable = false)
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
-    @Column(name = "updatedAt")
+    @Column(name = "updated_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
-    @Column(name = "content", columnDefinition = "TEXT")
-    private String content;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "address_id", nullable = false)
+    private Address address;
     // Getters and setters (omitted for brevity)
 }

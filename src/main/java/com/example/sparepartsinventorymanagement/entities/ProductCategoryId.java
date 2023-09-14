@@ -16,10 +16,10 @@ import java.io.Serializable;
 @Setter
 public class ProductCategoryId implements Serializable {
 
-    @Column(name = "productId")
+    @Column(name = "product_id")
     private Long productId;
 
-    @Column(name = "categoryId")
+    @Column(name = "category_id")
     private Long categoryId;
 
     // Constructors, getters, setters, and equals, hashCode methods (omitted for brevity)

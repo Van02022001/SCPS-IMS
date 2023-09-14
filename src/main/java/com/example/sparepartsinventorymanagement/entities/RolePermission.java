@@ -20,7 +20,7 @@ public class RolePermission {
 
     @ManyToOne
     @MapsId("roleId")
-    @JoinColumn(name = "roleId")
+    @JoinColumn(name = "role_id")
     private Role role;
 
     @ManyToOne
@@ -28,11 +28,11 @@ public class RolePermission {
     @JoinColumn(name = "permissionId")
     private Permission permission;
 
-    @Column(name = "createdAt", nullable = false)
+    @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
-    @Column(name = "updatedAt")
+    @Column(name = "updated_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 

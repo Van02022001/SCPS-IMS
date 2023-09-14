@@ -14,7 +14,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "user", indexes = {
-        @Index(name = "uq_id", columnList = "id"),
+        @Index(name = "uq_id", columnList = "user_id"),
         @Index(name = "uq_mobile", columnList = "mobile"),
         @Index(name = "uq_email", columnList = "email"),
         @Index(name = "uq_username", columnList = "username")
@@ -23,15 +23,16 @@ import java.util.Date;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long id;
 
-    @Column(name = "firstName", length = 50)
+    @Column(name = "first_name", length = 50)
     private String firstName;
 
-    @Column(name = "middleName", length = 50)
+    @Column(name = "middle_name", length = 50)
     private String middleName;
 
-    @Column(name = "lastName", length = 50)
+    @Column(name = "last_name", length = 50)
     private String lastName;
 
     @Column(name = "mobile", length = 15, unique = true)
@@ -46,11 +47,11 @@ public class User {
     @Column(name = "password", length = 32, nullable = false)
     private String password;
 
-    @Column(name = "registeredAt", nullable = false)
+    @Column(name = "registered_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date registeredAt;
 
-    @Column(name = "lastLogin")
+    @Column(name = "last_login")
     @Temporal(TemporalType.TIMESTAMP)
     private Date lastLogin;
 
@@ -61,7 +62,7 @@ public class User {
     private String profile;
 
     @ManyToOne
-    @JoinColumn(name = "roleId", nullable = false)
+    @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
     // Getters and setters (omitted for brevity)

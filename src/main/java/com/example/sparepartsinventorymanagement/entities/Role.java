@@ -13,36 +13,32 @@ import java.util.Date;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "role", indexes = {
-        @Index(name = "idx_slug", columnList = "slug")
-})
+@Table(name = "role")
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="role_id")
     private Long id;
 
-    @Column(name = "title", length = 75, nullable = false)
-    private String title;
+    @Column(name = "name", length = 75, nullable = false)
+    private String name;
 
-    @Column(name = "slug", length = 100, nullable = false, unique = true)
-    private String slug;
 
     @Column(name = "description", columnDefinition = "TINYTEXT")
     private String description;
 
-    @Column(name = "active", nullable = false)
-    private boolean active;
+    @Column(name = "status", nullable = false)
+    private int status;
 
-    @Column(name = "createdAt", nullable = false)
+    @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
-    @Column(name = "updatedAt")
+    @Column(name = "updated_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
-    @Column(name = "content", columnDefinition = "TEXT")
-    private String content;
+
 
     // Getters and setters (omitted for brevity)
 }

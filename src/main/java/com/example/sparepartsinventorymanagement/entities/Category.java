@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,21 +18,22 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "parentId")
-    private Category parent;
 
-    @Column(name = "title", length = 75, nullable = false)
-    private String title;
+    @Column(name = "name", length = 75, nullable = false)
+    private String name;
 
-    @Column(name = "metaTitle", length = 100)
-    private String metaTitle;
 
-    @Column(name = "slug", length = 100, nullable = false)
-    private String slug;
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
 
-    @Column(name = "content", columnDefinition = "TEXT")
-    private String content;
+    @Column(name = "status", nullable = false)
+    private int status;
+    @Column(name = "created_at", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdAt;
 
+    @Column(name = "updated_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date updatedAt;
     // Getters and setters (omitted for brevity)
 }

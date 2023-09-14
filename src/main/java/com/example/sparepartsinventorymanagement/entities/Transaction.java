@@ -14,20 +14,17 @@ import java.util.Date;
 @Getter
 @Setter
 @Table(name = "transaction", indexes = {
-        @Index(name = "idx_transaction_user", columnList = "userId"),
-        @Index(name = "idx_transaction_order", columnList = "orderId")
+        @Index(name = "idx_transaction_order", columnList = "order_id")
 })
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "userId", nullable = false)
-    private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "orderId", nullable = false)
+
+    @OneToOne
+    @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
     @Column(name = "code", length = 100, nullable = false)
@@ -42,11 +39,11 @@ public class Transaction {
     @Column(name = "status", nullable = false)
     private int status;
 
-    @Column(name = "createdAt", nullable = false)
+    @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
-    @Column(name = "updatedAt")
+    @Column(name = "updated_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 

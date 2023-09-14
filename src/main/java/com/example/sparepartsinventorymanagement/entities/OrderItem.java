@@ -14,9 +14,9 @@ import java.util.Date;
 @Getter
 @Setter
 @Table(name = "order_item", indexes = {
-        @Index(name = "idx_order_item_product", columnList = "productId"),
-        @Index(name = "idx_order_item_item", columnList = "itemId"),
-        @Index(name = "idx_order_item_order", columnList = "orderId")
+        @Index(name = "idx_order_item_product", columnList = "product_id"),
+        @Index(name = "idx_order_item_item", columnList = "item_id"),
+        @Index(name = "idx_order_item_order", columnList = "order_id")
 })
 public class OrderItem {
     @Id
@@ -24,15 +24,15 @@ public class OrderItem {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "productId", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name = "itemId", nullable = false)
+    @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
     @ManyToOne
-    @JoinColumn(name = "orderId", nullable = false)
+    @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
     @Column(name = "sku", length = 100, nullable = false)
@@ -47,16 +47,16 @@ public class OrderItem {
     @Column(name = "quantity", nullable = false)
     private int quantity;
 
-    @Column(name = "createdAt", nullable = false)
+    @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
-    @Column(name = "updatedAt")
+    @Column(name = "updated_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
-    @Column(name = "content", columnDefinition = "TEXT")
-    private String content;
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
 
     // Getters and setters (omitted for brevity)
 }

@@ -14,31 +14,16 @@ import java.util.Date;
 @Getter
 @Setter
 @Table(name = "item", indexes = {
-        @Index(name = "idx_item_product", columnList = "productId"),
-        @Index(name = "idx_item_brand", columnList = "brandId"),
-        @Index(name = "idx_item_user", columnList = "supplierId"),
-        @Index(name = "idx_item_order", columnList = "orderId")
+        @Index(name = "idx_item_product", columnList = "product_id"),
+        @Index(name = "idx_item_brand", columnList = "brand_id"),
+
+        @Index(name = "idx_item_order", columnList = "order_id")
 })
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="item_id")
     private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "productId", nullable = false)
-    private Product product;
-
-    @ManyToOne
-    @JoinColumn(name = "brandId", nullable = false)
-    private Brand brand;
-
-    @ManyToOne
-    @JoinColumn(name = "supplierId", nullable = false)
-    private User supplier;
-
-    @ManyToOne
-    @JoinColumn(name = "orderId", nullable = false)
-    private Order order;
 
     @Column(name = "sku", length = 100, nullable = false)
     private String sku;
@@ -64,19 +49,39 @@ public class Item {
     @Column(name = "defective", nullable = false)
     private int defective;
 
-    @Column(name = "createdBy", nullable = false)
+    @Column(name = "created_by", nullable = false)
     private Long createdBy;
 
-    @Column(name = "updatedBy")
+    @Column(name = "updated_by")
     private Long updatedBy;
 
-    @Column(name = "createdAt", nullable = false)
+    @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
-    @Column(name = "updatedAt")
+    @Column(name = "updated_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
+
+
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
+
+    @ManyToOne
+    @JoinColumn(name = "brand_id", nullable = false)
+    private Brand brand;
+
+
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
+
+
+    @ManyToOne
+    @JoinColumn(name="warehouse_id", nullable = false)
+    private Warehouse warehouse;
+
 
     // Getters and setters (omitted for brevity)
 }

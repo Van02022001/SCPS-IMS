@@ -5,38 +5,44 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.modelmapper.internal.bytebuddy.dynamic.loading.InjectionClassLoader;
 
 import java.util.Date;
+import java.util.Set;
 
 @Entity
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "permission")
-public class Permission {
+@Getter
+@Setter
+@Table(name="warehouse")
+public class Warehouse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="permission_id")
+    @Column(name = "warehouse_id")
     private Long id;
 
     @Column(name = "name", length = 75, nullable = false)
     private String name;
 
-
-    @Column(name = "description", columnDefinition = "TINYTEXT")
-    private String description;
-
-    @Column(name = "status", nullable = false)
-    private int status;
-
-    @Column(name = "created_at", nullable = false)
+    @Column(name="created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name="updated_at", nullable=false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
-    // Getters and setters (omitted for brevity)
+    @Column(name="status", nullable = false)
+    private int status;
+
+
+    @OneToOne
+    @JoinColumn(name="address_id", nullable = false)
+    private Address address;
+
+
+    @OneToMany(mappedBy = "warehouse")
+    private Set<ProductWarehouse> productWarehouses;
+
 }

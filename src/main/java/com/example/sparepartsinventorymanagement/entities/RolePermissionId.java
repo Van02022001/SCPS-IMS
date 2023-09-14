@@ -16,10 +16,10 @@ import java.util.Objects;
 @Getter
 @Setter
 public class RolePermissionId implements Serializable {
-    @Column(name = "roleId")
+    @Column(name = "role_id")
     private Long roleId;
 
-    @Column(name = "permissionId")
+    @Column(name = "permission_id")
     private Long permissionId;
 
     // Constructors, getters, and setters (omitted for brevity)

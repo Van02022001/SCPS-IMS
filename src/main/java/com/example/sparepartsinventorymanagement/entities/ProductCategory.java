@@ -12,21 +12,21 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(name = "product_category", indexes = {
-        @Index(name = "idx_pc_category", columnList = "categoryId"),
-        @Index(name = "idx_pc_product", columnList = "productId")
+        @Index(name = "idx_pc_category", columnList = "category_id"),
+        @Index(name = "idx_pc_product", columnList = "product_id")
 })
 public class ProductCategory {
     @EmbeddedId
     private ProductCategoryId id;
 
     @ManyToOne
-    @MapsId("productId")
-    @JoinColumn(name = "productId")
+    @MapsId("product_id")
+    @JoinColumn(name = "product_id")
     private Product product;
 
     @ManyToOne
-    @MapsId("categoryId")
-    @JoinColumn(name = "categoryId")
+    @MapsId("category_id")
+    @JoinColumn(name = "category_id")
     private Category category;
 
     // Getters and setters (omitted for brevity)

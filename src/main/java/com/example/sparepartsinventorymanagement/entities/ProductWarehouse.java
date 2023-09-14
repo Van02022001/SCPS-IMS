@@ -11,22 +11,21 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "product_meta")
-public class ProductMeta {
+@Table(name="product_warehouse")
+public class ProductWarehouse {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "product_meta_id")
     private Long id;
 
+
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "product_id")
     private Product product;
 
-    @Column(name = "meta_key", length = 50, nullable = false)
-    private String key;
 
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
+    @ManyToOne
+    @JoinColumn(name = "warehouse_id")
+    private Warehouse warehouse;
 
-    // Getters and setters (omitted for brevity)
 }

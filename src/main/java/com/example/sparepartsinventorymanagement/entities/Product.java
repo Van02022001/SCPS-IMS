@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Date;
+import java.util.Set;
 
 @Entity
 @AllArgsConstructor
@@ -17,27 +18,28 @@ import java.util.Date;
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="product_id")
     private Long id;
 
-    @Column(name = "title", length = 75, nullable = false)
-    private String title;
+    @Column(name = "name", length = 75, nullable = false)
+    private String name;
 
-    @Column(name = "summary", columnDefinition = "TINYTEXT")
-    private String summary;
+    @Column(name = "description", columnDefinition = "TINYTEXT")
+    private String description;
 
-    @Column(name = "type", nullable = false)
-    private int type;
-
-    @Column(name = "createdAt", nullable = false)
+    @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
-    @Column(name = "updatedAt")
+    @Column(name = "updated_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
-    @Column(name = "content", columnDefinition = "TEXT")
-    private String content;
+    @Column(name="status")
+    private int status;
 
     // Getters and setters (omitted for brevity)
+
+    @OneToMany(mappedBy = "product")
+    private Set<ProductWarehouse> warehouses;
 }

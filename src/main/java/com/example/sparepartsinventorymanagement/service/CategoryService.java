@@ -4,7 +4,6 @@ import com.example.sparepartsinventorymanagement.dto.request.CreateCategoryForm;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateCategoryForm;
 import com.example.sparepartsinventorymanagement.entities.CategoryStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 
 public interface CategoryService {
     ResponseEntity getAll();

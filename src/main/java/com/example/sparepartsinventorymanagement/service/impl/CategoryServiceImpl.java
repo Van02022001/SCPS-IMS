@@ -51,7 +51,7 @@ public class CategoryServiceImpl implements CategoryService {
         List<Category> categories = categoryRepository.findByNameContaining(name);
         if(categories.size() > 0){
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Search category by name successfully", categories
+                    HttpStatus.OK.toString(), "Get list category by keyword " + name +" successfully.", categories
             ));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
@@ -63,7 +63,7 @@ public class CategoryServiceImpl implements CategoryService {
     public ResponseEntity createCategory(CreateCategoryForm form) {
         if(categoryRepository.existsByName(form.getName())){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Name of category was existed", null
+                    HttpStatus.BAD_REQUEST.toString(), "Category name already exists", null
             ));
         }
         ModelMapper mapper = new ModelMapper();

@@ -44,6 +44,10 @@ public class Product {
     @Column(name="status", nullable = false)
     private ProductStatus status;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", referencedColumnName = "id")
+    private Category category;
+
     @ManyToMany(mappedBy = "products")
     private Set<Warehouse> warehouses;
 }

@@ -3,6 +3,7 @@ package com.example.sparepartsinventorymanagement.service.impl;
 import com.example.sparepartsinventorymanagement.dto.request.CreateProductForm;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateProductForm;
 import com.example.sparepartsinventorymanagement.entities.Category;
+import com.example.sparepartsinventorymanagement.entities.CategoryStatus;
 import com.example.sparepartsinventorymanagement.entities.Product;
 import com.example.sparepartsinventorymanagement.entities.ProductStatus;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
@@ -120,6 +121,11 @@ public class ProductServiceImpl implements ProductService {
         Category category = categoryRepository.findById(form.getCategoryId()).orElseThrow(
                 ()-> new NotFoundException("Category not found")
         );
+        if(category.getStatus() == CategoryStatus.Inactive){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(), "Category has been inactive.", null
+            ));
+        }
         Product product = productRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Product not found")
         );

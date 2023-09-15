@@ -109,7 +109,11 @@ public class CategoryServiceImpl implements CategoryService {
             if(category.getProducts().size() > 0){
                 for (Product product : category.getProducts()
                 ) {
-                    product.setStatus(ProductStatus.Inactive);
+                    if(product.getCategories().size() == 1){
+                        product.setStatus(ProductStatus.Inactive);
+                    }else{
+                        product.getCategories().remove(category);
+                    }
                     productRepository.save(product);
                 }
             }

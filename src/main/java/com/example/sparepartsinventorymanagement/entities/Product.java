@@ -63,5 +63,5 @@ public class Product {
     private Set<Category> categories;
 
     @OneToMany(mappedBy = "product")
-    private List<ProductMeta> productmetas;
+    private List<ProductMeta> productMetas;
 }

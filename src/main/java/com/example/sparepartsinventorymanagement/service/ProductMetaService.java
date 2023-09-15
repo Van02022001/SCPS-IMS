@@ -6,7 +6,7 @@ import com.example.sparepartsinventorymanagement.entities.Product;
 import org.springframework.http.ResponseEntity;
 
 public interface ProductMetaService {
-    ResponseEntity getAllByProduct(Product product);
+    ResponseEntity getAllByProduct(Long productId);
     ResponseEntity getProductMetaById(Long id);
     ResponseEntity createProductMeta(CreateProductMetaForm form);
     ResponseEntity updateProductMeta(Long id,UpdateProductMetaForm form);

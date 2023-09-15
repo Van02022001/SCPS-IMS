@@ -22,7 +22,7 @@ public class UpdateProductForm {
     @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")
     private String name;
 
-    @Schema(description = "Product description")
+    @Schema(description = "Product description", example = "")
     @NotBlank(message = "Description not null")
     @NotEmpty(message = "Required field")
     @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")

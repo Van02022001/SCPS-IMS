@@ -28,5 +28,4 @@ public class ProductMeta {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    // Getters and setters (omitted for brevity)
 }

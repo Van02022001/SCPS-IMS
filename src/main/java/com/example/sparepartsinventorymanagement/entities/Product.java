@@ -11,6 +11,7 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -60,4 +61,7 @@ public class Product {
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
     private Set<Category> categories;
+
+    @OneToMany(mappedBy = "product")
+    private List<ProductMeta> productmetas;
 }

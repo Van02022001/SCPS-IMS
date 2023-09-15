@@ -3,6 +3,7 @@ package com.example.sparepartsinventorymanagement.service.impl;
 import com.example.sparepartsinventorymanagement.dto.request.CreateBrandFrom;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateBrandFrom;
 import com.example.sparepartsinventorymanagement.entities.Brand;
+import com.example.sparepartsinventorymanagement.entities.BrandStatus;
 import com.example.sparepartsinventorymanagement.entities.ProductMeta;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.BrandRepository;
@@ -35,7 +36,7 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
-    public ResponseEntity getBrandId(Long id) {
+    public ResponseEntity getBrandById(Long id) {
         Brand brand = brandRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Brand not found.")
         );
@@ -56,6 +57,7 @@ public class BrandServiceImpl implements BrandService {
         Date date = new Date();
         brand.setCreatedAt(date);
         brand.setUpdatedAt(date);
+        brand.setStatus(BrandStatus.Active);
         brandRepository.save(brand);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(),"Create brand successfully.", brand
@@ -70,6 +72,7 @@ public class BrandServiceImpl implements BrandService {
         brand.setName(from.getName());
         brand.setDescription(from.getDescription());
         brand.setUpdatedAt(new Date());
+        brandRepository.save(brand);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(),"Update brand successfully.", brand
         ));
@@ -89,13 +92,20 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
-    public ResponseEntity deleteBrand(Long id) {
+    public ResponseEntity updateBrandStatus(Long id, BrandStatus status) {
         Brand brand = brandRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Brand not found.")
         );
-        brandRepository.delete(brand);
+        if(status == BrandStatus.Inactive){
+            brand.setStatus(BrandStatus.Inactive);
+        }else{
+            brand.setStatus(BrandStatus.Active);
+        }
+        brandRepository.save(brand);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(),"Delete brand successfully.", null
+                HttpStatus.OK.toString(),"Update brand status successfully.", null
         ));
     }
+
+
 }

@@ -41,6 +41,9 @@ public class Brand {
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
 
+    @Column(name = "status", nullable = false)
+    private BrandStatus status;
+
     @OneToMany(mappedBy = "brand")
     @JsonIgnore
     private List<Item> items;

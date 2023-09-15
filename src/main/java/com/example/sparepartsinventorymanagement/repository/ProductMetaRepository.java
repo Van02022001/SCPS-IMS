@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ProductMetaRepository extends JpaRepository<ProductMeta, Long> {
-    boolean existsByKey(String key);
+    boolean existsByKeyAndProduct(String key,Product product);
     List<ProductMeta> findByProduct(Product product);
 }

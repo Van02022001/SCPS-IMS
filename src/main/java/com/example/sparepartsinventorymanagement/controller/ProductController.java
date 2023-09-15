@@ -1,10 +1,7 @@
 package com.example.sparepartsinventorymanagement.controller;
 
-import com.example.sparepartsinventorymanagement.dto.request.CreateCategoryForm;
 import com.example.sparepartsinventorymanagement.dto.request.CreateProductForm;
-import com.example.sparepartsinventorymanagement.dto.request.UpdateCategoryForm;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateProductForm;
-import com.example.sparepartsinventorymanagement.entities.CategoryStatus;
 import com.example.sparepartsinventorymanagement.entities.ProductStatus;
 import com.example.sparepartsinventorymanagement.service.impl.ProductServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;

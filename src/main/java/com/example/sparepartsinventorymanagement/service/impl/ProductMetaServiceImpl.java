@@ -57,14 +57,21 @@ public class ProductMetaServiceImpl implements ProductMetaService {
     }
 
     @Override
-    public ResponseEntity createProductMeta(CreateProductMetaForm form) {
-        if(productMetaRepository.existsByKey(form.getKey())){
+    public ResponseEntity createProductMeta(Long productId, CreateProductMetaForm form) {
+
+        Product product = productRepository.findById(productId).orElseThrow(
+                () -> new NotFoundException("Product not found")
+        );
+        if(productMetaRepository.existsByKeyAndProduct(form.getKey(), product)){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                     HttpStatus.BAD_REQUEST.toString(),"Key of product meta already exists", null
             ));
         }
+
         ModelMapper mapper = new ModelMapper();
         ProductMeta productMeta = mapper.map(form, ProductMeta.class);
+        productMeta.setProduct(product);
+        productMetaRepository.save(productMeta);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(),"Get product meta by id successfully.", productMeta
         ));
@@ -75,8 +82,14 @@ public class ProductMetaServiceImpl implements ProductMetaService {
         ProductMeta productMeta = productMetaRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Product meta not found")
         );
+        if(productMetaRepository.existsByKeyAndProduct(form.getKey(), productMeta.getProduct())){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(),"Key of product meta already exists", null
+            ));
+        }
         productMeta.setKey(form.getKey());
         productMeta.setDescription(form.getDescription());
+        productMetaRepository.save(productMeta);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(),"Update product meta by id successfully.", productMeta
         ));

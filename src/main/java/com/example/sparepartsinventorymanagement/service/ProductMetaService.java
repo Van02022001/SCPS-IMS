@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 public interface ProductMetaService {
     ResponseEntity getAllByProduct(Long productId);
     ResponseEntity getProductMetaById(Long id);
-    ResponseEntity createProductMeta(CreateProductMetaForm form);
+    ResponseEntity createProductMeta(Long id, CreateProductMetaForm form);
     ResponseEntity updateProductMeta(Long id,UpdateProductMetaForm form);
     ResponseEntity deleteProductMeta(Long id);
 }

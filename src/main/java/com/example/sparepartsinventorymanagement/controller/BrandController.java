@@ -65,5 +65,12 @@ public class BrandController {
     ) {
         return brandService.updateBrandStatus(id, status);
     }
-
+    @Operation(summary = "For list brands by name")
+    @GetMapping(value = "/getBrandsByName", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getBrandByName(
+            @Parameter(description = "enter keyword to search", required = true)
+            @NotEmpty @NotBlank String keyword
+    ) {
+        return brandService.getBrandByName(keyword);
+    }
 }

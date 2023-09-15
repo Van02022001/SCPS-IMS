@@ -2,7 +2,6 @@ package com.example.sparepartsinventorymanagement.service;
 
 import com.example.sparepartsinventorymanagement.dto.request.CreateBrandFrom;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateBrandFrom;
-import com.example.sparepartsinventorymanagement.entities.Brand;
 import com.example.sparepartsinventorymanagement.entities.BrandStatus;
 import org.springframework.http.ResponseEntity;
 

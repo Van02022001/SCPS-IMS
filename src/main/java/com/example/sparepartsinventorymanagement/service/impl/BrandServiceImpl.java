@@ -4,7 +4,6 @@ import com.example.sparepartsinventorymanagement.dto.request.CreateBrandFrom;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateBrandFrom;
 import com.example.sparepartsinventorymanagement.entities.Brand;
 import com.example.sparepartsinventorymanagement.entities.BrandStatus;
-import com.example.sparepartsinventorymanagement.entities.ProductMeta;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.BrandRepository;
 import com.example.sparepartsinventorymanagement.service.BrandService;

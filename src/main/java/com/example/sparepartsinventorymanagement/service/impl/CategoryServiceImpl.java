@@ -4,8 +4,11 @@ import com.example.sparepartsinventorymanagement.dto.request.CreateCategoryForm;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateCategoryForm;
 import com.example.sparepartsinventorymanagement.entities.Category;
 import com.example.sparepartsinventorymanagement.entities.CategoryStatus;
+import com.example.sparepartsinventorymanagement.entities.Product;
+import com.example.sparepartsinventorymanagement.entities.ProductStatus;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.CategoryRepository;
+import com.example.sparepartsinventorymanagement.repository.ProductRepository;
 import com.example.sparepartsinventorymanagement.service.CategoryService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import org.modelmapper.ModelMapper;
@@ -22,6 +25,8 @@ public class CategoryServiceImpl implements CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired
+    private ProductRepository productRepository;
     @Override
     public ResponseEntity<ResponseObject> getAll() {
         List<Category> categories = categoryRepository.findAll();
@@ -101,8 +106,22 @@ public class CategoryServiceImpl implements CategoryService {
         );
         if(status == CategoryStatus.Inactive){
             category.setStatus(CategoryStatus.Inactive);
+            if(category.getProducts().size() > 0){
+                for (Product product : category.getProducts()
+                ) {
+                    product.setStatus(ProductStatus.Inactive);
+                    productRepository.save(product);
+                }
+            }
         }else{
             category.setStatus(CategoryStatus.Active);
+            if(category.getProducts().size() > 0){
+                for (Product product : category.getProducts()
+                ) {
+                    product.setStatus(ProductStatus.Active);
+                    productRepository.save(product);
+                }
+            }
         }
         categoryRepository.save(category);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(

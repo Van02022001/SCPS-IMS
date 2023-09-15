@@ -18,7 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -95,9 +97,26 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ResponseEntity createProduct(CreateProductForm form) {
-        Category category = categoryRepository.findById(form.getCategoryId()).orElseThrow(
-                ()-> new NotFoundException("Category not found")
-        );
+
+        Set<Category> categories = new HashSet<>();
+        for (Long id : form.getCategoryIds()
+             ) {
+            Category category = categoryRepository.findById(id).orElseThrow(
+                    ()-> new NotFoundException("Category not found")
+            );
+            if(category.getStatus() == CategoryStatus.Inactive){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                        HttpStatus.BAD_REQUEST.toString(), "Category " + category.getName() + " was inactive." , null
+                ));
+            }
+           categories.add(category);
+        }
+        if(categories.size() < 1){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(), "Product must have at least one category", null
+            ));
+        }
+
         if(categoryRepository.existsByName(form.getName())){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                HttpStatus.BAD_REQUEST.toString(), "Product name already exists", null
@@ -108,7 +127,7 @@ public class ProductServiceImpl implements ProductService {
         Date currentDate = new Date();
         product.setCreatedAt(currentDate);
         product.setUpdatedAt(currentDate);
-        product.setCategory(category);
+        product.setCategories(categories);
         product.setStatus(ProductStatus.Active);
         productRepository.save(product);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
@@ -118,12 +137,22 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ResponseEntity updateProduct(Long id, UpdateProductForm form) {
-        Category category = categoryRepository.findById(form.getCategoryId()).orElseThrow(
-                ()-> new NotFoundException("Category not found")
-        );
-        if(category.getStatus() == CategoryStatus.Inactive){
+        Set<Category> categories = new HashSet<>();
+        for (Long cateId : form.getCategoryIds()
+        ) {
+            Category category = categoryRepository.findById(cateId).orElseThrow(
+                    ()-> new NotFoundException("Category not found")
+            );
+            if(category.getStatus() == CategoryStatus.Inactive){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                        HttpStatus.BAD_REQUEST.toString(), "Category " + category.getName() + " was inactive." , null
+                ));
+            }
+            categories.add(category);
+        }
+        if(categories.size() < 1){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Category has been inactive.", null
+                    HttpStatus.BAD_REQUEST.toString(), "Product must have at least one category", null
             ));
         }
         Product product = productRepository.findById(id).orElseThrow(
@@ -131,7 +160,7 @@ public class ProductServiceImpl implements ProductService {
         );
         product.setName(form.getName());
         product.setDescription(form.getDescription());
-        product.setCategory(category);
+        product.setCategories(categories);
         Date currentDate = new Date();
         product.setUpdatedAt(currentDate);
         productRepository.save(product);

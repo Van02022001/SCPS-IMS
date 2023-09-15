@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -29,5 +31,5 @@ public class UpdateProductForm {
     @Schema(description = "Category id")
     @NotBlank(message = "Description not null")
     @NotEmpty(message = "Required field")
-    private Long categoryId;
+    private List<Long> categoryIds;
 }

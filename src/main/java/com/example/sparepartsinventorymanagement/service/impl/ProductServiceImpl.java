@@ -2,6 +2,7 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.CreateProductForm;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateProductForm;
+import com.example.sparepartsinventorymanagement.dto.response.ProductDTO;
 import com.example.sparepartsinventorymanagement.entities.Category;
 import com.example.sparepartsinventorymanagement.entities.CategoryStatus;
 import com.example.sparepartsinventorymanagement.entities.Product;
@@ -17,10 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -34,10 +32,20 @@ public class ProductServiceImpl implements ProductService {
     public ResponseEntity getAll() {
         List<Product> products = productRepository.findAll();
         if(products.size() > 0){
+
+            ModelMapper mapper = new ModelMapper();
+            List<ProductDTO> res = new ArrayList<>();
+            for (Product product : products
+            ) {
+                ProductDTO p = mapper.map(product, ProductDTO.class);
+                res.add(p);
+            }
+
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-               HttpStatus.OK.toString(), "Get list product successfully.", products
+               HttpStatus.OK.toString(), "Get list product successfully.", res
             ));
         }
+
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
                 HttpStatus.NOT_FOUND.toString(), "List empty.", null
         ));
@@ -48,8 +56,10 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Product not found")
         );
+        ModelMapper mapper = new ModelMapper();
+        ProductDTO res = mapper.map(product, ProductDTO.class);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Get product by id successfully.", product
+                HttpStatus.OK.toString(), "Get product by id successfully.", res
         ));
     }
 
@@ -57,8 +67,16 @@ public class ProductServiceImpl implements ProductService {
     public ResponseEntity findByName(String name) {
         List<Product> products = productRepository.findByNameContaining(name);
         if(products.size() > 0){
+            ModelMapper mapper = new ModelMapper();
+            List<ProductDTO> res = new ArrayList<>();
+            for (Product product : products
+            ) {
+                ProductDTO p = mapper.map(product, ProductDTO.class);
+                res.add(p);
+            }
+
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Get list product by keyword " + name +" successfully.", products
+                    HttpStatus.OK.toString(), "Get list product by keyword " + name +" successfully.", res
             ));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
@@ -70,8 +88,15 @@ public class ProductServiceImpl implements ProductService {
     public ResponseEntity getActiveProducts() {
         List<Product> products = productRepository.findByStatus(ProductStatus.Active);
         if(products.size() > 0){
+            ModelMapper mapper = new ModelMapper();
+            List<ProductDTO> res = new ArrayList<>();
+            for (Product product : products
+            ) {
+                ProductDTO p = mapper.map(product, ProductDTO.class);
+                res.add(p);
+            }
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Get list active product successfully.", products
+                    HttpStatus.OK.toString(), "Get list active product successfully.", res
             ));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
@@ -80,14 +105,27 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity getProductsByCategory(Long categoryId) {
-        Category category = categoryRepository.findById(categoryId).orElseThrow(
-                ()-> new NotFoundException("Category not found")
-        );
-        List<Product> products = productRepository.findByCategory(category);
+    public ResponseEntity getProductsByCategory(Set<Long> ids) {
+        List<Category> categories = new ArrayList<>();
+        for (Long id: ids
+             ) {
+            Category category = categoryRepository.findById(id).orElseThrow(
+                    ()-> new NotFoundException("Category not found")
+            );
+            categories.add(category);
+        }
+
+        List<Product> products = productRepository.findByCategoriesIn(categories);
         if(products.size() > 0){
+            ModelMapper mapper = new ModelMapper();
+            List<ProductDTO> res = new ArrayList<>();
+            for (Product product : products
+            ) {
+                ProductDTO p = mapper.map(product, ProductDTO.class);
+                res.add(p);
+            }
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Get list active product successfully.", products
+                    HttpStatus.OK.toString(), "Get list product by category successfully.", res
             ));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
@@ -117,7 +155,7 @@ public class ProductServiceImpl implements ProductService {
             ));
         }
 
-        if(categoryRepository.existsByName(form.getName())){
+        if(productRepository.existsByName(form.getName())){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                HttpStatus.BAD_REQUEST.toString(), "Product name already exists", null
             ));
@@ -130,8 +168,10 @@ public class ProductServiceImpl implements ProductService {
         product.setCategories(categories);
         product.setStatus(ProductStatus.Active);
         productRepository.save(product);
+
+        ProductDTO res = mapper.map(product, ProductDTO.class);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Create product successfully.", product
+                HttpStatus.OK.toString(), "Create product successfully.", res
         ));
     }
 
@@ -164,8 +204,10 @@ public class ProductServiceImpl implements ProductService {
         Date currentDate = new Date();
         product.setUpdatedAt(currentDate);
         productRepository.save(product);
+        ModelMapper mapper = new ModelMapper();
+        ProductDTO res = mapper.map(product, ProductDTO.class);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Update product successfully.", product
+                HttpStatus.OK.toString(), "Update product successfully.", res
         ));
     }
 
@@ -179,6 +221,7 @@ public class ProductServiceImpl implements ProductService {
         }else {
             product.setStatus(ProductStatus.Inactive);
         }
+        productRepository.save(product);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(), "Update product status successfully.", null
         ));

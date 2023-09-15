@@ -47,12 +47,8 @@ public class Warehouse {
     @JoinColumn(name="address_id", nullable = false)
     private Address address;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "warehouses")
     @JsonIgnore
-    @JoinTable(name = "warehouse_product",
-            joinColumns = @JoinColumn(name = "warehouse_id"),
-            inverseJoinColumns = @JoinColumn(name = "product_id")
-    )
     private Set<Product> products;
 
 }

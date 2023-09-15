@@ -28,8 +28,7 @@ public class UpdateProductForm {
     @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")
     private String description;
 
-    @Schema(description = "Category id")
-    @NotBlank(message = "Description not null")
+    @Schema(description = "Categories id")
     @NotEmpty(message = "Required field")
     private List<Long> categoryIds;
 }

@@ -29,12 +29,21 @@ public class CategoryController {
     public ResponseEntity<?> getAll() {
         return categoryService.getAll();
     }
-    @Operation(summary = "For get list of categories")
+    @Operation(summary = "For get category by id")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCategoryById(
-            @Parameter(description = "enter category id to get", example = "1", required = true) @PathVariable(name = "id") @NotBlank Long id
+            @Parameter(description = "enter category id to get", example = "1", required = true)
+            @PathVariable(name = "id") @NotBlank @NotEmpty Long id
     ) {
         return categoryService.getCategoryById(id);
+    }
+    @Operation(summary = "For get category contains keyword by name")
+    @GetMapping(value = "/getCategoriesByName", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getCategoryByName(
+            @Parameter(description = "enter keyword to search", required = true)
+            @NotEmpty @NotBlank String keyword
+    ) {
+        return categoryService.searchCategoryByName(keyword);
     }
     @Operation(summary = "For create category")
     @PostMapping(value = "/createCategory", produces = MediaType.APPLICATION_JSON_VALUE)

@@ -6,12 +6,14 @@ import com.example.sparepartsinventorymanagement.entities.Category;
 import com.example.sparepartsinventorymanagement.entities.ProductStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Set;
+
 public interface ProductService {
     ResponseEntity getAll();
     ResponseEntity getProductById(Long id);
     ResponseEntity findByName(String name);
     ResponseEntity getActiveProducts();
-    ResponseEntity getProductsByCategory(Long categoryId);
+    ResponseEntity getProductsByCategory(Set<Long> categoryIds);
     ResponseEntity createProduct(CreateProductForm form);
     ResponseEntity updateProduct(Long id,UpdateProductForm form);
     ResponseEntity updateProductStatus(Long id,ProductStatus status);

@@ -29,7 +29,6 @@ public class CreateProductForm {
     private String description;
 
     @Schema(description = "Category id")
-    @NotBlank(message = "Description not null")
     @NotEmpty(message = "Required field")
     private List<Long> categoryIds;
 }

@@ -73,7 +73,7 @@ public class ProductMetaServiceImpl implements ProductMetaService {
         productMeta.setProduct(product);
         productMetaRepository.save(productMeta);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(),"Get product meta by id successfully.", productMeta
+                HttpStatus.OK.toString(),"Create product meta successfully.", productMeta
         ));
     }
 

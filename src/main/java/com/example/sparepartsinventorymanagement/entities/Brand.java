@@ -1,5 +1,6 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -34,7 +36,7 @@ public class Brand {
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
-
-
-    // Getters and setters (omitted for brevity)
+    @OneToMany(mappedBy = "brand")
+    @JsonIgnore
+    private List<Item> items;
 }

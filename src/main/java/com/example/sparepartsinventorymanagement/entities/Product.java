@@ -1,12 +1,17 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -28,22 +33,35 @@ public class Product {
     private String description;
 
     @Column(name = "created_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
+    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date createdAt;
 
     @Column(name = "updated_at")
-    @Temporal(TemporalType.TIMESTAMP)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
+    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
 
-    @Column(name="status")
-    private int status;
+    @Column(name="status", nullable = false)
+    private ProductStatus status;
 
-    // Getters and setters (omitted for brevity)
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JsonIgnore
+    @JoinTable(name = "warehouse_product",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "warehouse_id")
+    )
+    private Set<Warehouse> warehouses;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JsonIgnore
+    @JoinTable(name = "product_category",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private Set<Category> categories;
 
     @OneToMany(mappedBy = "product")
-    private Set<ProductWarehouse> warehouses;
-
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Image> images;
-
+    private List<ProductMeta> productMetas;
 }

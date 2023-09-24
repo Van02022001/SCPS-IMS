@@ -37,8 +37,8 @@ public class Warehouse {
     private int status;
 
 
-    @OneToOne
-    @JoinColumn(name="address_id", nullable = false)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "address_id", unique = true)
     private Address address;
 
 

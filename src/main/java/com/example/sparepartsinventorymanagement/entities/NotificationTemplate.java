@@ -7,25 +7,30 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Date;
-import java.util.Set;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "product")
-public class Product {
+@Table(name = "notification_template" )
+public class NotificationTemplate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="product_id")
+    @Column(name = "notification_template_id")
     private Long id;
 
-    @Column(name = "name", length = 75, nullable = false)
-    private String name;
+    @Column(name = "title", nullable = false)
+    private String title;
 
-    @Column(name = "description", columnDefinition = "TINYTEXT")
+    @Column(name = "description", length = 2048)
     private String description;
+
+    @Column(name = "type", nullable = false)
+    private int type;
+
+    @Column(name = "source_type", nullable = false)
+    private String sourceType;
 
     @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -35,15 +40,7 @@ public class Product {
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
-    @Column(name="status")
-    private int status;
-
-    // Getters and setters (omitted for brevity)
-
-    @OneToMany(mappedBy = "product")
-    private Set<ProductWarehouse> warehouses;
-
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Image> images;
+    @Column(name = "content", columnDefinition = "TEXT")
+    private String content;
 
 }

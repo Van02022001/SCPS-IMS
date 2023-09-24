@@ -13,9 +13,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "address", indexes = {
-        @Index(name = "idx_address_user", columnList = "user_id")
-})
+@Table(name = "address")
 public class Address {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,9 +35,11 @@ public class Address {
     @Column(name = "country", length = 50)
     private String country;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
+    @OneToOne(mappedBy = "address")
     private User user;
 
+
+    @OneToOne(mappedBy = "address")
+    private Warehouse warehouse;
 
 }

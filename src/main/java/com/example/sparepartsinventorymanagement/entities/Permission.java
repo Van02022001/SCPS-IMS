@@ -10,6 +10,7 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -42,6 +43,10 @@ public class Permission {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
+
+
+    @ManyToMany(mappedBy = "permissions")
+    private Set<Role> roles;
 
     // Getters and setters (omitted for brevity)
 }

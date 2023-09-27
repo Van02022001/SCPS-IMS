@@ -1,10 +1,14 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 import java.util.Set;
@@ -49,11 +53,13 @@ public class User {
     private String password;
 
     @Column(name = "registered_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
+    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date registeredAt;
 
     @Column(name = "last_login")
-    @Temporal(TemporalType.TIMESTAMP)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
+    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date lastLogin;
 
     @Column(name = "intro", columnDefinition = "TINYTEXT")
@@ -66,15 +72,15 @@ public class User {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
+    @ManyToOne
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company comany;
+
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "image_id")
+    @JoinColumn(name = "image_id", referencedColumnName = "image_id")
+    @JsonManagedReference
     private Image image;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "address_id")
-    private Address address;
-
 
 
     // Getters and setters (omitted for brevity)

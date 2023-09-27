@@ -1,7 +1,6 @@
 package com.example.sparepartsinventorymanagement.entities;
 
 import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -17,27 +16,37 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "image" )
-public class Image {
+@Table(name = "receipts")
+public class Receipt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="image_id")
     private Long id;
 
-    @Column(name = "name", nullable = false, length = 1024)
-    private String name;
 
-    @Column(name = "title", length = 2048)
-    private String title;
+    @Column(name = "type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ReceiptType type;
 
-    @Column(name = "description", length = 4096)
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ReceiptStatus status;
+
+
+    @Column(name = "tax", nullable = false)
+    private float tax;
+
+
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "created_by", nullable = false)
+    private Long createdBy;
 
-    @Column(name = "url", length = 2048)
-    private String url;
+    @Column(name = "updated_by")
+    private Long updatedBy;
 
-    @Column(name = "created_at")
+
+    @Column(name = "created_at", nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date createdAt;
@@ -47,13 +56,14 @@ public class Image {
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Một hình ảnh thuộc về một sản phẩm
-    @JoinColumn(name = "product_id")  // Tên trường khóa ngoại trong bảng Image
-    private Product product;      // Sản phẩm liên quan đến hình ảnh
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
 
-    @OneToOne(mappedBy = "image")
-    @JsonBackReference
-    private User  user;
-
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+    // Getters and setters (omitted for brevity)
 }

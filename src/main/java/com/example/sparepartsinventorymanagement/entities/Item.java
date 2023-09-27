@@ -1,23 +1,27 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "item", indexes = {
+@Table(name = "items", indexes = {
         @Index(name = "idx_item_product", columnList = "product_id"),
         @Index(name = "idx_item_brand", columnList = "brand_id"),
 
-        @Index(name = "idx_item_order", columnList = "order_id")
+
 })
 public class Item {
     @Id
@@ -25,17 +29,14 @@ public class Item {
     @Column(name="item_id")
     private Long id;
 
-    @Column(name = "sku", length = 100, nullable = false)
-    private String sku;
 
-    @Column(name = "mrp", nullable = false)
-    private float mrp;
 
-    @Column(name = "discount", nullable = false)
-    private float discount;
+    @Column(name = "cost_price", nullable = false)
+    private double costPrice;
 
-    @Column(name = "price", nullable = false)
-    private float price;
+    @Column(name = "sale_price", nullable = false)
+    private double salePrice;
+
 
     @Column(name = "quantity", nullable = false)
     private int quantity;
@@ -49,6 +50,13 @@ public class Item {
     @Column(name = "defective", nullable = false)
     private int defective;
 
+    @Column(name = "min_stock_level", nullable = false)
+    private int minStockLevel;
+
+    @Column(name = "max_stock_level", nullable = false)
+    private int maxStockLevel;
+
+
     @Column(name = "created_by", nullable = false)
     private Long createdBy;
 
@@ -56,11 +64,13 @@ public class Item {
     private Long updatedBy;
 
     @Column(name = "created_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
+    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date createdAt;
 
     @Column(name = "updated_at")
-    @Temporal(TemporalType.TIMESTAMP)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
+    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
 
 
@@ -74,13 +84,24 @@ public class Item {
 
 
     @ManyToOne
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @JoinColumn(name = "receipt_id", nullable = false)
+    private Receipt receipt;
+
+    @OneToMany(mappedBy = "item")
+    private List<Inventory> inventoryList;
 
 
     @ManyToOne
     @JoinColumn(name="warehouse_id", nullable = false)
     private Warehouse warehouse;
+
+    @OneToMany(mappedBy = "item")
+    private List<Location> locations;
+
+    @ManyToMany(mappedBy = "items")
+    private List<Supplier> suppliers;
+
+
 
 
     // Getters and setters (omitted for brevity)

@@ -1,10 +1,13 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
@@ -13,12 +16,8 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "order_item", indexes = {
-        @Index(name = "idx_order_item_product", columnList = "product_id"),
-        @Index(name = "idx_order_item_item", columnList = "item_id"),
-        @Index(name = "idx_order_item_order", columnList = "order_id")
-})
-public class OrderItem {
+@Table(name = "receipt_details")
+public class ReceiptDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,27 +31,30 @@ public class OrderItem {
     private Item item;
 
     @ManyToOne
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @JoinColumn(name = "receipt_id", nullable = false)
+    private Receipt receipt;
 
-    @Column(name = "sku", length = 100, nullable = false)
-    private String sku;
+    @Column(name = "unit_price", nullable = false)
+    private float unitPrice;
 
-    @Column(name = "price", nullable = false)
-    private float price;
-
-    @Column(name = "discount", nullable = false)
-    private float discount;
 
     @Column(name = "quantity", nullable = false)
     private int quantity;
 
+    @Column(name = "created_by", nullable = false)
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
     @Column(name = "created_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
+    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date createdAt;
 
     @Column(name = "updated_at")
-    @Temporal(TemporalType.TIMESTAMP)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
+    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
 
     @Column(name = "description", columnDefinition = "TEXT")

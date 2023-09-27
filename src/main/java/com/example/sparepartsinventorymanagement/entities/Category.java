@@ -31,6 +31,7 @@ public class Category {
 
     @Column(name = "status", nullable = false)
     private CategoryStatus status;
+
     @Column(name = "created_at", nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)

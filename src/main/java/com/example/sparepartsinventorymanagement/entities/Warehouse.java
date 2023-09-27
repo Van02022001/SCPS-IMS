@@ -8,11 +8,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.modelmapper.internal.bytebuddy.dynamic.loading.InjectionClassLoader;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -41,11 +39,11 @@ public class Warehouse {
     private Date updatedAt;
 
     @Column(name="status", nullable = false)
-    private int status;
+    private WarehouseStatus status;
 
     @OneToOne
-    @JoinColumn(name="address_id", nullable = false)
-    private Address address;
+    @JoinColumn(name="location_id", nullable = false)
+    private Location location;
 
     @ManyToMany(mappedBy = "warehouses")
     @JsonIgnore

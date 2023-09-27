@@ -64,4 +64,22 @@ public class Product {
 
     @OneToMany(mappedBy = "product")
     private List<ProductMeta> productMetas;
+
+
+    @OneToOne
+    @JoinColumn(name = "unit_id")
+    private Unit units;
+
+    @OneToOne
+    @JoinColumn(name = "size_id")
+    private Size sizes;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JsonIgnore
+    @JoinTable(
+            name = "product_origin", // Name of the join table
+            joinColumns = @JoinColumn(name = "product_id"), // Column in the join table that references Product
+            inverseJoinColumns = @JoinColumn(name = "origin_id") // Column in the join table that references Origin
+    )
+    private List<Origin> origins;
 }

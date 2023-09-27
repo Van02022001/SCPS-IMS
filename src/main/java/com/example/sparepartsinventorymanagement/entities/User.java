@@ -72,10 +72,10 @@ public class User {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
-    @ManyToOne
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company comany;
 
+    @ManyToOne
+    @JoinColumn(name = "company_id") // This links the user to a company via the company_id foreign key
+    private Company company;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "image_id", referencedColumnName = "image_id")

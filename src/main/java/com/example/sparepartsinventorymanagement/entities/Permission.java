@@ -32,7 +32,7 @@ public class Permission {
     private String description;
 
     @Column(name = "status", nullable = false)
-    private int status;
+    private PermissionStatus status;
 
     @Column(name = "created_at", nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)

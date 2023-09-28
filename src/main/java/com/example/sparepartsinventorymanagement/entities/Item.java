@@ -3,10 +3,7 @@ package com.example.sparepartsinventorymanagement.entities;
 import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
@@ -17,12 +14,8 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "items", indexes = {
-        @Index(name = "idx_item_product", columnList = "product_id"),
-        @Index(name = "idx_item_brand", columnList = "brand_id"),
-
-
-})
+@Builder
+@Table(name = "items")
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

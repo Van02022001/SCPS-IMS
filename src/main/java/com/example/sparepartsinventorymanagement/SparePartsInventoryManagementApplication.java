@@ -22,91 +22,91 @@ public class SparePartsInventoryManagementApplication {
         SpringApplication.run(SparePartsInventoryManagementApplication.class, args);
     }
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
-    private PermissionRepository permissionRepository;
-
-    @Autowired
-    private CompanyRepository companyRepository;
-    @Bean
-    public CommandLineRunner initData(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository, CompanyRepository companyRepository){
-        return (args) -> {
-            Company company = new Company();
-            company.setName("CÔNG TY TNHH SÀI GÒN KỸ THUẬT ĐIỀU KHIỂN");
-            company.setEmail("phutungbombetongsaigon@gmail.com");
-            company.setTaxCode("0311729807");
-            company.setCode("SG-KT-DK");
-            company.setAddress("528 Song Hành Xa Lộ Hà Nội, Phước Long A, Quận 9, Thành phố Hồ Chí Minh");
-            company.setPhone("0979000386");
-            companyRepository.save(company);
-
-            Permission manageWarehouse = new Permission();
-            manageWarehouse.setName("MANAGE_WAREHOUSE");
-            manageWarehouse.setDescription("Manage warehouse in system");
-            manageWarehouse.setStatus(PermissionStatus.Active);
-            manageWarehouse.setCreatedAt(new Date());
-            permissionRepository.save(manageWarehouse);
-
-            Role inventoryRole = new Role();
-            inventoryRole.setName("INVENTORY_STAFF");
-            inventoryRole.setDescription("inventory role");
-            inventoryRole.setStatus(RoleStatus.Active);
-            inventoryRole.setCreatedAt(new Date());
-            Set<Permission> permissionSet = new HashSet<>();
-            permissionSet.add(manageWarehouse);
-            inventoryRole.setPermissions(permissionSet);
-            roleRepository.save(inventoryRole);
-
-
-            Permission manageUser = new Permission();
-            manageUser.setName("MANAGE_USER");
-            manageUser.setDescription("Manage user in system");
-            manageUser.setStatus(PermissionStatus.Active);
-            manageUser.setCreatedAt(new Date());
-            permissionRepository.save(manageUser);
-
-            Permission manageRole = new Permission();
-            manageRole.setName("MANAGE_ROLE");
-            manageRole.setDescription("Manage role in system");
-            manageRole.setStatus(PermissionStatus.Active);
-            manageRole.setCreatedAt(new Date());
-            permissionRepository.save(manageRole);
-
-
-
-
-            
-            Role adminRole = new Role();
-            adminRole.setName("ADMIN");
-            adminRole.setDescription("Admin role");
-            adminRole.setStatus(RoleStatus.Active);
-            adminRole.setCreatedAt(new Date());
-            Set<Permission> permissionSets = new HashSet<>();
-            permissionSets.add(manageRole);
-            permissionSets.add(manageUser);
-            adminRole.setPermissions(permissionSets);
-            roleRepository.save(adminRole);
-
-
-            User adminUser = new User();
-            adminUser.setFirstName("Khanh");
-            adminUser.setMiddleName("Hong");
-            adminUser.setLastName("Nguyen");
-            adminUser.setPhone("0915000386");
-            adminUser.setEmail("nguyenhongkhanh@gmail.com");
-            adminUser.setUsername("AD0001");
-            adminUser.setPassword("Admin@123");
-            adminUser.setRegisteredAt(new Date());
-            adminUser.setRole(adminRole);
-            userRepository.save(adminUser);
-
-
-        };
-    }
+//    @Autowired
+//    private UserRepository userRepository;
+//
+//    @Autowired
+//    private RoleRepository roleRepository;
+//
+//    @Autowired
+//    private PermissionRepository permissionRepository;
+//
+//    @Autowired
+//    private CompanyRepository companyRepository;
+//    @Bean
+//    public CommandLineRunner initData(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository, CompanyRepository companyRepository){
+//        return (args) -> {
+//            Company company = new Company();
+//            company.setName("CÔNG TY TNHH SÀI GÒN KỸ THUẬT ĐIỀU KHIỂN");
+//            company.setEmail("phutungbombetongsaigon@gmail.com");
+//            company.setTaxCode("0311729807");
+//            company.setCode("SG-KT-DK");
+//            company.setAddress("528 Song Hành Xa Lộ Hà Nội, Phước Long A, Quận 9, Thành phố Hồ Chí Minh");
+//            company.setPhone("0979000386");
+//            companyRepository.save(company);
+//
+//            Permission manageWarehouse = new Permission();
+//            manageWarehouse.setName("MANAGE_WAREHOUSE");
+//            manageWarehouse.setDescription("Manage warehouse in system");
+//            manageWarehouse.setStatus(PermissionStatus.Active);
+//            manageWarehouse.setCreatedAt(new Date());
+//            permissionRepository.save(manageWarehouse);
+//
+//            Role inventoryRole = new Role();
+//            inventoryRole.setName("INVENTORY_STAFF");
+//            inventoryRole.setDescription("inventory role");
+//            inventoryRole.setStatus(RoleStatus.Active);
+//            inventoryRole.setCreatedAt(new Date());
+//            Set<Permission> permissionSet = new HashSet<>();
+//            permissionSet.add(manageWarehouse);
+//            inventoryRole.setPermissions(permissionSet);
+//            roleRepository.save(inventoryRole);
+//
+//
+//            Permission manageUser = new Permission();
+//            manageUser.setName("MANAGE_USER");
+//            manageUser.setDescription("Manage user in system");
+//            manageUser.setStatus(PermissionStatus.Active);
+//            manageUser.setCreatedAt(new Date());
+//            permissionRepository.save(manageUser);
+//
+//            Permission manageRole = new Permission();
+//            manageRole.setName("MANAGE_ROLE");
+//            manageRole.setDescription("Manage role in system");
+//            manageRole.setStatus(PermissionStatus.Active);
+//            manageRole.setCreatedAt(new Date());
+//            permissionRepository.save(manageRole);
+//
+//
+//
+//
+//
+//            Role adminRole = new Role();
+//            adminRole.setName("ADMIN");
+//            adminRole.setDescription("Admin role");
+//            adminRole.setStatus(RoleStatus.Active);
+//            adminRole.setCreatedAt(new Date());
+//            Set<Permission> permissionSets = new HashSet<>();
+//            permissionSets.add(manageRole);
+//            permissionSets.add(manageUser);
+//            adminRole.setPermissions(permissionSets);
+//            roleRepository.save(adminRole);
+//
+//
+//            User adminUser = new User();
+//            adminUser.setFirstName("Khanh");
+//            adminUser.setMiddleName("Hong");
+//            adminUser.setLastName("Nguyen");
+//            adminUser.setPhone("0915000386");
+//            adminUser.setEmail("nguyenhongkhanh@gmail.com");
+//            adminUser.setUsername("AD0001");
+//            adminUser.setPassword("Admin@123");
+//            adminUser.setRegisteredAt(new Date());
+//            adminUser.setRole(adminRole);
+//            userRepository.save(adminUser);
+//
+//
+//        };
+//    }
 
 }

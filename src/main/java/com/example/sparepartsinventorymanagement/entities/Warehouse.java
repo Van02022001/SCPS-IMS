@@ -10,7 +10,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -41,9 +43,9 @@ public class Warehouse {
     @Column(name="status", nullable = false)
     private WarehouseStatus status;
 
-    @OneToOne
-    @JoinColumn(name="location_id", nullable = false)
-    private Location location;
+
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Location> locations = new ArrayList<>();
 
     @ManyToMany(mappedBy = "warehouses")
     @JsonIgnore

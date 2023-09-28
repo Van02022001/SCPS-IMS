@@ -58,11 +58,6 @@ public class Receipt {
 
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-
-    @ManyToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;
     // Getters and setters (omitted for brevity)

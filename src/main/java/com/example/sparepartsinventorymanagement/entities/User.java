@@ -20,7 +20,6 @@ import java.util.Set;
 @NoArgsConstructor
 @Table(name = "user", indexes = {
         @Index(name = "uq_id", columnList = "user_id"),
-        @Index(name = "uq_mobile", columnList = "mobile"),
         @Index(name = "uq_email", columnList = "email"),
         @Index(name = "uq_username", columnList = "username")
 
@@ -40,8 +39,8 @@ public class User {
     @Column(name = "last_name", length = 50)
     private String lastName;
 
-    @Column(name = "mobile", length = 15, unique = true)
-    private String mobile;
+    @Column(name = "phone", length = 15, unique = true)
+    private String phone;
 
     @Column(name = "email", length = 50, unique = true)
     private String email;

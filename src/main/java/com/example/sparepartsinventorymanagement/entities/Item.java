@@ -50,11 +50,6 @@ public class Item {
     @Column(name = "defective", nullable = false)
     private int defective;
 
-    @Column(name = "min_stock_level", nullable = false)
-    private int minStockLevel;
-
-    @Column(name = "max_stock_level", nullable = false)
-    private int maxStockLevel;
 
 
     @Column(name = "created_by", nullable = false)
@@ -83,20 +78,13 @@ public class Item {
     private Brand brand;
 
 
-    @ManyToOne
-    @JoinColumn(name = "receipt_id", nullable = false)
-    private Receipt receipt;
-
     @OneToMany(mappedBy = "item")
     private List<Inventory> inventoryList;
-
 
     @ManyToOne
     @JoinColumn(name="warehouse_id", nullable = false)
     private Warehouse warehouse;
 
-    @OneToMany(mappedBy = "item")
-    private List<Location> locations;
 
     @ManyToMany(mappedBy = "items")
     private List<Supplier> suppliers;

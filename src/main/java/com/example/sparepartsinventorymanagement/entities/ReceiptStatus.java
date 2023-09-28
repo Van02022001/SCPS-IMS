@@ -9,7 +9,7 @@ public enum ReceiptStatus {
 
     Canceled, // Hủy bỏ
 
-    Confirmed, // xác nhận
+
 
 
 

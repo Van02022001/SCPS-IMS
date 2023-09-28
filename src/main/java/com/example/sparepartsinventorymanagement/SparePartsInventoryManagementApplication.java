@@ -45,6 +45,23 @@ public class SparePartsInventoryManagementApplication {
             company.setPhone("0979000386");
             companyRepository.save(company);
 
+            Permission manageWarehouse = new Permission();
+            manageWarehouse.setName("MANAGE_WAREHOUSE");
+            manageWarehouse.setDescription("Manage warehouse in system");
+            manageWarehouse.setStatus(PermissionStatus.Active);
+            manageWarehouse.setCreatedAt(new Date());
+            permissionRepository.save(manageWarehouse);
+
+            Role inventoryRole = new Role();
+            inventoryRole.setName("INVENTORY_STAFF");
+            inventoryRole.setDescription("inventory role");
+            inventoryRole.setStatus(RoleStatus.Active);
+            inventoryRole.setCreatedAt(new Date());
+            Set<Permission> permissionSet = new HashSet<>();
+            permissionSet.add(manageWarehouse);
+            inventoryRole.setPermissions(permissionSet);
+            roleRepository.save(inventoryRole);
+
 
             Permission manageUser = new Permission();
             manageUser.setName("MANAGE_USER");
@@ -60,15 +77,19 @@ public class SparePartsInventoryManagementApplication {
             manageRole.setCreatedAt(new Date());
             permissionRepository.save(manageRole);
 
+
+
+
+            
             Role adminRole = new Role();
             adminRole.setName("ADMIN");
             adminRole.setDescription("Admin role");
             adminRole.setStatus(RoleStatus.Active);
             adminRole.setCreatedAt(new Date());
-            Set<Permission> permissionSet = new HashSet<>();
-            permissionSet.add(manageRole);
-            permissionSet.add(manageUser);
-            adminRole.setPermissions(permissionSet);
+            Set<Permission> permissionSets = new HashSet<>();
+            permissionSets.add(manageRole);
+            permissionSets.add(manageUser);
+            adminRole.setPermissions(permissionSets);
             roleRepository.save(adminRole);
 
 
@@ -76,7 +97,7 @@ public class SparePartsInventoryManagementApplication {
             adminUser.setFirstName("Khanh");
             adminUser.setMiddleName("Hong");
             adminUser.setLastName("Nguyen");
-            adminUser.setMobile("0915000386");
+            adminUser.setPhone("0915000386");
             adminUser.setEmail("nguyenhongkhanh@gmail.com");
             adminUser.setUsername("AD0001");
             adminUser.setPassword("Admin@123");

@@ -22,17 +22,7 @@ public class ReceiptDetail {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
 
-    @ManyToOne
-    @JoinColumn(name = "item_id", nullable = false)
-    private Item item;
-
-    @ManyToOne
-    @JoinColumn(name = "receipt_id", nullable = false)
-    private Receipt receipt;
 
     @Column(name = "unit_price", nullable = false)
     private float unitPrice;
@@ -61,4 +51,12 @@ public class ReceiptDetail {
     private String description;
 
     // Getters and setters (omitted for brevity)
+
+    @ManyToOne
+    @JoinColumn(name = "item_id", nullable = false)
+    private Item item;
+
+    @ManyToOne
+    @JoinColumn(name = "receipt_id", nullable = false)
+    private Receipt receipt;
 }

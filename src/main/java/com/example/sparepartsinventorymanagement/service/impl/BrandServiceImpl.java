@@ -3,7 +3,6 @@ package com.example.sparepartsinventorymanagement.service.impl;
 import com.example.sparepartsinventorymanagement.dto.request.CreateBrandFrom;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateBrandFrom;
 import com.example.sparepartsinventorymanagement.entities.Brand;
-import com.example.sparepartsinventorymanagement.entities.BrandStatus;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.BrandRepository;
 import com.example.sparepartsinventorymanagement.service.BrandService;
@@ -53,10 +52,7 @@ public class BrandServiceImpl implements BrandService {
         }
         ModelMapper mapper =  new ModelMapper();
         Brand brand = mapper.map(from, Brand.class);
-        Date date = new Date();
-        brand.setCreatedAt(date);
-        brand.setUpdatedAt(date);
-        brand.setStatus(BrandStatus.Active);
+
         brandRepository.save(brand);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(),"Create brand successfully.", brand
@@ -70,7 +66,7 @@ public class BrandServiceImpl implements BrandService {
         );
         brand.setName(from.getName());
         brand.setDescription(from.getDescription());
-        brand.setUpdatedAt(new Date());
+
         brandRepository.save(brand);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(),"Update brand successfully.", brand
@@ -90,21 +86,7 @@ public class BrandServiceImpl implements BrandService {
         ));
     }
 
-    @Override
-    public ResponseEntity updateBrandStatus(Long id, BrandStatus status) {
-        Brand brand = brandRepository.findById(id).orElseThrow(
-                ()-> new NotFoundException("Brand not found.")
-        );
-        if(status == BrandStatus.Inactive){
-            brand.setStatus(BrandStatus.Inactive);
-        }else{
-            brand.setStatus(BrandStatus.Active);
-        }
-        brandRepository.save(brand);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(),"Update brand status successfully.", null
-        ));
-    }
+
 
 
 }

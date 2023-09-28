@@ -2,7 +2,6 @@ package com.example.sparepartsinventorymanagement.controller;
 
 import com.example.sparepartsinventorymanagement.dto.request.CreateBrandFrom;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateBrandFrom;
-import com.example.sparepartsinventorymanagement.entities.BrandStatus;
 import com.example.sparepartsinventorymanagement.service.impl.BrandServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -55,16 +54,7 @@ public class BrandController {
         return brandService.updateBrand(id, form);
     }
 
-    @Operation(summary = "For update brand status")
-    @PutMapping(value = "/updateBrandStatus/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createProductMeta(
-            @Parameter(description = "Enter brand id to update", example = "1", required = true)
-            @PathVariable(name = "id") @NotBlank @NotEmpty Long id,
-            @Parameter(description = "Brand status (Active or Inactive)", required = true)
-            @NotNull @NotEmpty @Pattern(regexp = "Active|Inactive") @RequestParam(name = "status") BrandStatus status
-    ) {
-        return brandService.updateBrandStatus(id, status);
-    }
+
     @Operation(summary = "For list brands by name")
     @GetMapping(value = "/getBrandsByName", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getBrandByName(

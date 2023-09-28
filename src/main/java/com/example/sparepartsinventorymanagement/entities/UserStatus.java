@@ -1,6 +1,7 @@
 package com.example.sparepartsinventorymanagement.entities;
 
-public enum BrandStatus {
+public enum UserStatus {
     Inactive,
+
     Active
 }

@@ -24,9 +24,9 @@ public class Location {
     private String location;
 
 
+
+
     @ManyToOne
-    @JoinColumn(name = "item_id") // Tên trường khóa ngoại trong bảng Location
-    private Item item; // Mối quan hệ với bảng Item
-
-
+    @JoinColumn(name = "warehouse_id") // Foreign key column pointing to Warehouse
+    private Warehouse warehouse;
 }

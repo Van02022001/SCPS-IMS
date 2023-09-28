@@ -31,18 +31,7 @@ public class Brand {
     @Column(name = "description", columnDefinition = "TINYTEXT")
     private String description;
 
-    @Column(name = "created_at", nullable = false)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
-    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
-    private Date createdAt;
 
-    @Column(name = "updated_at")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
-    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
-    private Date updatedAt;
-
-    @Column(name = "status", nullable = false)
-    private BrandStatus status;
 
     @OneToMany(mappedBy = "brand")
     @JsonIgnore

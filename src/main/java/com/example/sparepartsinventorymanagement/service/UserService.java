@@ -5,4 +5,10 @@ import org.springframework.http.ResponseEntity;
 
 public interface UserService {
     ResponseEntity<?> createAccount(CreateAccountForm form);
+
+    ResponseEntity<?> getAllUsers();
+
+    ResponseEntity<?> getUserById(Long id);
+
+    ResponseEntity<?> deleteUserById(Long id);
 }

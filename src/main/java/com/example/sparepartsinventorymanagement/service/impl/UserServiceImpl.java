@@ -62,6 +62,49 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @Override
+    public ResponseEntity<?> getAllUsers() {
+        List<User> users =userRepository.findAll();
+        if(!users.isEmpty()){
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                    HttpStatus.OK.toString(), "Get list users successfully!", users
+            ));
+        }
+
+        return  ResponseEntity.status(HttpStatus.NO_CONTENT).body(new ResponseObject(
+                HttpStatus.NO_CONTENT.toString(), "List of users is empty!", null
+        ));
+    }
+
+    @Override
+    public ResponseEntity<?> getUserById(Long id) {
+        User user = userRepository.getUserById(id );
+        if(user == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+               HttpStatus.NOT_FOUND.toString(), "User is not founded!", null
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(), "Get user successfully!", user
+        ));
+
+    }
+
+    @Override
+    public ResponseEntity<?> deleteUserById(Long id) {
+        int result = userRepository.deleteUserById(id);
+
+        if(result==0){
+             return  ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(), "User is not found!", null
+            ));
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(), "Delete user successfully!", null
+        ));
+    }
+
     private String generateUsername(CreateAccountForm form) {
         // Your logic for generating username
         String roleName = form.getRoleName();

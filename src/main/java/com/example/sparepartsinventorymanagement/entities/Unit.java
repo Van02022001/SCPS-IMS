@@ -1,7 +1,10 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -19,6 +22,8 @@ public class Unit {
     @Column(name = "name", nullable = false)
     private String name;
 
-
+    @OneToMany(mappedBy = "unit")
+    @JsonIgnore
+    private List<Product> products;
 
 }

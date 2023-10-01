@@ -1,7 +1,10 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -25,9 +28,9 @@ public class Size {
     @Column(name = "height", nullable = false)
     private float height;
 
-    @OneToOne(mappedBy = "sizes")
-    private Product product;
-
+    @OneToMany(mappedBy = "size")
+    @JsonIgnore
+    private List<Product> products;
 
     @ManyToOne
     @JoinColumn(name = "unit_measurements_id")

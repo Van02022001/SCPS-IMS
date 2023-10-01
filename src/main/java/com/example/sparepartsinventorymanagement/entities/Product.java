@@ -70,13 +70,13 @@ public class Product {
     private List<ProductMeta> productMetas;
 
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "unit_id")
-    private Unit units;
+    private Unit unit;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "size_id")
-    private Size sizes;
+    private Size size;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JsonIgnore

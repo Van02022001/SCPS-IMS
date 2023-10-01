@@ -1,5 +1,6 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,7 @@ public class UnitMeasurement {
     private String name; // Ví dụ: "m", "cm", "mm"
 
     @OneToMany(mappedBy = "unitMeasurement")
+    @JsonIgnore
     private List<Size> sizes;
 
 }

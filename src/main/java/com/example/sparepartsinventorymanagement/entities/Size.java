@@ -1,10 +1,8 @@
 package com.example.sparepartsinventorymanagement.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -28,9 +26,9 @@ public class Size {
     @Column(name = "height", nullable = false)
     private float height;
 
-    @OneToMany(mappedBy = "size")
-    @JsonIgnore
-    private List<Product> products;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "product_id")
+    private Product product;
 
     @ManyToOne
     @JoinColumn(name = "unit_measurements_id")

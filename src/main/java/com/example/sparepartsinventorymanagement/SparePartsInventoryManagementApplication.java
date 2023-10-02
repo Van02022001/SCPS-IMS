@@ -22,20 +22,20 @@ public class SparePartsInventoryManagementApplication {
         SpringApplication.run(SparePartsInventoryManagementApplication.class, args);
     }
 
-//    @Autowired
-//    private UserRepository userRepository;
-//
-//    @Autowired
-//    private RoleRepository roleRepository;
-//
-//    @Autowired
-//    private PermissionRepository permissionRepository;
-//
-//    @Autowired
-//    private CompanyRepository companyRepository;
-//    @Bean
-//    public CommandLineRunner initData(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository, CompanyRepository companyRepository){
-//        return (args) -> {
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private PermissionRepository permissionRepository;
+
+    @Autowired
+    private CompanyRepository companyRepository;
+    @Bean
+    public CommandLineRunner initData(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository, CompanyRepository companyRepository){
+        return (args) -> {
 //            Company company = new Company();
 //            company.setName("CÔNG TY TNHH SÀI GÒN KỸ THUẬT ĐIỀU KHIỂN");
 //            company.setEmail("phutungbombetongsaigon@gmail.com");
@@ -104,9 +104,9 @@ public class SparePartsInventoryManagementApplication {
 //            adminUser.setRegisteredAt(new Date());
 //            adminUser.setRole(adminRole);
 //            userRepository.save(adminUser);
-//
-//
-//        };
-//    }
+
+
+        };
+    }
 
 }

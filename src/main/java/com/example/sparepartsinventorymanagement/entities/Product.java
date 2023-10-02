@@ -74,8 +74,7 @@ public class Product {
     @JoinColumn(name = "unit_id")
     private Unit unit;
 
-    @ManyToOne
-    @JoinColumn(name = "size_id")
+    @OneToOne(mappedBy = "product")
     private Size size;
 
     @ManyToMany(fetch = FetchType.LAZY)

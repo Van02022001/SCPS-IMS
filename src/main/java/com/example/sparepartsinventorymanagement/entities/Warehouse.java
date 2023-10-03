@@ -33,13 +33,16 @@ public class Warehouse {
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date createdAt;
 
-    @Column(name="updated_at", nullable=false)
+    @Column(name="updated_at")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
 
     @Column(name="status", nullable = false)
     private WarehouseStatus status;
+
+    @Column(name = "address")
+    private String address;
 
 
     @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)

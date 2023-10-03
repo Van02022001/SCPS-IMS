@@ -23,7 +23,6 @@ public class Location {
 
 
 
-
     @ManyToOne
     @JoinColumn(name = "warehouse_id") // Foreign key column pointing to Warehouse
     private Warehouse warehouse;

@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +38,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .taxCode(form.getTaxCode())
                 .description(form.getDescription())
                 .type(form.getType())
+                .createdAt(new Date())
                 .build();
         customerRepository.save(customer);
         return ResponseEntity.ok().body(new ResponseObject(
@@ -96,6 +98,8 @@ public class CustomerServiceImpl implements CustomerService {
         existingCustomer.setAddress(form.getAddress());
         existingCustomer.setType(form.getType());
         existingCustomer.setDescription(form.getDescription());
+        existingCustomer.getCreatedAt();
+        existingCustomer.setUpdatedAt(new Date());
         customerRepository.save(existingCustomer);
 
         customerRepository.save(existingCustomer);
@@ -108,13 +112,14 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<?> deleteCustomerById(Long id) {
-        int result = customerRepository.deleteCustomerById(id);
-
-        if(result == 0){
+        if(!customerRepository.existsById(id)) {
+            // Nếu không tồn tại bản ghi với ID đó
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
                     HttpStatus.NOT_FOUND.toString(), "Customer is not found!", null
             ));
         }
+        // Nếu tồn tại thì tiến hành xóa
+        customerRepository.deleteById(id);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(), "Deleted customer successfully!", null
         ));

@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,7 +29,7 @@ public class SupplierServiceImpl implements SupplierService {
                 .email(form.getEmail())
                 .taxCode(form.getTaxCode())
                 .address(form.getAddress())
-
+                .createdAt(new Date())
                 .build();
         supplierRepository.save(supplier);
         return ResponseEntity.ok().body(new ResponseObject(
@@ -82,6 +83,8 @@ public class SupplierServiceImpl implements SupplierService {
                 .email(form.getEmail() != null ? form.getEmail() : existingSupplier.getEmail())
                 .taxCode(form.getTaxCode() != null ? form.getTaxCode() : existingSupplier.getTaxCode())
                 .address(form.getAddress() != null ? form.getAddress() : existingSupplier.getAddress())
+                .createdAt(existingSupplier.getCreatedAt())
+                .updatedAt(new Date())
                 .build();
 
         supplierRepository.save(updatedSupplier);
@@ -98,7 +101,7 @@ public class SupplierServiceImpl implements SupplierService {
                     HttpStatus.NOT_FOUND.toString(), "Supplier is not found!", null
             ));
         }
-        supplierRepository.deleteSupplierById(id);
+        supplierRepository.deleteById(id);
         return ResponseEntity.ok().body(new ResponseObject(
                 HttpStatus.OK.toString(), "Deleted supplier successfully!", null
         ));

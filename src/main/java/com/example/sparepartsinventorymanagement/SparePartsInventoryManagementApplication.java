@@ -1,10 +1,7 @@
 package com.example.sparepartsinventorymanagement;
 
 import com.example.sparepartsinventorymanagement.entities.*;
-import com.example.sparepartsinventorymanagement.repository.CompanyRepository;
-import com.example.sparepartsinventorymanagement.repository.PermissionRepository;
-import com.example.sparepartsinventorymanagement.repository.RoleRepository;
-import com.example.sparepartsinventorymanagement.repository.UserRepository;
+import com.example.sparepartsinventorymanagement.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -37,7 +34,8 @@ public class SparePartsInventoryManagementApplication {
 //    @Autowired
 //    private PasswordEncoder passwordEncoder;
 //    @Bean
-//    public CommandLineRunner initData(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository, CompanyRepository companyRepository, PasswordEncoder passwordEncoder){
+//    public CommandLineRunner initData(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository, CompanyRepository companyRepository, PasswordEncoder passwordEncoder,
+//                                      WarehouseRepository warehouseRepository){
 //        return (args) -> {
 //            Company company = new Company();
 //            company.setName("CÔNG TY TNHH SÀI GÒN KỸ THUẬT ĐIỀU KHIỂN");
@@ -47,6 +45,22 @@ public class SparePartsInventoryManagementApplication {
 //            company.setAddress("528 Song Hành Xa Lộ Hà Nội, Phước Long A, Quận 9, Thành phố Hồ Chí Minh");
 //            company.setPhone("0979000386");
 //            companyRepository.save(company);
+//
+//
+//            Warehouse warehouse1 = new Warehouse();
+//            warehouse1.setName("Kho 1");
+//            warehouse1.setStatus(WarehouseStatus.Active);
+//            warehouse1.setCreatedAt(new Date());
+//            warehouse1.setAddress("528 Song Hành Xa Lộ Hà Nội, Phước Long A, Quận 9, Thành phố Hồ Chí Minh");
+//            warehouseRepository.save(warehouse1);
+//
+//
+//            Warehouse warehouse2 = new Warehouse();
+//            warehouse2.setName("Kho 2");
+//            warehouse2.setStatus(WarehouseStatus.Active);
+//            warehouse2.setCreatedAt(new Date());
+//            warehouse2.setAddress("Kho 18C-Kho Thủ Đức, Đường số 1, Trường Thọ, Thủ Đức");
+//            warehouseRepository.save(warehouse2);
 //
 //            Permission manageUser = new Permission();
 //            manageUser.setName("MANAGE_USER");
@@ -85,7 +99,7 @@ public class SparePartsInventoryManagementApplication {
 //
 //            Role saleRole = new Role();
 //            saleRole.setName("SALE_STAFF");
-//            saleRole.setDescription("inventory role");
+//            saleRole.setDescription("sale role");
 //            saleRole.setStatus(RoleStatus.Active);
 //            saleRole.setCreatedAt(new Date());
 //            Set<Permission> permissionSets = new HashSet<>();
@@ -95,7 +109,7 @@ public class SparePartsInventoryManagementApplication {
 //
 //            Role managerRole = new Role();
 //            managerRole.setName("MANAGER");
-//            managerRole.setDescription("inventory role");
+//            managerRole.setDescription("manager role");
 //            managerRole.setStatus(RoleStatus.Active);
 //            managerRole.setCreatedAt(new Date());
 //            Set<Permission> managerPermission = new HashSet<>();

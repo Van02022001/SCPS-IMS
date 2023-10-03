@@ -1,5 +1,6 @@
 package com.example.sparepartsinventorymanagement.service;
 
+import com.example.sparepartsinventorymanagement.dto.request.ChangePasswordForm;
 import com.example.sparepartsinventorymanagement.dto.request.LoginForm;
 import com.example.sparepartsinventorymanagement.dto.request.LogoutForm;
 import com.example.sparepartsinventorymanagement.dto.request.RefreshTokenRequest;
@@ -20,4 +21,6 @@ public interface AuthService {
     boolean checkIfValidOldPassword(User user, String oldPassword);
 
     User findUserByName(String username);
+
+    String changeUserPassword(ChangePasswordForm passwordModel);
 }

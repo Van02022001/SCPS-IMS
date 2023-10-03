@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.isNotNull;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -51,7 +52,7 @@ class UserServiceTest {
         CreateAccountForm form =  new CreateAccountForm();
         form.setEmail("nguyenhongkhanh@gmail.com");
 
-        when(userRepository.existsByEmail(form.getEmail())).thenReturn(true);
+        when(userRepository.findByEmail(form.getEmail())).thenReturn(Optional.of(new User()));
 
         ResponseEntity<?> response = userService.createAccount(form);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -64,7 +65,7 @@ class UserServiceTest {
         CreateAccountForm form =  new CreateAccountForm();
         form.setPhone("0915000386");
 
-        when(userRepository.existsByEmail(form.getEmail())).thenReturn(true);
+        when(userRepository.findByEmail(form.getEmail())).thenReturn(Optional.of(new User()));
 
         ResponseEntity<?> response = userService.createAccount(form);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -77,8 +78,8 @@ class UserServiceTest {
         form.setPhone("0935182029");
         form.setRoleName("INVENTORY_STAFF");
 
-        when(userRepository.existsByEmail(form.getEmail())).thenReturn(false);
-        when(userRepository.existsByPhone(form.getPhone())).thenReturn(false);
+        when(userRepository.findByEmail(form.getEmail())).thenReturn(Optional.empty());
+        when(userRepository.findByPhone(form.getPhone())).thenReturn(Optional.empty());
         when(roleRepository.findByName(form.getRoleName())).thenReturn(Optional.of(new Role()));
 
         ResponseEntity<?> response = userService.createAccount(form);

@@ -5,6 +5,9 @@ import com.example.sparepartsinventorymanagement.dto.request.LoginForm;
 import com.example.sparepartsinventorymanagement.dto.request.LogoutForm;
 import com.example.sparepartsinventorymanagement.dto.request.RefreshTokenRequest;
 import com.example.sparepartsinventorymanagement.entities.User;
+import com.example.sparepartsinventorymanagement.exception.AuthenticationsException;
+import com.example.sparepartsinventorymanagement.exception.InvalidPasswordException;
+import com.example.sparepartsinventorymanagement.exception.PasswordMismatchException;
 import com.example.sparepartsinventorymanagement.service.AuthService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,15 +34,20 @@ public class AuthController {
 
     @PostMapping("/password-change")
     @Operation(summary = "For changing password ")
-    public String changPassword(@RequestBody ChangePasswordForm passwordModel){
-        User user = authService.findUserByName(passwordModel.getUsername());
-        if (!authService.checkIfValidOldPassword(user, passwordModel.getOldPassword())){
-            return "Invalid Password";
+    public ResponseEntity<?> changPassword(@RequestBody ChangePasswordForm passwordModel){
+        try{
+            String result = authService.changeUserPassword(passwordModel);
+            return ResponseEntity.ok(result);
+        } catch (AuthenticationsException authenticationsException){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authenticationsException.getMessage());
+        } catch (InvalidPasswordException invalidPasswordException){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(invalidPasswordException.getMessage());
+        } catch (PasswordMismatchException passwordMismatchException){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(passwordMismatchException.getMessage());
         }
-
-        // Save New Password;
-        authService.changePassword(user, passwordModel.getNewPassword());
-        return "Password Changed Successfully ";
+        catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred");
+        }
     }
 
 
@@ -80,4 +88,6 @@ public class AuthController {
         }
         return authService.login(loginForm);
     }
+
+
 }

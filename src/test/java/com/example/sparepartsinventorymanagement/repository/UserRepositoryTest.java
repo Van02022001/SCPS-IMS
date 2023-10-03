@@ -19,6 +19,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -68,28 +69,28 @@ class UserRepositoryTest {
     }
     @Test
     public  void whenCheckExistsEmail_thenReturnTrue(){
-        Boolean existEmail = userRepository.existsByEmail(users.getEmail());
-        assertThat(existEmail).isTrue();
+        Optional<User> existEmail = userRepository.findByEmail(users.getEmail());
+        assertThat(existEmail).isPresent();
     }
 
     @Test
     public void whenCheckNonExistsEmail_thenReturnFalse(){
-        Boolean existEmail = userRepository.existsByEmail("van@gmail.com");
-        assertThat(existEmail).isFalse();
+        Optional<User>  existEmail = userRepository.findByEmail("van@gmail.com");
+        assertThat(existEmail).isNotPresent();
     }
 
 
     @Test
-    public  void whenCheckExistsPhone_thenReturnTrue(){
-        Boolean existPhone = userRepository.existsByPhone(users.getPhone());
-        assertThat(existPhone).isTrue();
+    public  void whenCheckExistsPhone_thenReturnPresent(){
+        Optional<User> existPhone = userRepository.findByPhone(users.getPhone());
+        assertThat(existPhone).isPresent();
 
     }
 
     @Test
-    public void whenCheckNonExistsPhone_thenReturnFalse(){
-        Boolean existsPhone= userRepository.existsByPhone("0935182029");
-        assertThat(existsPhone).isFalse();
+    public void whenCheckNonExistsPhone_thenReturnNotPresent(){
+        Optional<User> existsPhone= userRepository.findByPhone("0935182029");
+        assertThat(existsPhone).isNotPresent();
     }
 
 
@@ -111,16 +112,18 @@ class UserRepositoryTest {
 
     }
     @Test
-    public void whenDeleteExistingUserById_thenShouldReturnOne(){
-       int recordsDeteleted= userRepository.deleteUserById(users.getId());
-       assertThat(recordsDeteleted).isEqualTo(1);
+    public void whenDeleteExistingUserById_thenUserShouldBeDeleted(){
+        userRepository.deleteById(users.getId());
+
+        boolean exist = userRepository.existsById(users.getId());
+        assertThat(exist).isFalse();
     }
 
     @Test
-    public void whenDeleteUserByIdAndUserDoesNotExist_thenShouldReturnZero(){
-        Long userId = 2L;
-        int recordsDeteleted= userRepository.deleteUserById(userId);
-        assertThat(recordsDeteleted).isEqualTo(0);
+    public void whenDeleteUserByIdAndUserDoesNotExist_thenShouldNotThrowException(){
+        Long nonExistingUserId = 2L;
+
+        assertDoesNotThrow(() -> userRepository.deleteUserById(nonExistingUserId));
     }
 
 }

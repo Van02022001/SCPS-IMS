@@ -1,6 +1,7 @@
 package com.example.sparepartsinventorymanagement.entities;
 
 import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -41,7 +42,7 @@ public class User {
     @Column(name = "username", length = 50, unique = true)
     private String username;
 
-    @Column(name = "password", length = 32, nullable = false)
+    @Column(name = "password", length = 100, nullable = false)
     private String password;
 
     @Column(name = "registered_at", nullable = false)
@@ -67,12 +68,19 @@ public class User {
 
     @ManyToOne
     @JoinColumn(name = "company_id") // This links the user to a company via the company_id foreign key
+    @JsonBackReference
     private Company company;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "image_id", referencedColumnName = "image_id")
     @JsonManagedReference
     private Image image;
+
+    @OneToOne
+    @JoinColumn(name = "warehouse_id")
+    @JsonBackReference
+    private Warehouse warehouse;
+
 
 
     // Getters and setters (omitted for brevity)

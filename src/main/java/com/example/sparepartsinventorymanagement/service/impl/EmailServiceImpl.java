@@ -4,6 +4,7 @@ import com.example.sparepartsinventorymanagement.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,6 +12,9 @@ public class EmailServiceImpl implements EmailService {
 
     @Autowired
     private JavaMailSender emailSender;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     @Override
     public void sendAccountDetail(String email, String username, String password) {
         SimpleMailMessage message = new SimpleMailMessage();

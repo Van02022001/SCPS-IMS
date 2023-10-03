@@ -10,6 +10,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -33,8 +34,10 @@ public class SparePartsInventoryManagementApplication {
 //
 //    @Autowired
 //    private CompanyRepository companyRepository;
+//    @Autowired
+//    private PasswordEncoder passwordEncoder;
 //    @Bean
-//    public CommandLineRunner initData(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository, CompanyRepository companyRepository){
+//    public CommandLineRunner initData(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository, CompanyRepository companyRepository, PasswordEncoder passwordEncoder){
 //        return (args) -> {
 //            Company company = new Company();
 //            company.setName("CÔNG TY TNHH SÀI GÒN KỸ THUẬT ĐIỀU KHIỂN");
@@ -45,30 +48,26 @@ public class SparePartsInventoryManagementApplication {
 //            company.setPhone("0979000386");
 //            companyRepository.save(company);
 //
-//            Permission manageWarehouse = new Permission();
-//            manageWarehouse.setName("MANAGE_WAREHOUSE");
-//            manageWarehouse.setDescription("Manage warehouse in system");
-//            manageWarehouse.setStatus(PermissionStatus.Active);
-//            manageWarehouse.setCreatedAt(new Date());
-//            permissionRepository.save(manageWarehouse);
-//
-//            Role inventoryRole = new Role();
-//            inventoryRole.setName("INVENTORY_STAFF");
-//            inventoryRole.setDescription("inventory role");
-//            inventoryRole.setStatus(RoleStatus.Active);
-//            inventoryRole.setCreatedAt(new Date());
-//            Set<Permission> permissionSet = new HashSet<>();
-//            permissionSet.add(manageWarehouse);
-//            inventoryRole.setPermissions(permissionSet);
-//            roleRepository.save(inventoryRole);
-//
-//
 //            Permission manageUser = new Permission();
 //            manageUser.setName("MANAGE_USER");
 //            manageUser.setDescription("Manage user in system");
 //            manageUser.setStatus(PermissionStatus.Active);
 //            manageUser.setCreatedAt(new Date());
 //            permissionRepository.save(manageUser);
+//
+//            Permission sale = new Permission();
+//            sale.setName("SALE");
+//            sale.setDescription("Sale product");
+//            sale.setStatus(PermissionStatus.Active);
+//            sale.setCreatedAt(new Date());
+//            permissionRepository.save(sale);
+//
+//            Permission manageWarehouse = new Permission();
+//            manageWarehouse.setName("MANAGE_WAREHOUSE");
+//            manageWarehouse.setDescription("Manage warehouse in system");
+//            manageWarehouse.setStatus(PermissionStatus.Active);
+//            manageWarehouse.setCreatedAt(new Date());
+//            permissionRepository.save(manageWarehouse);
 //
 //            Permission manageRole = new Permission();
 //            manageRole.setName("MANAGE_ROLE");
@@ -77,19 +76,52 @@ public class SparePartsInventoryManagementApplication {
 //            manageRole.setCreatedAt(new Date());
 //            permissionRepository.save(manageRole);
 //
+//            Permission manageProduct = new Permission();
+//            manageProduct.setName("MANAGE_PRODUCT");
+//            manageProduct.setDescription("Manage products and some thing else");
+//            manageProduct.setStatus(PermissionStatus.Active);
+//            manageProduct.setCreatedAt(new Date());
+//            permissionRepository.save(manageProduct);
 //
+//            Role saleRole = new Role();
+//            saleRole.setName("SALE_STAFF");
+//            saleRole.setDescription("inventory role");
+//            saleRole.setStatus(RoleStatus.Active);
+//            saleRole.setCreatedAt(new Date());
+//            Set<Permission> permissionSets = new HashSet<>();
+//            permissionSets.add(sale);
+//            saleRole.setPermissions(permissionSets);
+//            roleRepository.save(saleRole);
 //
+//            Role managerRole = new Role();
+//            managerRole.setName("MANAGER");
+//            managerRole.setDescription("inventory role");
+//            managerRole.setStatus(RoleStatus.Active);
+//            managerRole.setCreatedAt(new Date());
+//            Set<Permission> managerPermission = new HashSet<>();
+//            permissionSets.add(manageProduct);
+//            managerRole.setPermissions(managerPermission);
+//            roleRepository.save(managerRole);
 //
+//            Role inventoryRole = new Role();
+//            inventoryRole.setName("INVENTORY_STAFF");
+//            inventoryRole.setDescription("inventory role");
+//            inventoryRole.setStatus(RoleStatus.Active);
+//            inventoryRole.setCreatedAt(new Date());
+//            Set<Permission> inventoryPermissions = new HashSet<>();
+//            inventoryPermissions.add(manageWarehouse);
+//            inventoryRole.setPermissions(inventoryPermissions);
+//            roleRepository.save(inventoryRole);
 //
 //            Role adminRole = new Role();
 //            adminRole.setName("ADMIN");
 //            adminRole.setDescription("Admin role");
 //            adminRole.setStatus(RoleStatus.Active);
 //            adminRole.setCreatedAt(new Date());
-//            Set<Permission> permissionSets = new HashSet<>();
-//            permissionSets.add(manageRole);
-//            permissionSets.add(manageUser);
-//            adminRole.setPermissions(permissionSets);
+//            Set<Permission> permissionAdmin = new HashSet<>();
+//            permissionAdmin.add(manageRole);
+//            permissionAdmin.add(manageUser);
+//            adminRole.setPermissions(permissionAdmin);
 //            roleRepository.save(adminRole);
 //
 //
@@ -100,8 +132,9 @@ public class SparePartsInventoryManagementApplication {
 //            adminUser.setPhone("0915000386");
 //            adminUser.setEmail("nguyenhongkhanh@gmail.com");
 //            adminUser.setUsername("AD0001");
-//            adminUser.setPassword("Admin@123");
+//            adminUser.setPassword(passwordEncoder.encode("Admin@123"));
 //            adminUser.setRegisteredAt(new Date());
+//            adminUser.setCompany(company);
 //            adminUser.setRole(adminRole);
 //            userRepository.save(adminUser);
 //

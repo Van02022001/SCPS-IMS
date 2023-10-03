@@ -213,7 +213,7 @@ public class UserServiceImpl implements UserService {
         return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.toString(), "User updated successfully!", response));
     }
 
-    private String generateUsername(CreateAccountForm form) {
+    public String generateUsername(CreateAccountForm form) {
         String roleName = form.getRoleName();
 
         // Map roles to their desired prefixes
@@ -236,7 +236,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private String generatePassword() {
+    public String generatePassword() {
         // Your logic for generating password, for example:
         return UUID.randomUUID().toString().substring(0, 8);
     }

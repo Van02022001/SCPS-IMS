@@ -69,28 +69,29 @@ class UserRepositoryTest {
     }
     @Test
     public  void whenCheckExistsEmail_thenReturnTrue(){
-        Optional<User> existEmail = userRepository.findByEmail(users.getEmail());
-        assertThat(existEmail).isPresent();
+        List<User> existEmail = userRepository.findByEmail(users.getEmail());
+        assertThat(existEmail).isNotNull();
     }
 
     @Test
     public void whenCheckNonExistsEmail_thenReturnFalse(){
-        Optional<User>  existEmail = userRepository.findByEmail("van@gmail.com");
-        assertThat(existEmail).isNotPresent();
+        List<User>  existEmail = userRepository.findByEmail("van@gmail.com");
+        assertThat(existEmail).isNotNull();
     }
 
 
     @Test
     public  void whenCheckExistsPhone_thenReturnPresent(){
-        Optional<User> existPhone = userRepository.findByPhone(users.getPhone());
-        assertThat(existPhone).isPresent();
+        List<User> existPhone = userRepository.findByPhone(users.getPhone());
+        assertThat(existPhone).isNotNull();
 
     }
 
     @Test
     public void whenCheckNonExistsPhone_thenReturnNotPresent(){
-        Optional<User> existsPhone= userRepository.findByPhone("0935182029");
-        assertThat(existsPhone).isNotPresent();
+        List<User> existsPhone= userRepository.findByPhone("0935182029");
+
+        assertTrue(existsPhone.isEmpty());
     }
 
 

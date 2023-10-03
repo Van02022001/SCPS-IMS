@@ -1,12 +1,16 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
+import com.example.sparepartsinventorymanagement.dto.request.ChangePasswordForm;
 import com.example.sparepartsinventorymanagement.dto.request.LoginForm;
 import com.example.sparepartsinventorymanagement.dto.request.LogoutForm;
 import com.example.sparepartsinventorymanagement.dto.request.RefreshTokenRequest;
 import com.example.sparepartsinventorymanagement.dto.response.PrincipalDTO;
 import com.example.sparepartsinventorymanagement.dto.response.RefreshTokenResponse;
 import com.example.sparepartsinventorymanagement.entities.User;
+import com.example.sparepartsinventorymanagement.exception.AuthenticationsException;
+import com.example.sparepartsinventorymanagement.exception.InvalidPasswordException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
+import com.example.sparepartsinventorymanagement.exception.PasswordMismatchException;
 import com.example.sparepartsinventorymanagement.jwt.*;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
 import com.example.sparepartsinventorymanagement.repository.UserRepository;
@@ -26,9 +30,11 @@ import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -166,6 +172,24 @@ public class AuthServiceImpl implements AuthService {
         return userRepository.findByUsername(username).orElseThrow(()->
                 new NotFoundException( "User is not found"));
     }
+
+    @Override
+    public String changeUserPassword(ChangePasswordForm passwordModel) {
+        User user =getCurrentAuthenticatedUser();
+        if(user == null){
+            throw new AuthenticationsException("User not authenticated");
+
+        }
+        if(!checkIfValidOldPassword(user, passwordModel.getOldPassword())){
+            throw new InvalidPasswordException("invalid old password.");
+        }
+        if(!passwordModel.getNewPassword().equals(passwordModel.getConfirmNewPassword())){
+            throw new PasswordMismatchException("New password and confirm password do not match");
+        }
+        changePassword(user, passwordModel.getNewPassword());
+        return "Password changed successfully";
+    }
+
     private void clearRefreshTokenCache(String refreshToken) {
         boolean result = cacheManager.getCache("refreshToken").evictIfPresent(refreshToken);
         if (result) {
@@ -181,5 +205,15 @@ public class AuthServiceImpl implements AuthService {
         } else {
             log.error("Fail clear account " + username + " from cache");
         }
+    }
+    public User getCurrentAuthenticatedUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (principal instanceof UserDetails) {
+            String username = ((UserDetails) principal).getUsername();
+            return findUserByName(username); // Assuming you have this method in your repo
+        }
+
+        return null; // Return null or throw an exception if the user is not authenticated
     }
 }

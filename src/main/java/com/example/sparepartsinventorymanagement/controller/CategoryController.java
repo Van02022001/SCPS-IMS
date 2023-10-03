@@ -15,6 +15,7 @@ import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -23,12 +24,13 @@ import org.springframework.web.bind.annotation.*;
 public class CategoryController {
     @Autowired
     private CategoryServiceImpl categoryService;
-
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get list of categories")
     @GetMapping(value = "/getAllCategory", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAll() {
         return categoryService.getAll();
     }
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get category by id")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCategoryById(
@@ -37,6 +39,8 @@ public class CategoryController {
     ) {
         return categoryService.getCategoryById(id);
     }
+
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get category contains keyword by name")
     @GetMapping(value = "/getCategoriesByName", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCategoryByName(
@@ -45,6 +49,7 @@ public class CategoryController {
     ) {
         return categoryService.searchCategoryByName(keyword);
     }
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For create category")
     @PostMapping(value = "/createCategory", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createCategory(
@@ -52,6 +57,7 @@ public class CategoryController {
             ) {
         return categoryService.createCategory(form);
     }
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For update category")
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateCategory(
@@ -60,6 +66,8 @@ public class CategoryController {
     ) {
         return categoryService.updateCategory(id, form);
     }
+
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For update status of category")
     @PutMapping(value = "/changeCategoryStatus/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateCategoryStatus(
@@ -71,6 +79,7 @@ public class CategoryController {
         return categoryService.updateCategoryStatus(id, status);
     }
 
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get list of categories by status is active")
     @GetMapping(value = "/getActiveCategories", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getActiveCategories() {

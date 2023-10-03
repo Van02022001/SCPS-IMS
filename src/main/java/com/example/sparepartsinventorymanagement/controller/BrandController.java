@@ -8,11 +8,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,11 +21,15 @@ public class BrandController {
     @Autowired
     private BrandServiceImpl brandService;
 
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get list of brand")
     @GetMapping(value = "/getBrands", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAll() {
         return brandService.getAll();
+
     }
+
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For brand by id")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getBrandById(
@@ -35,7 +38,7 @@ public class BrandController {
     ) {
         return brandService.getBrandById(id);
     }
-
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For create brand")
     @PostMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createBrand(
@@ -43,7 +46,7 @@ public class BrandController {
     ) {
         return brandService.createBrand(form);
     }
-
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For update brand")
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateBrand(
@@ -54,7 +57,7 @@ public class BrandController {
         return brandService.updateBrand(id, form);
     }
 
-
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For list brands by name")
     @GetMapping(value = "/getBrandsByName", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getBrandByName(

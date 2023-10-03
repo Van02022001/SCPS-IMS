@@ -49,4 +49,8 @@ public class Warehouse {
     @JsonIgnore
     private Set<Product> products;
 
+    @OneToOne(mappedBy = "warehouse", cascade = CascadeType.ALL)
+    private User inventoryStaff;
+
+
 }

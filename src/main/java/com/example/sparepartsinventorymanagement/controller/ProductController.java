@@ -14,6 +14,7 @@ import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
@@ -23,13 +24,14 @@ import java.util.Set;
 public class ProductController {
     @Autowired
     private ProductServiceImpl productService;
-
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get list of products")
     @GetMapping(value = "/getAllProduct", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAll() {
         return productService.getAll();
     }
 
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get product by id")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCategoryById(
@@ -37,7 +39,7 @@ public class ProductController {
     ) {
         return productService.getProductById(id);
     }
-
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get products contains keyword by name")
     @GetMapping(value = "/getProductsByName", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCategoryByName(
@@ -46,13 +48,14 @@ public class ProductController {
     ) {
         return productService.findByName(keyword);
     }
-
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get product by active status")
     @GetMapping(value = "/getActiveProducts", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getActiveProducts() {
         return productService.getActiveProducts();
     }
 
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get product by category")
     @GetMapping(value = "/getProductsByCategory", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getProductsByCategory(
@@ -60,7 +63,7 @@ public class ProductController {
             @RequestParam(name = "id", required = true) Set<Long> ids){
         return productService.getProductsByCategory(ids);
     }
-
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For create product")
     @PostMapping(value = "/createProduct", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createCategory(
@@ -68,6 +71,7 @@ public class ProductController {
     ) {
         return productService.createProduct(form);
     }
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For update product")
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateCategory(
@@ -76,7 +80,7 @@ public class ProductController {
     ) {
         return productService.updateProduct(id, form);
     }
-
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For update status of product")
     @PutMapping(value = "/changeProductStatus/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateCategoryStatus(

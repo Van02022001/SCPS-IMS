@@ -1,7 +1,7 @@
 package com.example.sparepartsinventorymanagement.entities;
 
 public enum CustomerType {
-    PERSONALITY,
+    INDIVIDUAL,
 
     COMPANY
 

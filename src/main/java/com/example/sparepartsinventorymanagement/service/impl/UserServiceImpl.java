@@ -43,28 +43,32 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<?> createAccount(CreateAccountForm form) {
         try {
             System.out.println("Checking email: " + form.getEmail());
-            Optional<User> existUserByEmail = userRepository.findByEmail(form.getEmail());
-            System.out.println("Found user by email: " + existUserByEmail.isPresent());
+            List<User> existUserByEmail = userRepository.findByEmail(form.getEmail());
+            System.out.println("Found user by email: " + existUserByEmail.isEmpty());
             // Kiểm tra email
-            if (existUserByEmail.isPresent()) {
+            if (!existUserByEmail.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                         HttpStatus.BAD_REQUEST.toString(), "Email already exists.", null
                 ));
             }
             System.out.println("Checking email: " + form.getPhone());
             // Kiểm tra số điện thoại
-            Optional<User> existingUserByPhone = userRepository.findByPhone(form.getPhone());
-            System.out.println("Found user by email: " + existingUserByPhone.isPresent());
-            if (existingUserByPhone.isPresent()) {
+            List<User> existingUserByPhone = userRepository.findByPhone(form.getPhone());
+            System.out.println("Found user by email: " + existingUserByPhone.isEmpty());
+            if (!existingUserByPhone.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                         HttpStatus.BAD_REQUEST.toString(), "Phone already exists.", null
                 ));
             }
 
             // Lấy thông tin công ty
-            Company company = companyRepository.findById(1L)
-                    .orElseThrow(() -> new NotFoundException("Company is not found!"));
+            Company company = companyRepository.findCompanyByName("CÔNG TY TNHH SÀI GÒN KỸ THUẬT ĐIỀU KHIỂN");
 
+            if (company == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                        HttpStatus.NOT_FOUND.toString(), "Company not found.", null
+                ));
+            }
             // Khởi tạo thông tin user
             User user = new User();
             user.setFirstName(form.getFirstName());
@@ -78,12 +82,16 @@ public class UserServiceImpl implements UserService {
             String rawPassword = generatePassword();
             user.setPassword(passwordEncoder.encode(rawPassword));
 
-            // Lấy thông tin Role
-            Role userRole = roleRepository.findByName(form.getRoleName())
-                    .orElseThrow(() -> new RuntimeException("Role not found"));
+            if(form.getRoleName() == null){
+                List<Role> roles = roleRepository.findAll();
+                return ResponseEntity.ok(new ResponseObject(null, "Please select a role",roles));
+            } else {
+                Role role = roleRepository.findByName(form.getRoleName())
+                        .orElseThrow(() -> new NotFoundException("Role is not found"));
+                user.setRole(role);
+                user.setProfile(role.getDescription());
+            }
 
-            user.setRole(userRole);
-            user.setProfile(userRole.getDescription());
             user.setCompany(company);
 
             // Lưu thông tin user
@@ -133,16 +141,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<?> deleteUserById(Long id) {
-        int result = userRepository.deleteUserById(id);
-
-        if(result==0){
-             return  ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+        if(!userRepository.existsById(id)){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
                     HttpStatus.NOT_FOUND.toString(), "User is not found!", null
             ));
         }
-
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Delete user successfully!", null
+        userRepository.deleteById(id);
+        return ResponseEntity.ok().body(new ResponseObject(
+                HttpStatus.OK.toString(), "Deleted user successfully!", null
         ));
     }
 

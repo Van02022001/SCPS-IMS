@@ -2,6 +2,10 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.CreateAccountForm;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateUserForm;
+import com.example.sparepartsinventorymanagement.dto.response.CreateAccountDTO;
+import com.example.sparepartsinventorymanagement.dto.response.UpdateUserDTO;
+import com.example.sparepartsinventorymanagement.dto.response.UserDTO;
+import com.example.sparepartsinventorymanagement.dto.response.UserDetailDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.*;
@@ -9,6 +13,7 @@ import com.example.sparepartsinventorymanagement.service.EmailService;
 import com.example.sparepartsinventorymanagement.service.UserService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 
@@ -38,6 +44,9 @@ public class UserServiceImpl implements UserService {
     private WarehouseRepository warehouseRepository;
     @Autowired
     private PermissionRepository permissionRepository;
+
+    @Autowired
+    private ModelMapper modelMapper;
 
     @Override
     public ResponseEntity<?> createAccount(CreateAccountForm form) {
@@ -95,13 +104,17 @@ public class UserServiceImpl implements UserService {
             user.setCompany(company);
 
             // Lưu thông tin user
-            userRepository.save(user);
+            User saveUser = userRepository.save(user);
 
             // Gửi email thông tin tài khoản
             emailService.sendAccountDetail(user.getEmail(), user.getUsername(), rawPassword);
 
+
+            CreateAccountDTO accountDTO = modelMapper.map(saveUser, CreateAccountDTO.class);
+            accountDTO.setRoleName(saveUser.getRole().getName());
+
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Account created successfully", user
+                    HttpStatus.OK.toString(), "Account created successfully", accountDTO
             ));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
@@ -114,9 +127,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> getAllUsers() {
         List<User> users =userRepository.findAll();
-        if(!users.isEmpty()){
+        List<UserDTO>  response = users.stream()
+                .map(user -> modelMapper.map(user, UserDTO.class))
+                .collect(Collectors.toList());
+
+
+
+        if(!response.isEmpty()){
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Get list users successfully!", users
+                    HttpStatus.OK.toString(), "Get list users successfully!", response
             ));
         }
 
@@ -128,13 +147,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> getUserById(Long id) {
         User user = userRepository.getUserById(id );
-        if(user == null){
+
+        UserDetailDTO response = modelMapper.map(user, UserDetailDTO.class);
+        response.setRolName(user.getRole().getName());
+        if(response == null){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
                HttpStatus.NOT_FOUND.toString(), "User is not founded!", null
             ));
         }
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Get user successfully!", user
+                HttpStatus.OK.toString(), "Get user successfully!", response
         ));
 
     }
@@ -183,12 +205,15 @@ public class UserServiceImpl implements UserService {
                     .orElseThrow(() -> new NotFoundException("Warehouse is not found"));
             user.setWarehouse(warehouse);
         }
-        userRepository.save(user);
+        User updateUser =userRepository.save(user);
+        UpdateUserDTO response = modelMapper.map(updateUser, UpdateUserDTO.class);
+        response.setPermissions(updateUser.getRole().getPermissions());
+        response.setWarehouseId(updateUser.getWarehouse().getId());
 
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.toString(), "User updated successfully!", user));
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.toString(), "User updated successfully!", response));
     }
 
-    private String generateUsername(CreateAccountForm form) {
+    public String generateUsername(CreateAccountForm form) {
         String roleName = form.getRoleName();
 
         // Map roles to their desired prefixes
@@ -211,7 +236,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private String generatePassword() {
+    public String generatePassword() {
         // Your logic for generating password, for example:
         return UUID.randomUUID().toString().substring(0, 8);
     }

@@ -2,10 +2,12 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.CreateSupplierForm;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateSupplierForm;
+import com.example.sparepartsinventorymanagement.dto.response.SuppliersDTO;
 import com.example.sparepartsinventorymanagement.entities.Supplier;
 import com.example.sparepartsinventorymanagement.repository.SupplierRepository;
 import com.example.sparepartsinventorymanagement.service.SupplierService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,11 +16,14 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class SupplierServiceImpl implements SupplierService {
     @Autowired
     private SupplierRepository supplierRepository;
+    @Autowired
+    private ModelMapper modelMapper;
 
     @Override
     public ResponseEntity<?> createSupplier(CreateSupplierForm form) {
@@ -30,19 +35,26 @@ public class SupplierServiceImpl implements SupplierService {
                 .taxCode(form.getTaxCode())
                 .address(form.getAddress())
                 .createdAt(new Date())
+                .updatedAt(new Date())
                 .build();
-        supplierRepository.save(supplier);
+        Supplier createSupplier = supplierRepository.save(supplier);
+        SuppliersDTO response = modelMapper.map(createSupplier, SuppliersDTO.class);
+
         return ResponseEntity.ok().body(new ResponseObject(
-                HttpStatus.CREATED.toString(), "Create supplier successfully!", supplier
+                HttpStatus.CREATED.toString(), "Create supplier successfully!", response
         ));
     }
 
     @Override
     public ResponseEntity<?> getAllSuppliers() {
         List<Supplier> suppliers = supplierRepository.findAll();
-        if(!suppliers.isEmpty()){
+
+        List<SuppliersDTO> response = suppliers.stream()
+                .map(supplier -> modelMapper.map(suppliers, SuppliersDTO.class))
+                .collect(Collectors.toList());
+        if(!response.isEmpty()){
             return ResponseEntity.ok().body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Get list Supplier successfully!", suppliers
+                    HttpStatus.OK.toString(), "Get list Supplier successfully!", response
             ));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
@@ -53,19 +65,24 @@ public class SupplierServiceImpl implements SupplierService {
     @Override
     public ResponseEntity<?> getSupplierById(Long id) {
         Optional<Supplier> supplierOpt = supplierRepository.findById(id);
-        if(!supplierOpt.isPresent()){
+
+        List<SuppliersDTO> response = supplierOpt.stream()
+                .map(supplier -> modelMapper.map(supplierOpt, SuppliersDTO.class))
+                .collect(Collectors.toList());
+        if(!response.isEmpty()){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                    HttpStatus.NOT_FOUND.toString(), "Customer is not found!", supplierOpt
+                    HttpStatus.NOT_FOUND.toString(), "Customer is not found!", null
             ));
         }
         return ResponseEntity.ok().body(new ResponseObject(
-                HttpStatus.OK.toString(), "Get supplier successfully!", supplierOpt.get()
+                HttpStatus.OK.toString(), "Get supplier successfully!", response
         ));
     }
 
     @Override
     public ResponseEntity<?> updateSupplier(Long id, UpdateSupplierForm form) {
         Optional<Supplier> supplierOpt = supplierRepository.findById(id);
+
         if(supplierOpt.isEmpty()){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
                     HttpStatus.NOT_FOUND.toString(), "Supplier is not found!", null
@@ -87,10 +104,10 @@ public class SupplierServiceImpl implements SupplierService {
                 .updatedAt(new Date())
                 .build();
 
-        supplierRepository.save(updatedSupplier);
-
+        Supplier supplier = supplierRepository.save(updatedSupplier);
+        SuppliersDTO respone = modelMapper.map(supplier, SuppliersDTO.class);
         return ResponseEntity.ok().body(new ResponseObject(
-                HttpStatus.OK.toString(), "Updated supplier successfully!", updatedSupplier
+                HttpStatus.OK.toString(), "Updated supplier successfully!", respone
         ));
     }
 

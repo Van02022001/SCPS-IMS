@@ -26,7 +26,7 @@ public class ProductController {
     private ProductServiceImpl productService;
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get list of products")
-    @GetMapping(value = "/getAllProduct", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAll() {
         return productService.getAll();
     }
@@ -41,7 +41,7 @@ public class ProductController {
     }
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get products contains keyword by name")
-    @GetMapping(value = "/getProductsByName", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCategoryByName(
             @Parameter(description = "enter keyword to search", required = true)
             @NotEmpty @NotBlank String keyword
@@ -50,14 +50,14 @@ public class ProductController {
     }
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get product by active status")
-    @GetMapping(value = "/getActiveProducts", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/active-products", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getActiveProducts() {
         return productService.getActiveProducts();
     }
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get product by category")
-    @GetMapping(value = "/getProductsByCategory", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/products-by-categories", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getProductsByCategory(
             @Parameter(description = "Filter with category")
             @RequestParam(name = "id", required = true) Set<Long> ids){
@@ -65,7 +65,7 @@ public class ProductController {
     }
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For create product")
-    @PostMapping(value = "/createProduct", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createCategory(
             @Valid @RequestBody ProductFormRequest form
     ) {
@@ -82,7 +82,7 @@ public class ProductController {
     }
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For update status of product")
-    @PutMapping(value = "/changeProductStatus/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/product-status/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateCategoryStatus(
             @Parameter(description = "enter product id", required = true, example = "1")
             @NotNull @NotEmpty @PathVariable(name = "id") Long id,

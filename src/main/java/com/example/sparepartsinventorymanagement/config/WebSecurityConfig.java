@@ -33,7 +33,9 @@ public class WebSecurityConfig {
             "/api/v1/auth/authentication",
             "/api/v1/units-measurement/**",
             "/api/v1/origins/",
-            "/api/v1/units", "/api/v1/units/search", "/api/v1/origins", "/api/v1/origins/search"
+            "/api/v1/units", "/api/v1/units/search", "/api/v1/origins", "/api/v1/origins/search",
+            "/api/v1/products", "/api/v1/products/search", "/api/v1/products/products-by-categories",
+            "/api/v1/products/active-products"
 
     };
     @Autowired

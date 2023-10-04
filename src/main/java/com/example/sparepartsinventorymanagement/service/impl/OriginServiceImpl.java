@@ -2,6 +2,7 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.OriginFormRequest;
 import com.example.sparepartsinventorymanagement.entities.Origin;
+import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.OriginRepository;
 import com.example.sparepartsinventorymanagement.service.OriginService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
@@ -57,12 +58,29 @@ public class OriginServiceImpl implements OriginService {
 
     @Override
     public ResponseEntity<?> updateOrigin(Long id, OriginFormRequest form) {
-        return null;
+        Origin origin = originRepository.findById(id).orElseThrow(
+                ()-> new NotFoundException("Origin not found")
+        );
+        origin.setName(form.getName());
+        originRepository.save(origin);
+        return ResponseEntity.status(HttpStatus.OK).body( new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Update origin successfully.",
+                origin
+        ));
     }
 
     @Override
     public ResponseEntity<?> deleteOrigin(Long id) {
-        return null;
+        Origin origin = originRepository.findById(id).orElseThrow(
+                ()-> new NotFoundException("Origin not found")
+        );
+        originRepository.delete(origin);
+        return ResponseEntity.status(HttpStatus.OK).body( new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Delete origin successfully.",
+                null
+        ));
     }
 
     @Override

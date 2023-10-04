@@ -34,22 +34,4 @@ public class UnitMeasurementServiceImpl implements UnitMeasurementService {
                 unitMeasurements
         ));
     }
-
-    @Override
-    public ResponseEntity<?> findByName(String keyword) {
-        List<UnitMeasurement> unitMeasurements = repository.findByNameContaining(keyword);
-
-        if(unitMeasurements.isEmpty()){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body( new ResponseObject(
-                    HttpStatus.NOT_FOUND.toString(),
-                    "List is empty",
-                    null
-            ));
-        }
-        return ResponseEntity.status(HttpStatus.OK).body( new ResponseObject(
-                HttpStatus.OK.toString(),
-                "Get list Unit Measurement successfully.",
-                unitMeasurements
-        ));
-    }
 }

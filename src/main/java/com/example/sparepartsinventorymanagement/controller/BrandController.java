@@ -40,7 +40,7 @@ public class BrandController {
     }
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For create brand")
-    @PostMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createBrand(
             @Valid @RequestBody CreateBrandFrom form
     ) {

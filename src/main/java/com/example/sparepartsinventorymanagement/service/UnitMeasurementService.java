@@ -4,5 +4,4 @@ import org.springframework.http.ResponseEntity;
 
 public interface UnitMeasurementService {
     ResponseEntity<?> getAll();
-    ResponseEntity<?> findByName(String keyword);
 }

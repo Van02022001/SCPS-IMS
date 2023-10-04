@@ -20,23 +20,23 @@ public class SparePartsInventoryManagementApplication {
         SpringApplication.run(SparePartsInventoryManagementApplication.class, args);
     }
 
-//    @Autowired
-//    private UserRepository userRepository;
-//
-//    @Autowired
-//    private RoleRepository roleRepository;
-//
-//    @Autowired
-//    private PermissionRepository permissionRepository;
-//
-//    @Autowired
-//    private CompanyRepository companyRepository;
-//    @Autowired
-//    private PasswordEncoder passwordEncoder;
-//    @Bean
-//    public CommandLineRunner initData(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository, CompanyRepository companyRepository, PasswordEncoder passwordEncoder,
-//                                      WarehouseRepository warehouseRepository){
-//        return (args) -> {
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private PermissionRepository permissionRepository;
+
+    @Autowired
+    private CompanyRepository companyRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Bean
+    public CommandLineRunner initData(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository, CompanyRepository companyRepository, PasswordEncoder passwordEncoder,
+                                      WarehouseRepository warehouseRepository){
+        return (args) -> {
 //            Company company = new Company();
 //            company.setName("CÔNG TY TNHH SÀI GÒN KỸ THUẬT ĐIỀU KHIỂN");
 //            company.setEmail("phutungbombetongsaigon@gmail.com");
@@ -128,22 +128,6 @@ public class SparePartsInventoryManagementApplication {
 //            roleRepository.save(inventoryRole);
 //
 //
-//            Permission manageUser = new Permission();
-//            manageUser.setName("MANAGE_USER");
-//            manageUser.setDescription("Manage user in system");
-//            manageUser.setStatus(PermissionStatus.Active);
-//            manageUser.setCreatedAt(new Date());
-//            permissionRepository.save(manageUser);
-//
-//            Permission manageRole = new Permission();
-//            manageRole.setName("MANAGE_ROLE");
-//            manageRole.setDescription("Manage role in system");
-//            manageRole.setStatus(PermissionStatus.Active);
-//            manageRole.setCreatedAt(new Date());
-//            permissionRepository.save(manageRole);
-//
-//
-//
 //
 //
 //            Role adminRole = new Role();
@@ -170,9 +154,9 @@ public class SparePartsInventoryManagementApplication {
 //            adminUser.setCompany(company);
 //            adminUser.setRole(adminRole);
 //            userRepository.save(adminUser);
-//
-//
-//        };
-//    }
+
+
+        };
+    }
 
 }

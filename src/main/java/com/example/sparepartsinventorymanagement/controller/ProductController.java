@@ -1,6 +1,6 @@
 package com.example.sparepartsinventorymanagement.controller;
 
-import com.example.sparepartsinventorymanagement.dto.request.CreateProductForm;
+import com.example.sparepartsinventorymanagement.dto.request.ProductFormRequest;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateProductForm;
 import com.example.sparepartsinventorymanagement.entities.ProductStatus;
 import com.example.sparepartsinventorymanagement.service.impl.ProductServiceImpl;
@@ -67,7 +67,7 @@ public class ProductController {
     @Operation(summary = "For create product")
     @PostMapping(value = "/createProduct", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createCategory(
-            @Valid @RequestBody CreateProductForm form
+            @Valid @RequestBody ProductFormRequest form
     ) {
         return productService.createProduct(form);
     }
@@ -76,7 +76,7 @@ public class ProductController {
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateCategory(
             @Parameter(description = "enter product id", required = true, example = "1") @NotNull @PathVariable(name = "id") Long id,
-            @Valid @RequestBody UpdateProductForm form
+            @Valid @RequestBody ProductFormRequest form
     ) {
         return productService.updateProduct(id, form);
     }

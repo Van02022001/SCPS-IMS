@@ -21,7 +21,7 @@ public class BrandServiceImpl implements BrandService {
     @Autowired
     private BrandRepository brandRepository;
     @Override
-    public ResponseEntity getAll() {
+    public ResponseEntity<?> getAll() {
         List<Brand> brands = brandRepository.findAll();
         if(brands.size() > 0){
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
@@ -34,7 +34,7 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
-    public ResponseEntity getBrandById(Long id) {
+    public ResponseEntity<?> getBrandById(Long id) {
         Brand brand = brandRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Brand not found.")
         );
@@ -44,7 +44,7 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
-    public ResponseEntity createBrand(CreateBrandFrom from) {
+    public ResponseEntity<?> createBrand(CreateBrandFrom from) {
         if(brandRepository.existsByName(from.getName())){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                     HttpStatus.BAD_REQUEST.toString(),"Name of brand already exists.", null
@@ -60,7 +60,7 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
-    public ResponseEntity updateBrand(Long id, UpdateBrandFrom from) {
+    public ResponseEntity<?> updateBrand(Long id, UpdateBrandFrom from) {
         Brand brand = brandRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Brand not found.")
         );
@@ -74,7 +74,7 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
-    public ResponseEntity getBrandByName(String name) {
+    public ResponseEntity<?> getBrandByName(String name) {
         List<Brand> brands = brandRepository.findByNameContaining(name);
         if(brands.size() > 0){
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
@@ -85,8 +85,5 @@ public class BrandServiceImpl implements BrandService {
                 HttpStatus.NOT_FOUND.toString(),"List empty", null
         ));
     }
-
-
-
 
 }

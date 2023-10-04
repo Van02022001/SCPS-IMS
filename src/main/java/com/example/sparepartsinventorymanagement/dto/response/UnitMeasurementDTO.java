@@ -7,9 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class WarehouseDTO {
-
+public class UnitMeasurementDTO {
     private Long id;
-
     private String name;
 }

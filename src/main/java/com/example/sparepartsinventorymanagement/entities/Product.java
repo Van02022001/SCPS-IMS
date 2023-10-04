@@ -84,5 +84,5 @@ public class Product {
             joinColumns = @JoinColumn(name = "product_id"), // Column in the join table that references Product
             inverseJoinColumns = @JoinColumn(name = "origin_id") // Column in the join table that references Origin
     )
-    private List<Origin> origins;
+    private Set<Origin> origins;
 }

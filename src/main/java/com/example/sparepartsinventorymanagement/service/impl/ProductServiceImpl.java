@@ -1,18 +1,15 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
-import com.example.sparepartsinventorymanagement.dto.request.CreateProductForm;
+import com.example.sparepartsinventorymanagement.dto.request.ProductFormRequest;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateProductForm;
 import com.example.sparepartsinventorymanagement.dto.response.ProductDTO;
-import com.example.sparepartsinventorymanagement.entities.Category;
-import com.example.sparepartsinventorymanagement.entities.CategoryStatus;
-import com.example.sparepartsinventorymanagement.entities.Product;
-import com.example.sparepartsinventorymanagement.entities.ProductStatus;
+import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
-import com.example.sparepartsinventorymanagement.repository.CategoryRepository;
-import com.example.sparepartsinventorymanagement.repository.ProductRepository;
+import com.example.sparepartsinventorymanagement.repository.*;
 import com.example.sparepartsinventorymanagement.service.ProductService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,23 +21,26 @@ import java.util.*;
 public class ProductServiceImpl implements ProductService {
 
     @Autowired
+    private UnitRepository unitRepository;
+    @Autowired
+    private SizeRepository sizeRepository;
+    @Autowired
+    private UnitMeasurementRepository unitMeasurementRepository;
+    @Autowired
+    private  OriginRepository originRepository;
+    @Autowired
     private ProductRepository productRepository;
     @Autowired
     private CategoryRepository categoryRepository;
 
     @Override
-    public ResponseEntity getAll() {
+    public ResponseEntity<?> getAll() {
         List<Product> products = productRepository.findAll();
         if(products.size() > 0){
 
             ModelMapper mapper = new ModelMapper();
-            List<ProductDTO> res = new ArrayList<>();
-            for (Product product : products
-            ) {
-                ProductDTO p = mapper.map(product, ProductDTO.class);
-                res.add(p);
-            }
-
+            List<ProductDTO> res = mapper.map(products, new TypeToken<List<ProductDTO>>() {
+            }.getType());
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                HttpStatus.OK.toString(), "Get list product successfully.", res
             ));
@@ -68,13 +68,8 @@ public class ProductServiceImpl implements ProductService {
         List<Product> products = productRepository.findByNameContaining(name);
         if(products.size() > 0){
             ModelMapper mapper = new ModelMapper();
-            List<ProductDTO> res = new ArrayList<>();
-            for (Product product : products
-            ) {
-                ProductDTO p = mapper.map(product, ProductDTO.class);
-                res.add(p);
-            }
-
+            List<ProductDTO> res = mapper.map(products, new TypeToken<List<ProductDTO>>() {
+            }.getType());
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                     HttpStatus.OK.toString(), "Get list product by keyword " + name +" successfully.", res
             ));
@@ -89,12 +84,8 @@ public class ProductServiceImpl implements ProductService {
         List<Product> products = productRepository.findByStatus(ProductStatus.Active);
         if(products.size() > 0){
             ModelMapper mapper = new ModelMapper();
-            List<ProductDTO> res = new ArrayList<>();
-            for (Product product : products
-            ) {
-                ProductDTO p = mapper.map(product, ProductDTO.class);
-                res.add(p);
-            }
+            List<ProductDTO> res = mapper.map(products, new TypeToken<List<ProductDTO>>() {
+            }.getType());
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                     HttpStatus.OK.toString(), "Get list active product successfully.", res
             ));
@@ -118,12 +109,8 @@ public class ProductServiceImpl implements ProductService {
         List<Product> products = productRepository.findByCategoriesIn(categories);
         if(products.size() > 0){
             ModelMapper mapper = new ModelMapper();
-            List<ProductDTO> res = new ArrayList<>();
-            for (Product product : products
-            ) {
-                ProductDTO p = mapper.map(product, ProductDTO.class);
-                res.add(p);
-            }
+            List<ProductDTO> res = mapper.map(products, new TypeToken<List<ProductDTO>>() {
+            }.getType());
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                     HttpStatus.OK.toString(), "Get list product by category successfully.", res
             ));
@@ -134,10 +121,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity createProduct(CreateProductForm form) {
+    public ResponseEntity createProduct(ProductFormRequest form) {
 
         Set<Category> categories = new HashSet<>();
-        for (Long id : form.getCategoryIds()
+        for (Long id : form.getCategories_id()
              ) {
             Category category = categoryRepository.findById(id).orElseThrow(
                     ()-> new NotFoundException("Category not found")
@@ -155,11 +142,41 @@ public class ProductServiceImpl implements ProductService {
             ));
         }
 
+        //check origin
+        Set<Origin> origins = new HashSet<>();
+        for (Long id : form.getOrigins_id()
+        ) {
+            Origin origin = originRepository.findById(id).orElseThrow(
+                    ()-> new NotFoundException("Origin not found")
+            );
+            origins.add(origin);
+        }
+        if(origins.size() < 1){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(), "Product must have at least one origin", null
+            ));
+        }
+
         if(productRepository.existsByName(form.getName())){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                HttpStatus.BAD_REQUEST.toString(), "Product name already exists", null
             ));
         }
+        //check unit
+        Unit unit = unitRepository.findById(form.getUnit_id()).orElseThrow(
+                ()-> new NotFoundException("Unit not found")
+        );
+        //check unit of measurement id
+        UnitMeasurement unitMeasurement = unitMeasurementRepository.findById(form.getUnit_mea_id()).orElseThrow(
+                ()-> new NotFoundException("Unit of measurement not found")
+        );
+        Size size = Size.builder()
+                .height(form.getHeight())
+                .length(form.getLength())
+                .width(form.getWidth())
+                .unitMeasurement(unitMeasurement)
+                .build();
+        sizeRepository.save(size);
         ModelMapper mapper =  new ModelMapper();
         Product product =  mapper.map(form, Product.class);
         Date currentDate = new Date();
@@ -167,6 +184,8 @@ public class ProductServiceImpl implements ProductService {
         product.setUpdatedAt(currentDate);
         product.setCategories(categories);
         product.setStatus(ProductStatus.Active);
+        product.setOrigins(origins);
+        product.setSize(size);
         productRepository.save(product);
 
         ProductDTO res = mapper.map(product, ProductDTO.class);
@@ -176,11 +195,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity updateProduct(Long id, UpdateProductForm form) {
+    public ResponseEntity updateProduct(Long id, ProductFormRequest form) {
         Set<Category> categories = new HashSet<>();
-        for (Long cateId : form.getCategoryIds()
+
+        Product product = productRepository.findById(id).orElseThrow(
+                ()-> new NotFoundException("Product not found")
+        );
+        for (Long ct_di : form.getCategories_id()
         ) {
-            Category category = categoryRepository.findById(cateId).orElseThrow(
+            Category category = categoryRepository.findById(ct_di).orElseThrow(
                     ()-> new NotFoundException("Category not found")
             );
             if(category.getStatus() == CategoryStatus.Inactive){
@@ -195,14 +218,48 @@ public class ProductServiceImpl implements ProductService {
                     HttpStatus.BAD_REQUEST.toString(), "Product must have at least one category", null
             ));
         }
-        Product product = productRepository.findById(id).orElseThrow(
-                ()-> new NotFoundException("Product not found")
+
+        //check origin
+        Set<Origin> origins = new HashSet<>();
+        for (Long or_id : form.getOrigins_id()
+        ) {
+            Origin origin = originRepository.findById(or_id).orElseThrow(
+                    ()-> new NotFoundException("Origin not found")
+            );
+            origins.add(origin);
+        }
+        if(origins.size() < 1){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(), "Product must have at least one origin", null
+            ));
+        }
+
+        if(productRepository.existsByName(form.getName())){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(), "Product name already exists", null
+            ));
+        }
+        //check unit
+        Unit unit = unitRepository.findById(form.getUnit_id()).orElseThrow(
+                ()-> new NotFoundException("Unit not found")
         );
+        //check unit of measurement id
+        UnitMeasurement unitMeasurement = unitMeasurementRepository.findById(form.getUnit_mea_id()).orElseThrow(
+                ()-> new NotFoundException("Unit of measurement not found")
+        );
+        Size size = sizeRepository.findByProduct(product).orElseThrow(
+                ()-> new NotFoundException("Size of product dont ex                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ist.")
+        );
+
         product.setName(form.getName());
         product.setDescription(form.getDescription());
         product.setCategories(categories);
         Date currentDate = new Date();
         product.setUpdatedAt(currentDate);
+        product.setOrigins(origins);
+        product.getSize().setHeight(form.getHeight());
+        product.getSize().setWidth(form.getWidth());
+        product.getSize().setLength(form.getLength());
         productRepository.save(product);
         ModelMapper mapper = new ModelMapper();
         ProductDTO res = mapper.map(product, ProductDTO.class);

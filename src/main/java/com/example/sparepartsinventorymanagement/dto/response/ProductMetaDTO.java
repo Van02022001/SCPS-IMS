@@ -7,9 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class WarehouseDTO {
-
+public class ProductMetaDTO {
     private Long id;
 
-    private String name;
+    private String key;
+
+    private String description;
 }

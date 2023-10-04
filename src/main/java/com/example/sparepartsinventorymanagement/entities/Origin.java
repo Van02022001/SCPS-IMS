@@ -1,5 +1,6 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,7 @@ public class Origin {
     private String name;
 
     @ManyToMany(mappedBy = "origins")
+    @JsonIgnore
     private List<Product> products;
 
 }

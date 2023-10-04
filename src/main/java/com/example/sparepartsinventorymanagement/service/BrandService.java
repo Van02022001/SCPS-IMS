@@ -5,10 +5,10 @@ import com.example.sparepartsinventorymanagement.dto.request.UpdateBrandFrom;
 import org.springframework.http.ResponseEntity;
 
 public interface BrandService {
-    ResponseEntity getAll();
-    ResponseEntity getBrandById(Long id);
-    ResponseEntity createBrand(CreateBrandFrom from);
-    ResponseEntity updateBrand(Long id, UpdateBrandFrom from);
-    ResponseEntity getBrandByName(String name);
+    ResponseEntity<?> getAll();
+    ResponseEntity<?> getBrandById(Long id);
+    ResponseEntity<?> createBrand(CreateBrandFrom from);
+    ResponseEntity<?> updateBrand(Long id, UpdateBrandFrom from);
+    ResponseEntity<?> getBrandByName(String name);
 
 }

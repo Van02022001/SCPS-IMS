@@ -1,8 +1,6 @@
 package com.example.sparepartsinventorymanagement.dto.response;
 
-import com.example.sparepartsinventorymanagement.entities.Category;
-import com.example.sparepartsinventorymanagement.entities.ProductStatus;
-import com.example.sparepartsinventorymanagement.entities.Warehouse;
+import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
@@ -12,6 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -34,7 +33,13 @@ public class ProductDTO {
 
     private ProductStatus status;
 
+    private UnitDTO unit;
+
     private Set<WarehouseDTO> warehouses;
 
     private Set<CategoryDTO> categories;
+
+    private Set<OriginDTO> origins;
+
+    private List<ProductMetaDTO> productMetas;
 }

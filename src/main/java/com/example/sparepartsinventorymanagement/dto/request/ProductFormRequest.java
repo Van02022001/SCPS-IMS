@@ -2,7 +2,7 @@ package com.example.sparepartsinventorymanagement.dto.request;
 
 
 import jakarta.validation.constraints.*;
-import io.swagger.v3.oas.annotations.media.Schema;;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,7 +20,7 @@ public class ProductFormRequest {
     @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")
     private String name;
 
-    @Schema(description = "Product description")
+    @Schema(description = "Product description", example = "Mô tả về product")
     @NotBlank(message = "Description not null")
     @NotEmpty(message = "Required field")
     @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")

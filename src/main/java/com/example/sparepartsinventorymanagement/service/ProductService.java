@@ -1,7 +1,6 @@
 package com.example.sparepartsinventorymanagement.service;
 
 import com.example.sparepartsinventorymanagement.dto.request.ProductFormRequest;
-import com.example.sparepartsinventorymanagement.dto.request.UpdateProductForm;
 import com.example.sparepartsinventorymanagement.entities.ProductStatus;
 import org.springframework.http.ResponseEntity;
 

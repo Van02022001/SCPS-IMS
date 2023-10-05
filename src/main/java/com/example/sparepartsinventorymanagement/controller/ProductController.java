@@ -1,7 +1,6 @@
 package com.example.sparepartsinventorymanagement.controller;
 
 import com.example.sparepartsinventorymanagement.dto.request.ProductFormRequest;
-import com.example.sparepartsinventorymanagement.dto.request.UpdateProductForm;
 import com.example.sparepartsinventorymanagement.entities.ProductStatus;
 import com.example.sparepartsinventorymanagement.service.impl.ProductServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;

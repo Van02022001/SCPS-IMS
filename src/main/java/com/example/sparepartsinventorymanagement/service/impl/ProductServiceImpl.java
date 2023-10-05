@@ -1,7 +1,6 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.ProductFormRequest;
-import com.example.sparepartsinventorymanagement.dto.request.UpdateProductForm;
 import com.example.sparepartsinventorymanagement.dto.response.ProductDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;

@@ -26,7 +26,7 @@ public class CategoryController {
     private CategoryServiceImpl categoryService;
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get list of categories")
-    @GetMapping(value = "/getAllCategory", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAll() {
         return categoryService.getAll();
     }
@@ -42,7 +42,7 @@ public class CategoryController {
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get category contains keyword by name")
-    @GetMapping(value = "/getCategoriesByName", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCategoryByName(
             @Parameter(description = "enter keyword to search", required = true)
             @NotEmpty @NotBlank String keyword
@@ -51,7 +51,7 @@ public class CategoryController {
     }
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For create category")
-    @PostMapping(value = "/createCategory", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createCategory(
             @Valid @RequestBody CreateCategoryForm form
             ) {
@@ -69,7 +69,7 @@ public class CategoryController {
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For update status of category")
-    @PutMapping(value = "/changeCategoryStatus/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/category-status/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateCategoryStatus(
             @Parameter(description = "enter category id", required = true, example = "1")
             @NotNull @NotEmpty @PathVariable(name = "id") Long id,
@@ -81,7 +81,7 @@ public class CategoryController {
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get list of categories by status is active")
-    @GetMapping(value = "/getActiveCategories", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/active-categories", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getActiveCategories() {
         return categoryService.getActiveCategories();
     }

@@ -42,4 +42,6 @@ public class ProductDTO {
     private Set<OriginDTO> origins;
 
     private List<ProductMetaDTO> productMetas;
+
+    private SizeDTO size;
 }

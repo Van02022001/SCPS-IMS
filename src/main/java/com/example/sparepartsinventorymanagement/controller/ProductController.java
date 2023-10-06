@@ -23,14 +23,13 @@ import java.util.Set;
 public class ProductController {
     @Autowired
     private ProductServiceImpl productService;
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+
     @Operation(summary = "For get list of products")
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAll() {
         return productService.getAll();
     }
 
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get product by id")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCategoryById(
@@ -38,7 +37,6 @@ public class ProductController {
     ) {
         return productService.getProductById(id);
     }
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get products contains keyword by name")
     @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCategoryByName(
@@ -47,14 +45,12 @@ public class ProductController {
     ) {
         return productService.findByName(keyword);
     }
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get product by active status")
     @GetMapping(value = "/active-products", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getActiveProducts() {
         return productService.getActiveProducts();
     }
 
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get product by category")
     @GetMapping(value = "/products-by-categories", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getProductsByCategory(

@@ -49,15 +49,6 @@ public class Product {
     @Column(name="status", nullable = false)
     private ProductStatus status;
 
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JsonIgnore
-    @JoinTable(name = "warehouse_product",
-            joinColumns = @JoinColumn(name = "product_id"),
-            inverseJoinColumns = @JoinColumn(name = "warehouse_id")
-    )
-    private Set<Warehouse> warehouses;
-
     @ManyToMany(fetch = FetchType.LAZY)
     @JsonIgnore
     @JoinTable(name = "product_category",
@@ -69,7 +60,6 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private List<ProductMeta> productMetas;
 
-
     @ManyToOne
     @JoinColumn(name = "unit_id")
     private Unit unit;
@@ -77,12 +67,4 @@ public class Product {
     @OneToOne(mappedBy = "product")
     private Size size;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JsonIgnore
-    @JoinTable(
-            name = "product_origin", // Name of the join table
-            joinColumns = @JoinColumn(name = "product_id"), // Column in the join table that references Product
-            inverseJoinColumns = @JoinColumn(name = "origin_id") // Column in the join table that references Origin
-    )
-    private Set<Origin> origins;
 }

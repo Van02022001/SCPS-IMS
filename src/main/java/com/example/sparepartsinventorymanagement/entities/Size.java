@@ -17,14 +17,17 @@ public class Size {
     @Column(name="size_id")
     private Long id;
 
-    @Column(name = "length", nullable = false)
+    @Column(name = "length")
     private float length;
 
-    @Column(name = "width", nullable = false)
+    @Column(name = "width")
     private float width;
 
-    @Column(name = "height", nullable = false)
+    @Column(name = "height")
     private float height;
+
+    @Column(name = "diameter")
+    private float diameter;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "product_id")

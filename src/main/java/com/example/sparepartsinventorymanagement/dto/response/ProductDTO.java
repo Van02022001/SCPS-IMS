@@ -35,11 +35,7 @@ public class ProductDTO {
 
     private UnitDTO unit;
 
-    private Set<WarehouseDTO> warehouses;
-
     private Set<CategoryDTO> categories;
-
-    private Set<OriginDTO> origins;
 
     private List<ProductMetaDTO> productMetas;
 

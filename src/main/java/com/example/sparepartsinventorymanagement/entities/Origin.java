@@ -22,8 +22,8 @@ public class Origin {
     @Column(name = "name", length = 50)
     private String name;
 
-    @ManyToMany(mappedBy = "origins")
+    @OneToMany(mappedBy = "origin")
     @JsonIgnore
-    private List<Product> products;
+    private List<Item> items;
 
 }

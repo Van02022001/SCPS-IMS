@@ -22,7 +22,8 @@ public class Item {
     @Column(name="item_id")
     private Long id;
 
-
+    @Column(name="code")
+    private String code;
 
     @Column(name = "cost_price", nullable = false)
     private double costPrice;
@@ -43,13 +44,14 @@ public class Item {
     @Column(name = "defective", nullable = false)
     private int defective;
 
-
-
     @Column(name = "created_by", nullable = false)
     private Long createdBy;
 
     @Column(name = "updated_by")
     private Long updatedBy;
+
+    @Column(name="status", nullable = false)
+    private ProductStatus status;
 
     @Column(name = "created_at", nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
@@ -70,20 +72,18 @@ public class Item {
     @JoinColumn(name = "brand_id", nullable = false)
     private Brand brand;
 
-
     @OneToMany(mappedBy = "item")
     private List<Inventory> inventoryList;
-
-    @ManyToOne
-    @JoinColumn(name="warehouse_id", nullable = false)
-    private Warehouse warehouse;
-
 
     @ManyToMany(mappedBy = "items")
     private List<Supplier> suppliers;
 
+    @ManyToOne
+    @JoinColumn(name = "origin_id", nullable = false)
+    private Origin origin;
 
-
+    @OneToOne(mappedBy = "item")
+    private Location location;
 
     // Getters and setters (omitted for brevity)
 }

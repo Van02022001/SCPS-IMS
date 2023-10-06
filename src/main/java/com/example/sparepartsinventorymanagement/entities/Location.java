@@ -3,7 +3,6 @@ package com.example.sparepartsinventorymanagement.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -21,9 +20,11 @@ public class Location {
     @Column(name = "location", length = 50)
     private String location;
 
-
-
     @ManyToOne
     @JoinColumn(name = "warehouse_id") // Foreign key column pointing to Warehouse
     private Warehouse warehouse;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "item_id")
+    private Item item;
 }

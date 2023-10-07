@@ -1,13 +1,12 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
-import com.example.sparepartsinventorymanagement.dto.request.ItemRepository;
 import com.example.sparepartsinventorymanagement.dto.request.WarehouseFormRequest;
-import com.example.sparepartsinventorymanagement.dto.response.PrincipalDTO;
-import com.example.sparepartsinventorymanagement.dto.response.ProductDTO;
 import com.example.sparepartsinventorymanagement.dto.response.WarehouseDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
+import com.example.sparepartsinventorymanagement.repository.ItemRepository;
+import com.example.sparepartsinventorymanagement.repository.UserRepository;
 import com.example.sparepartsinventorymanagement.repository.WarehouseRepository;
 import com.example.sparepartsinventorymanagement.service.WarehouseService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
@@ -29,6 +28,9 @@ public class WarehouseServiceImpl implements WarehouseService {
     private WarehouseRepository warehouseRepository;
     @Autowired
     private ItemRepository itemRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     public ResponseEntity<?> getAll() {
@@ -159,6 +161,9 @@ public class WarehouseServiceImpl implements WarehouseService {
                 ()-> new NotFoundException("Warehouse not found")
         );
         Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
+                ()-> new NotFoundException("User not found")
+        );
         ModelMapper mapper = new ModelMapper();
         if(status == WarehouseStatus.Active){
             warehouse.setStatus(WarehouseStatus.Active);
@@ -167,9 +172,9 @@ public class WarehouseServiceImpl implements WarehouseService {
            if(warehouse.getLocations().size() > 0){
                for (Location l : warehouse.getLocations()
                ) {
-                   l.getItem().setStatus(ProductStatus.Inactive);
+                   l.getItem().setStatus(ItemStatus.Inactive);
                    l.getItem().setUpdatedAt(new Date());
-                   l.getItem().setUpdatedBy(userPrinciple.getId());
+                   l.getItem().setUpdatedBy(user);
                    itemRepository.save(l.getItem());
                }
            }

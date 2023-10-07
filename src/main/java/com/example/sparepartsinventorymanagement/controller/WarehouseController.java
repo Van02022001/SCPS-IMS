@@ -1,8 +1,6 @@
 package com.example.sparepartsinventorymanagement.controller;
 
-import com.example.sparepartsinventorymanagement.dto.request.ProductFormRequest;
 import com.example.sparepartsinventorymanagement.dto.request.WarehouseFormRequest;
-import com.example.sparepartsinventorymanagement.entities.ProductStatus;
 import com.example.sparepartsinventorymanagement.entities.WarehouseStatus;
 import com.example.sparepartsinventorymanagement.service.impl.WarehouseServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +30,7 @@ public class WarehouseController {
 
     @Operation(summary = "For get warehouse by id")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getCategoryById(
+    public ResponseEntity<?> getWarehouseById(
             @Parameter(description = "Enter id to get", example = "1", required = true) @PathVariable(name = "id") @NotBlank Long id
     ) {
         return warehouseService.getWarehouseById(id);
@@ -40,7 +38,7 @@ public class WarehouseController {
 
     @Operation(summary = "For get warehouses contains keyword by name")
     @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getCategoryByName(
+    public ResponseEntity<?> getWarehousesByName(
             @Parameter(description = "Enter keyword to search", required = true)
             @NotEmpty @NotBlank String keyword
     ) {
@@ -49,7 +47,7 @@ public class WarehouseController {
 
     @Operation(summary = "For get warehouses by active status")
     @GetMapping(value = "/active-warehouses", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getActiveProducts() {
+    public ResponseEntity<?> getActiveWarehouses() {
         return warehouseService.getWarehousesByActiveStatus();
     }
 
@@ -57,7 +55,7 @@ public class WarehouseController {
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For create warehouse")
     @PostMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createCategory(
+    public ResponseEntity<?> createWarehouse(
             @Valid @RequestBody WarehouseFormRequest form
     ) {
         return warehouseService.createWarehouse(form);
@@ -66,7 +64,7 @@ public class WarehouseController {
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For update warehouse")
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateCategory(
+    public ResponseEntity<?> updateWarehouse(
             @Parameter(description = "Enter id", required = true, example = "1") @NotNull @PathVariable(name = "id") Long id,
             @Valid @RequestBody WarehouseFormRequest form
     ) {
@@ -76,7 +74,7 @@ public class WarehouseController {
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For update status of warehouse")
     @PutMapping(value = "/warehouse-status/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateCategoryStatus(
+    public ResponseEntity<?> updateWarehouseStatus(
             @Parameter(description = "Enter warehouse id", required = true, example = "1")
             @NotNull @NotEmpty @PathVariable(name = "id") Long id,
             @Parameter(description = "Warehouse status (Active or Inactive)", required = true)

@@ -2,6 +2,7 @@ package com.example.sparepartsinventorymanagement.entities;
 
 import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -44,14 +45,18 @@ public class Item {
     @Column(name = "defective", nullable = false)
     private int defective;
 
-    @Column(name = "created_by", nullable = false)
-    private Long createdBy;
+    @ManyToOne
+    @JsonIgnore
+    @JoinColumn(name = "created_by_id", nullable = false)
+    private User createdBy;
 
-    @Column(name = "updated_by")
-    private Long updatedBy;
+    @ManyToOne
+    @JsonIgnore
+    @JoinColumn(name = "updated_by_id", nullable = false)
+    private User updatedBy;
 
     @Column(name="status", nullable = false)
-    private ProductStatus status;
+    private ItemStatus status;
 
     @Column(name = "created_at", nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
@@ -75,8 +80,9 @@ public class Item {
     @OneToMany(mappedBy = "item")
     private List<Inventory> inventoryList;
 
-    @ManyToMany(mappedBy = "items")
-    private List<Supplier> suppliers;
+    @ManyToOne
+    @JoinColumn(name = "supplier_id", nullable = false)
+    private Supplier supplier;
 
     @ManyToOne
     @JoinColumn(name = "origin_id", nullable = false)

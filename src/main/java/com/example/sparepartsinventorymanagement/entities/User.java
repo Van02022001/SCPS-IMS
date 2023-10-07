@@ -9,6 +9,7 @@ import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -81,7 +82,11 @@ public class User {
     @JsonBackReference
     private Warehouse warehouse;
 
+    @OneToMany(mappedBy = "createdBy")
+    private List<Item> createdItems;
 
+    @OneToMany(mappedBy = "updatedBy")
+    private List<Item> updatedItems;
 
     // Getters and setters (omitted for brevity)
 }

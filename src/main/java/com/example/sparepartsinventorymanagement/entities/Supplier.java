@@ -53,13 +53,8 @@ public class Supplier {
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
 
-    @ManyToMany
+    @OneToMany(mappedBy = "supplier")
     @JsonIgnore
-    @JoinTable(
-            name = "supplier_item",
-            joinColumns = @JoinColumn(name = "supplier_id"),
-            inverseJoinColumns = @JoinColumn(name = "item_id")
-    )
     private List<Item> items;
 
 

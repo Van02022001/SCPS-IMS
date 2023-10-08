@@ -3,41 +3,59 @@ package com.example.sparepartsinventorymanagement.dto.response;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
-
 import java.util.Date;
-import java.util.List;
-import java.util.Set;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class ProductDTO {
+@NoArgsConstructor
+public class ItemDTO {
     private Long id;
 
-    private String name;
+    private String code;
 
-    private String description;
+    private double costPrice;
+
+    private double salePrice;
+
+    private int quantity;
+
+    private int sold;
+
+    private int available;
+
+    private int defective;
+
+    private ItemUserDTO createdBy;
+
+    private ItemUserDTO updatedBy;
+
+    private ItemStatus status;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date createdAt;
 
+    @Column(name = "updated_at")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
 
-    private ProductStatus status;
 
-    private UnitDTO unit;
+    private ItemProductDTO product;
 
-    private Set<CategoryDTO> categories;
+    private BrandDTO brand;
 
-    private List<ProductMetaDTO> productMetas;
+    //private List<Inventory> inventoryList;
 
-    private SizeDTO size;
+    private ItemSupplierDTO supplier;
+
+    private OriginDTO origin;
+
+    private LocationDTO location;
 }

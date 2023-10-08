@@ -41,16 +41,11 @@ public class Warehouse {
     @Column(name="status", nullable = false)
     private WarehouseStatus status;
 
-    @Column(name = "address")
+    @Column(name = "address", nullable = false)
     private String address;
-
 
     @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Location> locations = new ArrayList<>();
-
-    @ManyToMany(mappedBy = "warehouses")
-    @JsonIgnore
-    private Set<Product> products;
 
     @OneToOne(mappedBy = "warehouse", cascade = CascadeType.ALL)
     private User inventoryStaff;

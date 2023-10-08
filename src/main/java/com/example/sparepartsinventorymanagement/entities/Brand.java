@@ -29,8 +29,6 @@ public class Brand {
     @Column(name = "description", columnDefinition = "TINYTEXT")
     private String description;
 
-
-
     @OneToMany(mappedBy = "brand")
     @JsonIgnore
     private List<Item> items;

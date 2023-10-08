@@ -17,6 +17,8 @@ public class SizeDTO {
 
     private float height;
 
+    private float diameter;
+
     private UnitMeasurementDTO unitMeasurement;
 
 }

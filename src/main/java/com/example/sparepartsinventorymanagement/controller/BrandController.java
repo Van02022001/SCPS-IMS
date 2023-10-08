@@ -23,7 +23,7 @@ public class BrandController {
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For get list of brand")
-    @GetMapping(value = "/getBrands", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAll() {
         return brandService.getAll();
 
@@ -59,7 +59,7 @@ public class BrandController {
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For list brands by name")
-    @GetMapping(value = "/getBrandsByName", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getBrandByName(
             @Parameter(description = "enter keyword to search", required = true)
             @NotEmpty @NotBlank String keyword

@@ -26,8 +26,6 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private UnitMeasurementRepository unitMeasurementRepository;
     @Autowired
-    private  OriginRepository originRepository;
-    @Autowired
     private ProductRepository productRepository;
     @Autowired
     private CategoryRepository categoryRepository;
@@ -51,7 +49,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity getProductById(Long id) {
+    public ResponseEntity<?> getProductById(Long id) {
         Product product = productRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Product not found")
         );
@@ -63,7 +61,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity findByName(String name) {
+    public ResponseEntity<?> findByName(String name) {
         List<Product> products = productRepository.findByNameContaining(name);
         if(products.size() > 0){
             ModelMapper mapper = new ModelMapper();
@@ -79,7 +77,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity getActiveProducts() {
+    public ResponseEntity<?> getActiveProducts() {
         List<Product> products = productRepository.findByStatus(ProductStatus.Active);
         if(products.size() > 0){
             ModelMapper mapper = new ModelMapper();
@@ -95,7 +93,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity getProductsByCategory(Set<Long> ids) {
+    public ResponseEntity<?> getProductsByCategory(Set<Long> ids) {
         List<Category> categories = new ArrayList<>();
         for (Long id: ids
              ) {
@@ -120,7 +118,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity createProduct(ProductFormRequest form) {
+    public ResponseEntity<?> createProduct(ProductFormRequest form) {
 
         Set<Category> categories = new HashSet<>();
         for (Long id : form.getCategories_id()
@@ -141,21 +139,6 @@ public class ProductServiceImpl implements ProductService {
             ));
         }
 
-        //check origin
-        Set<Origin> origins = new HashSet<>();
-        for (Long id : form.getOrigins_id()
-        ) {
-            Origin origin = originRepository.findById(id).orElseThrow(
-                    ()-> new NotFoundException("Origin not found")
-            );
-            origins.add(origin);
-        }
-        if(origins.size() < 1){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Product must have at least one origin", null
-            ));
-        }
-
         if(productRepository.existsByName(form.getName())){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                HttpStatus.BAD_REQUEST.toString(), "Product name already exists", null
@@ -173,6 +156,7 @@ public class ProductServiceImpl implements ProductService {
                 .height(form.getHeight())
                 .length(form.getLength())
                 .width(form.getWidth())
+                .diameter(form.getDiameter())
                 .unitMeasurement(unitMeasurement)
                 .build();
         ModelMapper mapper =  new ModelMapper();
@@ -182,7 +166,6 @@ public class ProductServiceImpl implements ProductService {
         product.setUpdatedAt(currentDate);
         product.setCategories(categories);
         product.setStatus(ProductStatus.Active);
-        product.setOrigins(origins);
         product.setUnit(unit);
         product.setSize(size);
 
@@ -197,7 +180,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity updateProduct(Long id, ProductFormRequest form) {
+    public ResponseEntity<?> updateProduct(Long id, ProductFormRequest form) {
         Set<Category> categories = new HashSet<>();
 
         Product product = productRepository.findById(id).orElseThrow(
@@ -218,21 +201,6 @@ public class ProductServiceImpl implements ProductService {
         if(categories.size() < 1){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                     HttpStatus.BAD_REQUEST.toString(), "Product must have at least one category", null
-            ));
-        }
-
-        //check origin
-        Set<Origin> origins = new HashSet<>();
-        for (Long or_id : form.getOrigins_id()
-        ) {
-            Origin origin = originRepository.findById(or_id).orElseThrow(
-                    ()-> new NotFoundException("Origin not found")
-            );
-            origins.add(origin);
-        }
-        if(origins.size() < 1){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Product must have at least one origin", null
             ));
         }
 
@@ -260,11 +228,13 @@ public class ProductServiceImpl implements ProductService {
         product.setCategories(categories);
         Date currentDate = new Date();
         product.setUpdatedAt(currentDate);
-        product.setOrigins(origins);
         product.getSize().setHeight(form.getHeight());
         product.getSize().setWidth(form.getWidth());
         product.getSize().setLength(form.getLength());
+        product.getSize().setDiameter(form.getDiameter());
+        product.getSize().setUnitMeasurement(unitMeasurement);
         product.setUnit(unit);
+        sizeRepository.save(size);
         productRepository.save(product);
         ModelMapper mapper = new ModelMapper();
         ProductDTO res = mapper.map(product, ProductDTO.class);
@@ -274,7 +244,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity updateProductStatus(Long id, ProductStatus status) {
+    public ResponseEntity<?> updateProductStatus(Long id, ProductStatus status) {
         Product product = productRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Product not found")
         );

@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.util.List;
 
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,12 +19,16 @@ public class Location {
     @Column(name="location_id")
     private Long id;
 
-    @Column(name = "location", length = 50)
-    private String location;
-
-
+    @ElementCollection
+    @CollectionTable(name = "location_tags", joinColumns = @JoinColumn(name = "location_id"))
+    @Column(name = "tag")
+    private List<String> tags;
 
     @ManyToOne
     @JoinColumn(name = "warehouse_id") // Foreign key column pointing to Warehouse
     private Warehouse warehouse;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "item_id")
+    private Item item;
 }

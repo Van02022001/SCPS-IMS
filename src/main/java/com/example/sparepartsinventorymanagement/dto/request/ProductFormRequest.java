@@ -43,27 +43,29 @@ public class ProductFormRequest {
     @NotNull(message = "Required field")
     private Long unit_id;
 
-    @Schema(description = "List origin id")
-    @NotEmpty(message = "Required field")
-    private Set<Long> origins_id;
-
     @Schema(description = "Length")
     @NotNull(message = "Length is required")
-    @DecimalMin(value = "0.1", message = "Length must be greater than or equal to 0.1")
+    @DecimalMin(value = "0.0", message = "Length must be greater than or equal to 0.0")
     @DecimalMax(value = "1000.0", message = "Length must be less than or equal to 1000.0")
     private float length;
 
     @Schema(description = "Width")
     @NotNull(message = "Width is required")
-    @DecimalMin(value = "0.1", message = "Width must be greater than or equal to 0.1")
+    @DecimalMin(value = "0.0", message = "Width must be greater than or equal to 0.0")
     @DecimalMax(value = "1000.0", message = "Width must be less than or equal to 1000.0")
     private float width;
 
     @Schema(description = "Height")
     @NotNull(message = "Height is required")
-    @DecimalMin(value = "0.1", message = "Height must be greater than or equal to 0.1")
+    @DecimalMin(value = "0.0", message = "Height must be greater than or equal to 0.0")
     @DecimalMax(value = "1000.0", message = "Height must be less than or equal to 1000.0")
     private float height;
+
+    @Schema(description = "Diameter")
+    @NotNull(message = "Height is required")
+    @DecimalMin(value = "0.0", message = "Height must be greater than or equal to 0.0")
+    @DecimalMax(value = "1000.0", message = "Height must be less than or equal to 1000.0")
+    private float diameter;
 
     @Schema(description = "Unit of measurement id")
     @NotNull(message = "Unit of measurement id is required")

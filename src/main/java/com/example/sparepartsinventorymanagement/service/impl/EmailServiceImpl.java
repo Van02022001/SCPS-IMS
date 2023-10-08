@@ -27,4 +27,16 @@ public class EmailServiceImpl implements EmailService {
                      "\n Vui lòng đăng nhập và thay đổi mật khẩu.");
         emailSender.send(message);
     }
+
+//    @Override
+//    public void sendPasswordResetEmail(String email, String token) {
+//        String resetUrl="http://localhost:8080/reset-password?token=" + token;
+//        String message ="Click the following link to reset your password: " + resetUrl;
+//
+//        SimpleMailMessage mailMessage = new SimpleMailMessage();
+//        mailMessage.setTo(email);
+//        mailMessage.setSubject("Password Reset Request");
+//        mailMessage.setText(message);
+//        emailSender.send(mailMessage);
+//    }
 }

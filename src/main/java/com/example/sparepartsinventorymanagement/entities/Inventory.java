@@ -1,7 +1,13 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.util.Date;
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -16,8 +22,6 @@ public class Inventory {
     @Column(name="inventory_id")
     private Long id;
 
-    @Column(name = "period", nullable = false)
-    private String period; // Kỳ
 
     @Column(name = "opening_stock_quantity", nullable = false)
     private int openingStockQuantity; // Số lượng tồn đầu kỳ
@@ -47,11 +51,25 @@ public class Inventory {
     private double totalValue; // Giá trị xuất
 
 
+    @Column(name = "discrepancy_quantity")
+    private int discrepancyQuantity; // Sự khác biệt về số lượng
+
+    @Column(name = "discrepancy_value")
+    private double discrepancyValue;  // Sự khác biệt về giá trị
+
+    @Column(name = "notes")
+    private String notes;
+
+    @ManyToMany
+    @JoinTable(
+            name = "inventory_item",
+            joinColumns = @JoinColumn(name = "inventory_id"),
+            inverseJoinColumns = @JoinColumn(name = "item_id")
+    )
+    private List<Item> items;
+
     @ManyToOne
-    @JoinColumn(name = "item_id", nullable = false)
-    private Item item; // Mối quan hệ với bảng Item
-
-
-
+    @JoinColumn(name = "period_id", nullable = false)
+    private Period period; // Mối quan hệ mới với bảng Period
 
 }

@@ -1,9 +1,6 @@
 package com.example.sparepartsinventorymanagement.controller;
 
-import com.example.sparepartsinventorymanagement.dto.request.ChangePasswordForm;
-import com.example.sparepartsinventorymanagement.dto.request.LoginForm;
-import com.example.sparepartsinventorymanagement.dto.request.LogoutForm;
-import com.example.sparepartsinventorymanagement.dto.request.RefreshTokenRequest;
+import com.example.sparepartsinventorymanagement.dto.request.*;
 import com.example.sparepartsinventorymanagement.entities.User;
 import com.example.sparepartsinventorymanagement.exception.AuthenticationsException;
 import com.example.sparepartsinventorymanagement.exception.InvalidPasswordException;
@@ -88,6 +85,12 @@ public class AuthController {
         }
         return authService.login(loginForm);
     }
+
+//    @Operation(summary = "For resetting password")
+//    @PostMapping(value = "/reset-password")
+//    public ResponseEntity<?> forgetPassword(@RequestBody ForgetPasswordForm form){
+//        return authService.forgetPassword(form);
+//    }
 
 
 }

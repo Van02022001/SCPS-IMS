@@ -56,7 +56,7 @@ class UserServiceTest {
 
         User existingUser = new User();
         existingUser.setEmail("nguyenhongkhanh@gmail.com");
-        when(userRepository.findByEmail(form.getEmail())).thenReturn(Collections.emptyList());
+        when(userRepository.findByEmail(form.getEmail())).thenReturn(Arrays.asList(existingUser));
 
         ResponseEntity<?> response = userService.createAccount(form);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());

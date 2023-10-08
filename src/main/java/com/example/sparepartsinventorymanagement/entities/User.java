@@ -81,6 +81,8 @@ public class User {
     @JsonBackReference
     private Warehouse warehouse;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private PasswordResetToken passwordResetToken;
 
 
     // Getters and setters (omitted for brevity)

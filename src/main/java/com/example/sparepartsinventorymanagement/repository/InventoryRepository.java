@@ -1,2 +1,9 @@
-package com.example.sparepartsinventorymanagement.repository;public interface InventoryRepository {
+package com.example.sparepartsinventorymanagement.repository;
+
+import com.example.sparepartsinventorymanagement.entities.Inventory;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 }

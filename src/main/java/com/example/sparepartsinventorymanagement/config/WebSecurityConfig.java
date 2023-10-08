@@ -30,6 +30,7 @@ public class WebSecurityConfig {
             "/v3/api-docs/**",
             "/v2/api-docs/**",
             "/api/v1/auth/authentication",
+            "/api/v1/auth/reset-password",
             "/api/v1/units-measurement/**",
             "/api/v1/origins/",
             "/api/v1/units", "/api/v1/units/search", "/api/v1/origins", "/api/v1/origins/search",

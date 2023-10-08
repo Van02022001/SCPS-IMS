@@ -22,6 +22,8 @@ public class Item {
     @Column(name="item_id")
     private Long id;
 
+    @Column(name="code")
+    private String code;
 
 
     @Column(name = "cost_price", nullable = false)
@@ -71,8 +73,8 @@ public class Item {
     private Brand brand;
 
 
-    @OneToMany(mappedBy = "item")
-    private List<Inventory> inventoryList;
+    @ManyToMany(mappedBy = "items")
+    private List<Inventory> inventories;
 
     @ManyToOne
     @JoinColumn(name="warehouse_id", nullable = false)

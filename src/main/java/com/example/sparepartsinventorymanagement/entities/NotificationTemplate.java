@@ -25,7 +25,7 @@ public class NotificationTemplate {
     private String description;
 
     @Column(name = "type", nullable = false)
-    private int type;
+    private NotificationType type;
 
     @Column(name = "source_type", nullable = false)
     private String sourceType;

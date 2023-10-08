@@ -13,8 +13,10 @@ import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.exception.PasswordMismatchException;
 import com.example.sparepartsinventorymanagement.jwt.*;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
+//import com.example.sparepartsinventorymanagement.repository.PasswordResetTokenRepository;
 import com.example.sparepartsinventorymanagement.repository.UserRepository;
 import com.example.sparepartsinventorymanagement.service.AuthService;
+import com.example.sparepartsinventorymanagement.service.EmailService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +32,6 @@ import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,8 +39,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.attribute.UserPrincipal;
 import java.time.Instant;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Optional;
 
@@ -47,6 +48,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService {
+
+   // private PasswordResetTokenRepository passwordResetTokenRepository;
 
     private final String companyEmail = "qvanwork@outlook.com.vn";
     @Autowired
@@ -64,6 +67,9 @@ public class AuthServiceImpl implements AuthService {
     CacheManager cacheManager;
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     @Override
     public ResponseEntity<?> login(LoginForm loginModel) {
@@ -188,6 +194,54 @@ public class AuthServiceImpl implements AuthService {
         }
         changePassword(user, passwordModel.getNewPassword());
         return "Password changed successfully";
+    }
+
+//    @Override
+//    public ResponseEntity<?> forgetPassword(ForgetPasswordForm form) {
+//        List<User> users = userRepository.findByEmail(form.getEmail());
+//
+//        ForgetPasswordDTO response = new ForgetPasswordDTO();
+//        response.setEmail(form.getEmail());
+//
+//        // If no users are found with the given email
+//        if(users.isEmpty()){
+//            response.setMessage("Email not found");
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+//                    HttpStatus.NOT_FOUND.toString(), "Email not found", null
+//            ));
+//        }
+//
+//        User user = users.get(0);
+//
+//        Optional<PasswordResetToken> existingTokenOpt = passwordResetTokenRepository.findByUser(user);
+//        if (existingTokenOpt.isPresent()) {
+//            PasswordResetToken existingToken = existingTokenOpt.get();
+//            passwordResetTokenRepository.delete(existingToken);
+//            passwordResetTokenRepository.flush();
+//
+//        }
+//
+//        String token = UUID.randomUUID().toString();
+//        PasswordResetToken passwordResetToken = new PasswordResetToken(token, user);
+//        // Optionally, set the expiry date for the token here
+//
+//        passwordResetTokenRepository.save(passwordResetToken);
+//        emailService.sendPasswordResetEmail(user.getEmail(), token);
+//
+//        response.setMessage("If this email address is registered, a password reset link has been sent.");
+//        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+//                HttpStatus.OK.toString(), response.getMessage(), response
+//        ));
+//    }
+
+
+
+
+    private Date calculateExpiryDate(int expiryTimeMinutes){
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(new Date().getTime());
+        calendar.add(Calendar.MINUTE, expiryTimeMinutes);
+        return new Date(calendar.getTime().getTime());
     }
 
     private void clearRefreshTokenCache(String refreshToken) {

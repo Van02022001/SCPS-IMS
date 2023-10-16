@@ -21,7 +21,7 @@ public class CreateSupplierForm {
     @Size(min = 1, max = 100)
     @NotBlank(message = "Supplier name cannot be null")
     @NotEmpty(message = "Required field.")
-    @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")
+    @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")
     private String name;
 
     @Schema(description = "Supplier phone number", example = "1234567890")

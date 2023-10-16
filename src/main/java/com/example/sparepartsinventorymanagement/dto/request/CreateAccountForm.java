@@ -18,14 +18,14 @@ public class CreateAccountForm {
     @NotBlank(message = "firstName not null")
     @NotEmpty(message = "Required field.")
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")
+    @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")
     private String firstName;
 
     @Schema(name = "middleName", example = "Quang")
     @NotBlank(message = "middleName not null")
     @NotEmpty(message = "Required field.")
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")
+    @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")
     private String middleName;
 
 

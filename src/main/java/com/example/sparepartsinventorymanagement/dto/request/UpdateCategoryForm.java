@@ -17,12 +17,12 @@ public class UpdateCategoryForm {
     @Size(min = 1, max = 100)
     @NotBlank(message = "Name of category not null")
     @NotEmpty(message = "Required field.")
-    @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")
+    @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")
     private String name;
 
     @Schema(description = "Category description", example = "Ron cao su hay còn được gọi bằng các tên khác nhau như gioăng cao su, vòng đệm cao su. Sản phẩm được làm từ cao su tự nhiên hoặc cao su tổng hợp, có khả năng làm kín các các chi tiết kỹ thuật, cách nhiệt, chống ồn, chống thấm nước, chống chảy dầu rất tốt.")
     @NotBlank(message = "Description not null")
     @NotEmpty(message = "Required field")
-    @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")
+    @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")
     private String description;
 }

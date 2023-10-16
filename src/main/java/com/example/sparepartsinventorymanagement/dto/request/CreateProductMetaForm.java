@@ -17,12 +17,12 @@ public class CreateProductMetaForm {
     @Size(min = 1, max = 100)
     @NotBlank(message = "key not null")
     @NotEmpty(message = "Required field.")
-    @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")
+    @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")
     private String key;
 
     @Schema(description = "Product description", example = "Là sản phầm được làm từ ...")
     @NotBlank(message = "Description not null")
     @NotEmpty(message = "Required field")
-    @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")
+    @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")
     private String description;
 }

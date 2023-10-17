@@ -22,7 +22,7 @@ public class CreateCustomerForm {
     @Size(min = 1, max = 100)
     @NotBlank(message = "Customer name cannot be null")
     @NotEmpty(message = "Required field.")
-    @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")
+    @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")
     private String name;
 
     @Schema(description = "Customer phone number", example = "1234567890")

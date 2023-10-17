@@ -17,13 +17,13 @@ public class ProductFormRequest {
     @Size(min = 1, max = 100)
     @NotBlank(message = "Name of product not null")
     @NotEmpty(message = "Required field.")
-    @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")
+    @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")
     private String name;
 
     @Schema(description = "Product description", example = "Mô tả về product")
     @NotBlank(message = "Description not null")
     @NotEmpty(message = "Required field")
-    @Pattern(regexp = "^[A-Z].*", message = "The first letter must be uppercase.")
+    @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")
     private String description;
 
 

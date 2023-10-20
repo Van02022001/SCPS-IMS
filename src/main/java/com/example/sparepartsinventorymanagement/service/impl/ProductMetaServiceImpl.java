@@ -67,10 +67,11 @@ public class ProductMetaServiceImpl implements ProductMetaService {
                     HttpStatus.BAD_REQUEST.toString(),"Key of product meta already exists", null
             ));
         }
-
-        ModelMapper mapper = new ModelMapper();
-        ProductMeta productMeta = mapper.map(form, ProductMeta.class);
-        productMeta.setProduct(product);
+        ProductMeta productMeta = ProductMeta.builder()
+                .key(form.getKey())
+                .description(form.getDescription())
+                .product(product)
+                .build();
         productMetaRepository.save(productMeta);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(),"Create product meta successfully.", productMeta

@@ -159,20 +159,24 @@ public class ProductServiceImpl implements ProductService {
                 .diameter(form.getDiameter())
                 .unitMeasurement(unitMeasurement)
                 .build();
-        ModelMapper mapper =  new ModelMapper();
-        Product product =  mapper.map(form, Product.class);
         Date currentDate = new Date();
-        product.setCreatedAt(currentDate);
-        product.setUpdatedAt(currentDate);
-        product.setCategories(categories);
-        product.setStatus(ProductStatus.Active);
-        product.setUnit(unit);
-        product.setSize(size);
+        Product product = Product.builder()
+                .name(form.getName())
+                .description(form.getDescription())
+                .minStockLevel(form.getMinStockLevel())
+                .maxStockLevel(form.getMaxStockLevel())
+                .createdAt(currentDate)
+                .updatedAt(currentDate)
+                .categories(categories)
+                .status(ProductStatus.Active)
+                .unit(unit)
+                .size(size)
+                .build();
 
         size.setProduct(product);
         sizeRepository.save(size);
         productRepository.save(product);
-
+        ModelMapper mapper =  new ModelMapper();
         ProductDTO res = mapper.map(product, ProductDTO.class);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(), "Create product successfully.", res

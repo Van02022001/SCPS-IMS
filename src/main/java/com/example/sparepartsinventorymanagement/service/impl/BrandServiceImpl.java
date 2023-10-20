@@ -50,8 +50,10 @@ public class BrandServiceImpl implements BrandService {
                     HttpStatus.BAD_REQUEST.toString(),"Name of brand already exists.", null
             ));
         }
-        ModelMapper mapper =  new ModelMapper();
-        Brand brand = mapper.map(from, Brand.class);
+        Brand brand = Brand.builder()
+                .name(from.getName())
+                .description(from.getDescription())
+                .build();
 
         brandRepository.save(brand);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(

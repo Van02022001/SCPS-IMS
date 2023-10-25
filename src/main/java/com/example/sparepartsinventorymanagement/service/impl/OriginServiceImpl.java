@@ -53,8 +53,9 @@ public class OriginServiceImpl implements OriginService {
                     null
             ));
         }
-        ModelMapper mapper = new ModelMapper();
-        Origin origin = mapper.map(form, Origin.class);
+        Origin origin = Origin.builder()
+                .name(form.getName())
+                .build();
         originRepository.save(origin);
         return ResponseEntity.status(HttpStatus.OK).body( new ResponseObject(
                 HttpStatus.OK.toString(),

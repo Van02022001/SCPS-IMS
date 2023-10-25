@@ -71,12 +71,14 @@ public class CategoryServiceImpl implements CategoryService {
                     HttpStatus.BAD_REQUEST.toString(), "Category name already exists", null
             ));
         }
-        ModelMapper mapper = new ModelMapper();
-        Category category = mapper.map(form, Category.class);
         Date currentDate = new Date();
-        category.setUpdatedAt(currentDate);
-        category.setCreatedAt(currentDate);
-        category.setStatus(CategoryStatus.Active);
+        Category category = Category.builder()
+                .name(form.getName())
+                .description(form.getDescription())
+                .createdAt(currentDate)
+                .updatedAt(currentDate)
+                .status(CategoryStatus.Active)
+                .build();
         categoryRepository.save(category);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(), "Create category successfully.", category

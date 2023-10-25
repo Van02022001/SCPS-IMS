@@ -113,14 +113,16 @@ public class WarehouseServiceImpl implements WarehouseService {
                     HttpStatus.BAD_REQUEST.toString(), "Address of warehouse was existed.", null
             ));
         }
-
-        ModelMapper mapper = new ModelMapper();
-        Warehouse warehouse = mapper.map(form, Warehouse.class);
         Date cDate = new Date();
-        warehouse.setCreatedAt(cDate);
-        warehouse.setStatus(WarehouseStatus.Active);
-        warehouse.setUpdatedAt(cDate);
+        Warehouse warehouse = Warehouse.builder()
+                .name(form.getName())
+                .address(form.getAddress())
+                .status(WarehouseStatus.Active)
+                .createdAt(cDate)
+                .updatedAt(cDate)
+                .build();
         warehouseRepository.save(warehouse);
+        ModelMapper mapper = new ModelMapper();
         WarehouseDTO res = mapper.map(warehouse, WarehouseDTO.class);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(), "Create warehouse successfully.", res

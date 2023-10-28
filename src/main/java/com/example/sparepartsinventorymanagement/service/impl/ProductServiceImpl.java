@@ -207,11 +207,12 @@ public class ProductServiceImpl implements ProductService {
                     HttpStatus.BAD_REQUEST.toString(), "Product must have at least one category", null
             ));
         }
-
-        if(productRepository.existsByName(form.getName())){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Product name already exists", null
-            ));
+        if(!product.getName().equalsIgnoreCase(form.getName())){
+            if(productRepository.existsByName(form.getName())){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                        HttpStatus.BAD_REQUEST.toString(), "Product name already exists", null
+                ));
+            }
         }
         //check unit
         Unit unit = unitRepository.findById(form.getUnit_id()).orElseThrow(

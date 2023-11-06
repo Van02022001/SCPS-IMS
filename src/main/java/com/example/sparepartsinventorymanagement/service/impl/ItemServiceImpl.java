@@ -2,13 +2,11 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
-import com.example.sparepartsinventorymanagement.dto.response.ProductDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
 import com.example.sparepartsinventorymanagement.repository.*;
 import com.example.sparepartsinventorymanagement.service.ItemService;
-import com.example.sparepartsinventorymanagement.service.WarehouseService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
@@ -80,10 +78,10 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ResponseEntity<?> getItemByProduct(Long productId) {
-        Product product = productRepository.findById(productId).orElseThrow(
+        SubCategory subCategory = productRepository.findById(productId).orElseThrow(
                 ()-> new NotFoundException("Product not found")
         );
-        List<Item> items = itemRepository.findByProduct(product);
+        List<Item> items = itemRepository.findByProduct(subCategory);
         if(items.size() > 0){
 
             ModelMapper mapper = new ModelMapper();
@@ -132,7 +130,7 @@ public class ItemServiceImpl implements ItemService {
                 ()-> new NotFoundException("Supplier not found")
         );
         //Check product
-        Product product = productRepository.findById(form.getProduct_id()).orElseThrow(
+        SubCategory subCategory = productRepository.findById(form.getProduct_id()).orElseThrow(
                 ()-> new NotFoundException("Product not found")
         );
 
@@ -161,7 +159,7 @@ public class ItemServiceImpl implements ItemService {
                 .warehouse(warehouse)
                 .build();
         //Create code
-        String code = createItemCode(product.getName().trim(), product.getSize(), brand.getName().trim(), origin.getName().trim(), origin.getName().trim());
+        String code = createItemCode(subCategory.getName().trim(), subCategory.getSize(), brand.getName().trim(), origin.getName().trim(), origin.getName().trim());
         //Create item
         Date currentDate = new Date();
 
@@ -175,7 +173,7 @@ public class ItemServiceImpl implements ItemService {
                 .updatedAt(currentDate)
                 .createdBy(user)
                 .updatedBy(user)
-                .product(product)
+                .subCategory(subCategory)
                 .brand(brand)
                 .origin(origin)
                 .supplier(supplier)
@@ -211,7 +209,7 @@ public class ItemServiceImpl implements ItemService {
                 () -> new NotFoundException("Supplier not found")
         );
         //Check product
-        Product product = productRepository.findById(form.getProduct_id()).orElseThrow(
+        SubCategory subCategory = productRepository.findById(form.getProduct_id()).orElseThrow(
                 () -> new NotFoundException("Product not found")
         );
 
@@ -242,13 +240,13 @@ public class ItemServiceImpl implements ItemService {
         }
         //Create code
         String code = null;
-        if (item.getProduct().getId() != form.getProduct_id() || item.getBrand().getId() != form.getBrand_id()
+        if (item.getSubCategory().getId() != form.getProduct_id() || item.getBrand().getId() != form.getBrand_id()
                 || item.getOrigin().getId() != form.getOrigin_id() || item.getSupplier().getId() != form.getSupplier_id()) {
-            code = createItemCode(product.getName().trim(), product.getSize(), brand.getName().trim(), origin.getName().trim(), origin.getName().trim());
+            code = createItemCode(subCategory.getName().trim(), subCategory.getSize(), brand.getName().trim(), origin.getName().trim(), origin.getName().trim());
             item.setCode(code);
         }
         //update item
-        item.setProduct(product);
+        item.setSubCategory(subCategory);
         item.setBrand(brand);
         item.setOrigin(origin);
         item.setSupplier(supplier);

@@ -2,20 +2,16 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.OriginFormRequest;
 import com.example.sparepartsinventorymanagement.entities.Origin;
-import com.example.sparepartsinventorymanagement.entities.Product;
-import com.example.sparepartsinventorymanagement.entities.ProductStatus;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.OriginRepository;
 import com.example.sparepartsinventorymanagement.repository.ProductRepository;
 import com.example.sparepartsinventorymanagement.service.OriginService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.List;
 
 @Service

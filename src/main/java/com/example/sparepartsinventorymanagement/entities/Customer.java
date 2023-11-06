@@ -34,7 +34,6 @@ public class Customer {
     private String phone;
 
 
-
     @Column(name="email", nullable =false)
     private String email;
 
@@ -62,6 +61,8 @@ public class Customer {
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
 
+
     @OneToMany(mappedBy = "customer")
-    private List<Receipt> receipts;
+    private List<CustomerRequestReceipt> customerRequestReceiptList;
+
 }

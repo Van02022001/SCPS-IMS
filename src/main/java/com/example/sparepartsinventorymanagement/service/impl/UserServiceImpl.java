@@ -101,7 +101,7 @@ public class UserServiceImpl implements UserService {
                 user.setProfile(role.getDescription());
             }
 
-            user.setCompany(company);
+
 
             // Lưu thông tin user
             User saveUser = userRepository.save(user);

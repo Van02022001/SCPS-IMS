@@ -60,13 +60,12 @@ public class Inventory {
     @Column(name = "notes")
     private String notes;
 
-    @ManyToMany
-    @JoinTable(
-            name = "inventory_item",
-            joinColumns = @JoinColumn(name = "inventory_id"),
-            inverseJoinColumns = @JoinColumn(name = "item_id")
-    )
-    private List<Item> items;
+    @Column(name="is_active")
+    private boolean isActive;
+
+    @ManyToOne
+    @JoinColumn(name = "item_id", nullable = false)
+    private Item item;
 
     @ManyToOne
     @JoinColumn(name = "period_id", nullable = false)

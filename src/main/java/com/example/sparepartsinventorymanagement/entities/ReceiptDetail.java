@@ -22,10 +22,6 @@ public class ReceiptDetail {
 
 
 
-    @Column(name = "unit_price", nullable = false)
-    private float unitPrice;
-
-
     @Column(name = "quantity", nullable = false)
     private int quantity;
 
@@ -48,8 +44,14 @@ public class ReceiptDetail {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    // Getters and setters (omitted for brevity)
 
+    @ManyToOne
+    @JoinColumn(name = "pricing_id")
+    private PurchasePrice purchasePrice;
+
+    @ManyToOne
+    @JoinColumn(name = "pricing_id")
+    private Pricing salePricice;
     @ManyToOne
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;

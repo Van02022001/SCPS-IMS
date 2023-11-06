@@ -37,14 +37,7 @@ public class SparePartsInventoryManagementApplication {
     public CommandLineRunner initData(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository, CompanyRepository companyRepository, PasswordEncoder passwordEncoder,
                                       WarehouseRepository warehouseRepository){
         return (args) -> {
-//            Company company = new Company();
-//            company.setName("CÔNG TY TNHH SÀI GÒN KỸ THUẬT ĐIỀU KHIỂN");
-//            company.setEmail("phutungbombetongsaigon@gmail.com");
-//            company.setTaxCode("0311729807");
-//            company.setCode("SG-KT-DK");
-//            company.setAddress("528 Song Hành Xa Lộ Hà Nội, Phước Long A, Quận 9, Thành phố Hồ Chí Minh");
-//            company.setPhone("0979000386");
-//            companyRepository.save(company);
+
 //
 //
 //            Warehouse warehouse1 = new Warehouse();
@@ -151,7 +144,6 @@ public class SparePartsInventoryManagementApplication {
 //            adminUser.setUsername("AD0001");
 //            adminUser.setPassword(passwordEncoder.encode("Admin@123"));
 //            adminUser.setRegisteredAt(new Date());
-//            adminUser.setCompany(company);
 //            adminUser.setRole(adminRole);
 //            userRepository.save(adminUser);
 

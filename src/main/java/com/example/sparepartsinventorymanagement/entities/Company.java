@@ -41,8 +41,7 @@ public class Company {
     @Column(name = "address", nullable =false)
     private String address;
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
-    private List<User> users;
+
 
 
 

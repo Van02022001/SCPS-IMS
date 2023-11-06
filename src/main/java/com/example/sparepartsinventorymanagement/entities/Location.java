@@ -12,7 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-@Table(name = "location")
+@Table(name = "locations")
 public class Location {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,7 +28,6 @@ public class Location {
     @JoinColumn(name = "warehouse_id") // Foreign key column pointing to Warehouse
     private Warehouse warehouse;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "item_id")
-    private Item item;
+    @OneToMany(mappedBy = "locations", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Item> items;
 }

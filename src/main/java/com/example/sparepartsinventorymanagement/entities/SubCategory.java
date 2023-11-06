@@ -17,11 +17,11 @@ import java.util.Set;
 @Getter
 @Setter
 @Builder
-@Table(name = "product")
-public class Product {
+@Table(name = "sub_category")
+public class SubCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="product_id")
+    @Column(name="subcategory_id")
     private Long id;
 
     @Column(name = "name", length = 75, nullable = false)
@@ -30,11 +30,7 @@ public class Product {
     @Column(name = "description", columnDefinition = "TINYTEXT")
     private String description;
 
-    @Column(name = "min_stock_level", nullable = false)
-    private int minStockLevel;
 
-    @Column(name = "max_stock_level", nullable = false)
-    private int maxStockLevel;
 
     @Column(name = "created_at", nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
@@ -57,14 +53,15 @@ public class Product {
     )
     private Set<Category> categories;
 
-    @OneToMany(mappedBy = "product")
-    private List<ProductMeta> productMetas;
+    @OneToOne
+    @JoinColumn(name = "sub_category_meta_id")
+    private SubCategoryMeta subCategoryMeta;
 
     @ManyToOne
     @JoinColumn(name = "unit_id")
     private Unit unit;
 
-    @OneToOne(mappedBy = "product")
+    @OneToOne(mappedBy = "subCategory")
     private Size size;
 
 }

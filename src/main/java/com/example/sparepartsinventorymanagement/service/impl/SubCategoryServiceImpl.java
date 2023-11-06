@@ -5,7 +5,7 @@ import com.example.sparepartsinventorymanagement.dto.response.ProductDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.*;
-import com.example.sparepartsinventorymanagement.service.ProductService;
+import com.example.sparepartsinventorymanagement.service.SubCategoryService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
-public class ProductServiceImpl implements ProductService {
+public class SubCategoryServiceImpl implements SubCategoryService {
 
     @Autowired
     private UnitRepository unitRepository;
@@ -32,11 +32,11 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ResponseEntity<?> getAll() {
-        List<Product> products = productRepository.findAll();
-        if(products.size() > 0){
+        List<SubCategory> subCategories = productRepository.findAll();
+        if(subCategories.size() > 0){
 
             ModelMapper mapper = new ModelMapper();
-            List<ProductDTO> res = mapper.map(products, new TypeToken<List<ProductDTO>>() {
+            List<ProductDTO> res = mapper.map(subCategories, new TypeToken<List<ProductDTO>>() {
             }.getType());
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                HttpStatus.OK.toString(), "Get list product successfully.", res
@@ -49,12 +49,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity<?> getProductById(Long id) {
-        Product product = productRepository.findById(id).orElseThrow(
+    public ResponseEntity<?> getSubCategoryById(Long id) {
+        SubCategory subCategory = productRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Product not found")
         );
         ModelMapper mapper = new ModelMapper();
-        ProductDTO res = mapper.map(product, ProductDTO.class);
+        ProductDTO res = mapper.map(subCategory, ProductDTO.class);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(), "Get product by id successfully.", res
         ));
@@ -62,10 +62,10 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ResponseEntity<?> findByName(String name) {
-        List<Product> products = productRepository.findByNameContaining(name);
-        if(products.size() > 0){
+        List<SubCategory> subCategories = productRepository.findByNameContaining(name);
+        if(subCategories.size() > 0){
             ModelMapper mapper = new ModelMapper();
-            List<ProductDTO> res = mapper.map(products, new TypeToken<List<ProductDTO>>() {
+            List<ProductDTO> res = mapper.map(subCategories, new TypeToken<List<ProductDTO>>() {
             }.getType());
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                     HttpStatus.OK.toString(), "Get list product by keyword " + name +" successfully.", res
@@ -78,10 +78,10 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ResponseEntity<?> getActiveProducts() {
-        List<Product> products = productRepository.findByStatus(ProductStatus.Active);
-        if(products.size() > 0){
+        List<SubCategory> subCategories = productRepository.findByStatus(ProductStatus.Active);
+        if(subCategories.size() > 0){
             ModelMapper mapper = new ModelMapper();
-            List<ProductDTO> res = mapper.map(products, new TypeToken<List<ProductDTO>>() {
+            List<ProductDTO> res = mapper.map(subCategories, new TypeToken<List<ProductDTO>>() {
             }.getType());
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                     HttpStatus.OK.toString(), "Get list active product successfully.", res
@@ -103,10 +103,10 @@ public class ProductServiceImpl implements ProductService {
             categories.add(category);
         }
 
-        List<Product> products = productRepository.findByCategoriesIn(categories);
-        if(products.size() > 0){
+        List<SubCategory> subCategories = productRepository.findByCategoriesIn(categories);
+        if(subCategories.size() > 0){
             ModelMapper mapper = new ModelMapper();
-            List<ProductDTO> res = mapper.map(products, new TypeToken<List<ProductDTO>>() {
+            List<ProductDTO> res = mapper.map(subCategories, new TypeToken<List<ProductDTO>>() {
             }.getType());
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                     HttpStatus.OK.toString(), "Get list product by category successfully.", res
@@ -160,7 +160,7 @@ public class ProductServiceImpl implements ProductService {
                 .unitMeasurement(unitMeasurement)
                 .build();
         Date currentDate = new Date();
-        Product product = Product.builder()
+        SubCategory subCategory = SubCategory.builder()
                 .name(form.getName())
                 .description(form.getDescription())
                 .minStockLevel(form.getMinStockLevel())
@@ -173,11 +173,11 @@ public class ProductServiceImpl implements ProductService {
                 .size(size)
                 .build();
 
-        size.setProduct(product);
+        size.setSubCategory(subCategory);
         sizeRepository.save(size);
-        productRepository.save(product);
+        productRepository.save(subCategory);
         ModelMapper mapper =  new ModelMapper();
-        ProductDTO res = mapper.map(product, ProductDTO.class);
+        ProductDTO res = mapper.map(subCategory, ProductDTO.class);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(), "Create product successfully.", res
         ));
@@ -187,7 +187,7 @@ public class ProductServiceImpl implements ProductService {
     public ResponseEntity<?> updateProduct(Long id, ProductFormRequest form) {
         Set<Category> categories = new HashSet<>();
 
-        Product product = productRepository.findById(id).orElseThrow(
+        SubCategory subCategory = productRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Product not found")
         );
         for (Long ct_di : form.getCategories_id()
@@ -207,7 +207,7 @@ public class ProductServiceImpl implements ProductService {
                     HttpStatus.BAD_REQUEST.toString(), "Product must have at least one category", null
             ));
         }
-        if(!product.getName().equalsIgnoreCase(form.getName())){
+        if(!subCategory.getName().equalsIgnoreCase(form.getName())){
             if(productRepository.existsByName(form.getName())){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                         HttpStatus.BAD_REQUEST.toString(), "Product name already exists", null
@@ -222,27 +222,27 @@ public class ProductServiceImpl implements ProductService {
         UnitMeasurement unitMeasurement = unitMeasurementRepository.findById(form.getUnit_mea_id()).orElseThrow(
                 ()-> new NotFoundException("Unit of measurement not found")
         );
-        Size size = sizeRepository.findByProduct(product).orElseThrow(
+        Size size = sizeRepository.findByProduct(subCategory).orElseThrow(
                 ()-> new NotFoundException("Size of product not found")
         );
 
-        product.setName(form.getName());
-        product.setDescription(form.getDescription());
-        product.setMinStockLevel(form.getMinStockLevel());
-        product.setMaxStockLevel(form.getMaxStockLevel());
-        product.setCategories(categories);
+        subCategory.setName(form.getName());
+        subCategory.setDescription(form.getDescription());
+        subCategory.setMinStockLevel(form.getMinStockLevel());
+        subCategory.setMaxStockLevel(form.getMaxStockLevel());
+        subCategory.setCategories(categories);
         Date currentDate = new Date();
-        product.setUpdatedAt(currentDate);
-        product.getSize().setHeight(form.getHeight());
-        product.getSize().setWidth(form.getWidth());
-        product.getSize().setLength(form.getLength());
-        product.getSize().setDiameter(form.getDiameter());
-        product.getSize().setUnitMeasurement(unitMeasurement);
-        product.setUnit(unit);
+        subCategory.setUpdatedAt(currentDate);
+        subCategory.getSize().setHeight(form.getHeight());
+        subCategory.getSize().setWidth(form.getWidth());
+        subCategory.getSize().setLength(form.getLength());
+        subCategory.getSize().setDiameter(form.getDiameter());
+        subCategory.getSize().setUnitMeasurement(unitMeasurement);
+        subCategory.setUnit(unit);
         sizeRepository.save(size);
-        productRepository.save(product);
+        productRepository.save(subCategory);
         ModelMapper mapper = new ModelMapper();
-        ProductDTO res = mapper.map(product, ProductDTO.class);
+        ProductDTO res = mapper.map(subCategory, ProductDTO.class);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(), "Update product successfully.", res
         ));
@@ -250,15 +250,15 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ResponseEntity<?> updateProductStatus(Long id, ProductStatus status) {
-        Product product = productRepository.findById(id).orElseThrow(
+        SubCategory subCategory = productRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Product not found")
         );
         if(status == ProductStatus.Active){
-            product.setStatus(ProductStatus.Active);
+            subCategory.setStatus(ProductStatus.Active);
         }else {
-            product.setStatus(ProductStatus.Inactive);
+            subCategory.setStatus(ProductStatus.Inactive);
         }
-        productRepository.save(product);
+        productRepository.save(subCategory);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(), "Update product status successfully.", null
         ));

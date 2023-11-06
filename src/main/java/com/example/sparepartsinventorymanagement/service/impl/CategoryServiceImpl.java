@@ -4,14 +4,13 @@ import com.example.sparepartsinventorymanagement.dto.request.CreateCategoryForm;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateCategoryForm;
 import com.example.sparepartsinventorymanagement.entities.Category;
 import com.example.sparepartsinventorymanagement.entities.CategoryStatus;
-import com.example.sparepartsinventorymanagement.entities.Product;
+import com.example.sparepartsinventorymanagement.entities.SubCategory;
 import com.example.sparepartsinventorymanagement.entities.ProductStatus;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.CategoryRepository;
 import com.example.sparepartsinventorymanagement.repository.ProductRepository;
 import com.example.sparepartsinventorymanagement.service.CategoryService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -108,24 +107,24 @@ public class CategoryServiceImpl implements CategoryService {
         );
         if(status == CategoryStatus.Inactive){
             category.setStatus(CategoryStatus.Inactive);
-            if(category.getProducts().size() > 0){
-                for (Product product : category.getProducts()
+            if(category.getSubCategories().size() > 0){
+                for (SubCategory subCategory : category.getSubCategories()
                 ) {
-                    if(product.getCategories().size() == 1){
-                        product.setStatus(ProductStatus.Inactive);
+                    if(subCategory.getCategories().size() == 1){
+                        subCategory.setStatus(ProductStatus.Inactive);
                     }else{
-                        product.getCategories().remove(category);
+                        subCategory.getCategories().remove(category);
                     }
-                    productRepository.save(product);
+                    productRepository.save(subCategory);
                 }
             }
         }else{
             category.setStatus(CategoryStatus.Active);
-            if(category.getProducts().size() > 0){
-                for (Product product : category.getProducts()
+            if(category.getSubCategories().size() > 0){
+                for (SubCategory subCategory : category.getSubCategories()
                 ) {
-                    product.setStatus(ProductStatus.Active);
-                    productRepository.save(product);
+                    subCategory.setStatus(ProductStatus.Active);
+                    productRepository.save(subCategory);
                 }
             }
         }

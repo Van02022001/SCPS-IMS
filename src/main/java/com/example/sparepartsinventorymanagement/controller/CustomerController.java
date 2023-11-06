@@ -24,7 +24,7 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_SALE_STAFF') or hasRole('ROLE_MANAGER')")
     @Operation(summary = "For creating  a new customer")
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createCustomer(@Valid @RequestBody CreateCustomerForm form) {
@@ -33,7 +33,7 @@ public class CustomerController {
 
     }
 
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_SALE_STAFF')or hasRole('ROLE_MANAGER')")
     @Operation(summary = "For getting all customers")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAllCustomers(){
@@ -42,7 +42,7 @@ public class CustomerController {
 
 
     }
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_SALE_STAFF') or hasRole('ROLE_MANAGER')")
     @Operation(summary = "For getting a customer by ID")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCustomerById(
@@ -53,7 +53,7 @@ public class CustomerController {
 
     }
 
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_SALE_STAFF') or hasRole('ROLE_MANAGER')")
     @Operation(summary = "For updating a customer by id")
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateCustomer(
@@ -66,7 +66,7 @@ public class CustomerController {
 
     }
 
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_SALE_STAFF') or hasRole('ROLE_MANAGER')")
     @Operation(summary = "For deleting a customer")
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<?> deleteCustomer(

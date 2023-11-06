@@ -2,7 +2,7 @@ package com.example.sparepartsinventorymanagement.controller;
 
 import com.example.sparepartsinventorymanagement.dto.request.ProductFormRequest;
 import com.example.sparepartsinventorymanagement.entities.ProductStatus;
-import com.example.sparepartsinventorymanagement.service.impl.ProductServiceImpl;
+import com.example.sparepartsinventorymanagement.service.impl.SubCategoryServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
@@ -22,7 +22,7 @@ import java.util.Set;
 @RequestMapping("/api/v1/products")
 public class ProductController {
     @Autowired
-    private ProductServiceImpl productService;
+    private SubCategoryServiceImpl productService;
 
     @Operation(summary = "For get list of products")
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -35,7 +35,7 @@ public class ProductController {
     public ResponseEntity<?> getProductById(
             @Parameter(description = "enter product id to get", example = "1", required = true) @PathVariable(name = "id") @NotBlank Long id
     ) {
-        return productService.getProductById(id);
+        return productService.getSubCategoryById(id);
     }
     @Operation(summary = "For get products contains keyword by name")
     @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)

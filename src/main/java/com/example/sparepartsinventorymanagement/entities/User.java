@@ -63,20 +63,14 @@ public class User {
     @Column(name = "profile", columnDefinition = "TEXT")
     private String profile;
 
+
+    @Column(name = "image", length = 2048)
+    private String image;
+
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
-
-    @ManyToOne
-    @JoinColumn(name = "company_id") // This links the user to a company via the company_id foreign key
-    @JsonBackReference
-    private Company company;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "image_id", referencedColumnName = "image_id")
-    @JsonManagedReference
-    private Image image;
 
     @OneToOne
     @JoinColumn(name = "warehouse_id")

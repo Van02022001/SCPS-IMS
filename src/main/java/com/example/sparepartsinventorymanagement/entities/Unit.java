@@ -24,6 +24,6 @@ public class Unit {
 
     @OneToMany(mappedBy = "unit")
     @JsonIgnore
-    private List<Product> products;
+    private List<SubCategory> subCategories;
 
 }

@@ -6,9 +6,9 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Set;
 
-public interface ProductService {
+public interface SubCategoryService {
     ResponseEntity<?> getAll();
-    ResponseEntity<?> getProductById(Long id);
+    ResponseEntity<?> getSubCategoryById(Long id);
     ResponseEntity<?> findByName(String name);
     ResponseEntity<?> getActiveProducts();
     ResponseEntity<?> getProductsByCategory(Set<Long> categoryIds);

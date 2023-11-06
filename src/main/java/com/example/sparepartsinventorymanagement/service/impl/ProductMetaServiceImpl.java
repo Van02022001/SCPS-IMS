@@ -2,15 +2,13 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.CreateProductMetaForm;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateProductMetaForm;
-import com.example.sparepartsinventorymanagement.entities.Category;
-import com.example.sparepartsinventorymanagement.entities.Product;
-import com.example.sparepartsinventorymanagement.entities.ProductMeta;
+import com.example.sparepartsinventorymanagement.entities.SubCategory;
+import com.example.sparepartsinventorymanagement.entities.SubCategoryMeta;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.ProductMetaRepository;
 import com.example.sparepartsinventorymanagement.repository.ProductRepository;
 import com.example.sparepartsinventorymanagement.service.ProductMetaService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,14 +28,14 @@ public class ProductMetaServiceImpl implements ProductMetaService {
     @Override
     public ResponseEntity getAllByProduct(Long productId) {
 
-        Product product = productRepository.findById(productId).orElseThrow(
+        SubCategory subCategory = productRepository.findById(productId).orElseThrow(
                 ()-> new NotFoundException("Product not found")
         );
 
-        List<ProductMeta> productMetas = productMetaRepository.findByProduct(product);
-        if(productMetas.size() > 0){
+        List<SubCategoryMeta> subCategoryMetas = productMetaRepository.findByProduct(subCategory);
+        if(subCategoryMetas.size() > 0){
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                    HttpStatus.OK.toString(),"Get list successfully.", productMetas
+                    HttpStatus.OK.toString(),"Get list successfully.", subCategoryMetas
             ));
 
         }
@@ -48,60 +46,60 @@ public class ProductMetaServiceImpl implements ProductMetaService {
 
     @Override
     public ResponseEntity getProductMetaById(Long id) {
-        ProductMeta productMeta = productMetaRepository.findById(id).orElseThrow(
+        SubCategoryMeta subCategoryMeta = productMetaRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Product meta not found")
         );
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(),"Get product meta by id successfully.", productMeta
+                HttpStatus.OK.toString(),"Get product meta by id successfully.", subCategoryMeta
         ));
     }
 
     @Override
     public ResponseEntity createProductMeta(Long productId, CreateProductMetaForm form) {
 
-        Product product = productRepository.findById(productId).orElseThrow(
+        SubCategory subCategory = productRepository.findById(productId).orElseThrow(
                 () -> new NotFoundException("Product not found")
         );
-        if(productMetaRepository.existsByKeyAndProduct(form.getKey(), product)){
+        if(productMetaRepository.existsByKeyAndProduct(form.getKey(), subCategory)){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                     HttpStatus.BAD_REQUEST.toString(),"Key of product meta already exists", null
             ));
         }
-        ProductMeta productMeta = ProductMeta.builder()
+        SubCategoryMeta subCategoryMeta = SubCategoryMeta.builder()
                 .key(form.getKey())
                 .description(form.getDescription())
-                .product(product)
+                .subCategory(subCategory)
                 .build();
-        productMetaRepository.save(productMeta);
+        productMetaRepository.save(subCategoryMeta);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(),"Create product meta successfully.", productMeta
+                HttpStatus.OK.toString(),"Create product meta successfully.", subCategoryMeta
         ));
     }
 
     @Override
     public ResponseEntity updateProductMeta(Long id, UpdateProductMetaForm form) {
-        ProductMeta productMeta = productMetaRepository.findById(id).orElseThrow(
+        SubCategoryMeta subCategoryMeta = productMetaRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Product meta not found")
         );
-        if(productMetaRepository.existsByKeyAndProduct(form.getKey(), productMeta.getProduct())){
+        if(productMetaRepository.existsByKeyAndProduct(form.getKey(), subCategoryMeta.getSubCategory())){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                     HttpStatus.BAD_REQUEST.toString(),"Key of product meta already exists", null
             ));
         }
-        productMeta.setKey(form.getKey());
-        productMeta.setDescription(form.getDescription());
-        productMetaRepository.save(productMeta);
+        subCategoryMeta.setKey(form.getKey());
+        subCategoryMeta.setDescription(form.getDescription());
+        productMetaRepository.save(subCategoryMeta);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(),"Update product meta by id successfully.", productMeta
+                HttpStatus.OK.toString(),"Update product meta by id successfully.", subCategoryMeta
         ));
     }
 
     @Override
     public ResponseEntity deleteProductMeta(Long id) {
-        ProductMeta productMeta = productMetaRepository.findById(id).orElseThrow(
+        SubCategoryMeta subCategoryMeta = productMetaRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Product meta not found")
         );
-        productMetaRepository.delete(productMeta);
+        productMetaRepository.delete(subCategoryMeta);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(),"Delete product meta successfully.", null
         ));

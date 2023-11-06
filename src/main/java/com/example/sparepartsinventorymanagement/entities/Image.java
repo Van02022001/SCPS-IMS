@@ -47,11 +47,8 @@ public class Image {
 
     @ManyToOne(fetch = FetchType.LAZY) // Một hình ảnh thuộc về một sản phẩm
     @JoinColumn(name = "product_id")  // Tên trường khóa ngoại trong bảng Image
-    private Product product;      // Sản phẩm liên quan đến hình ảnh
+    private SubCategory subCategory;      // Sản phẩm liên quan đến hình ảnh
 
 
-    @OneToOne(mappedBy = "image")
-    @JsonBackReference
-    private User  user;
 
 }

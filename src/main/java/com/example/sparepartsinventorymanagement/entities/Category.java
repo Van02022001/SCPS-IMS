@@ -7,7 +7,6 @@ import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -45,5 +44,5 @@ public class Category {
 
     @ManyToMany(mappedBy = "categories")
     @JsonIgnore
-    private Set<Product> products;
+    private Set<SubCategory> subCategories;
 }

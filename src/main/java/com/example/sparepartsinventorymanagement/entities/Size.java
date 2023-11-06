@@ -31,7 +31,7 @@ public class Size {
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "product_id")
-    private Product product;
+    private SubCategory subCategory;
 
     @ManyToOne
     @JoinColumn(name = "unit_measurements_id")

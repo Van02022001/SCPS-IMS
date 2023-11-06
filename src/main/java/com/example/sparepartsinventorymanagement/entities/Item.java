@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @AllArgsConstructor
@@ -25,12 +26,6 @@ public class Item {
 
     @Column(name="code")
     private String code;
-
-    @Column(name = "cost_price", nullable = false)
-    private double costPrice;
-
-    @Column(name = "sale_price", nullable = false)
-    private double salePrice;
 
 
     @Column(name = "quantity", nullable = false)
@@ -71,11 +66,17 @@ public class Item {
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    private SubCategory subCategory;
 
     @ManyToOne
     @JoinColumn(name = "brand_id", nullable = false)
     private Brand brand;
+
+    @Column(name = "min_stock_level", nullable = false)
+    private int minStockLevel;
+
+    @Column(name = "max_stock_level", nullable = false)
+    private int maxStockLevel;
 
     @OneToMany(mappedBy = "item")
     private List<Inventory> inventoryList;
@@ -88,8 +89,20 @@ public class Item {
     @JoinColumn(name = "origin_id", nullable = false)
     private Origin origin;
 
-    @OneToOne(mappedBy = "item")
-    private Location location;
+    @ManyToOne
+    @JoinColumn(name = "location_id", nullable = false)
+    private Location locations;
+
+    @OneToMany(mappedBy = "items", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CustomerRequestReceiptDetail> customerRequestReceiptDetailList;
+
+
+    @OneToMany(mappedBy = "item")
+    private Set<Pricing> pricings;
+
+    @OneToMany(mappedBy = "item")
+    private Set<PurchasePrice> purchasePrices;
+
 
     // Getters and setters (omitted for brevity)
 }

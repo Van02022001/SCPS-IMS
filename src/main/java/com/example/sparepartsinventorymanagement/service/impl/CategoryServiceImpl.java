@@ -8,7 +8,7 @@ import com.example.sparepartsinventorymanagement.entities.SubCategory;
 import com.example.sparepartsinventorymanagement.entities.SubCategoryStatus;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.CategoryRepository;
-import com.example.sparepartsinventorymanagement.repository.ProductRepository;
+import com.example.sparepartsinventorymanagement.repository.SubCategoryRepository;
 import com.example.sparepartsinventorymanagement.service.CategoryService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class CategoryServiceImpl implements CategoryService {
     private CategoryRepository categoryRepository;
 
     @Autowired
-    private ProductRepository productRepository;
+    private SubCategoryRepository subCategoryRepository;
     @Override
     public ResponseEntity<ResponseObject> getAll() {
         List<Category> categories = categoryRepository.findAll();
@@ -115,7 +115,7 @@ public class CategoryServiceImpl implements CategoryService {
                     }else{
                         subCategory.getCategories().remove(category);
                     }
-                    productRepository.save(subCategory);
+                    subCategoryRepository.save(subCategory);
                 }
             }
         }else{
@@ -124,7 +124,7 @@ public class CategoryServiceImpl implements CategoryService {
                 for (SubCategory subCategory : category.getSubCategories()
                 ) {
                     subCategory.setStatus(SubCategoryStatus.Active);
-                    productRepository.save(subCategory);
+                    subCategoryRepository.save(subCategory);
                 }
             }
         }

@@ -4,7 +4,7 @@ import com.example.sparepartsinventorymanagement.dto.request.OriginFormRequest;
 import com.example.sparepartsinventorymanagement.entities.Origin;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.OriginRepository;
-import com.example.sparepartsinventorymanagement.repository.ProductRepository;
+import com.example.sparepartsinventorymanagement.repository.SubCategoryRepository;
 import com.example.sparepartsinventorymanagement.service.OriginService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ public class OriginServiceImpl implements OriginService {
     private OriginRepository originRepository;
 
     @Autowired
-    private ProductRepository productRepository;
+    private SubCategoryRepository subCategoryRepository;
 
     @Override
     public ResponseEntity<?> getAll() {

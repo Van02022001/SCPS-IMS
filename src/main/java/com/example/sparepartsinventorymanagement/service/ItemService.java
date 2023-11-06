@@ -7,9 +7,9 @@ import org.springframework.http.ResponseEntity;
 public interface ItemService {
     ResponseEntity<?> getAll();
     ResponseEntity<?> getItemById(Long id);
-    ResponseEntity<?> getItemByProduct(Long productId);
+    ResponseEntity<?> getItemBySubCategory(Long productId);
     ResponseEntity<?> getItemByActiveStatus();
-   // ResponseEntity<?> createItem(ItemFormRequest form);
-    //ResponseEntity<?> updateItem(Long id, ItemFormRequest form);
+    ResponseEntity<?> createItem(ItemFormRequest form);
+    ResponseEntity<?> updateItem(Long id, ItemFormRequest form);
     ResponseEntity<?> updateItemStatus(Long id, ItemStatus status);
 }

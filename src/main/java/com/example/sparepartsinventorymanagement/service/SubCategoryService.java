@@ -1,5 +1,6 @@
 package com.example.sparepartsinventorymanagement.service;
 
+import com.example.sparepartsinventorymanagement.dto.request.SubCategoryFormRequest;
 import com.example.sparepartsinventorymanagement.entities.SubCategoryStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -9,9 +10,9 @@ public interface SubCategoryService {
     ResponseEntity<?> getAll();
     ResponseEntity<?> getSubCategoryById(Long id);
     ResponseEntity<?> findByName(String name);
-    ResponseEntity<?> getActiveProducts();
-    ResponseEntity<?> getProductsByCategory(Set<Long> categoryIds);
-    //ResponseEntity<?> createProduct(ProductFormRequest form);
-    //ResponseEntity<?> updateProduct(Long id,ProductFormRequest form);
-    ResponseEntity<?> updateProductStatus(Long id, SubCategoryStatus status);
+    ResponseEntity<?> getActiveSubCategories();
+    ResponseEntity<?> getSubCategoriesByCategory(Set<Long> categoryIds);
+    ResponseEntity<?> createSubCategory(SubCategoryFormRequest form);
+    ResponseEntity<?> updateSubCategory(Long id,SubCategoryFormRequest form);
+    ResponseEntity<?> updateSubCategoryStatus(Long id, SubCategoryStatus status);
 }

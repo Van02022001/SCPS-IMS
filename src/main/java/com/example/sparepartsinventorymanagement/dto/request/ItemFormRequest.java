@@ -17,11 +17,19 @@ import java.util.List;
 @NoArgsConstructor
 public class ItemFormRequest {
 
-    @Positive(message = "Cost price must be a positive value")
-    private double costPrice;
+    @Positive(message = "Purchase Price must be a positive value")
+    private double purchasePrice;
 
-    @Positive(message = "Sale price must be a positive value")
-    private double salePrice;
+    @Positive(message = "Pricing price must be a positive value")
+    private double pricingPrice;
+
+    @Min(value = 0, message = "Minimum stock level cannot be less than 0")
+    @NotNull(message = "Minimum stock level is required")
+    private int minStockLevel;
+
+    @Min(value = 0, message = "Maximum stock level cannot be less than 0")
+    @NotNull(message = "Maximum stock level is required")
+    private int maxStockLevel;
 
     @Min(value = 1, message = "Quantity must be at least 1")
     private int quantity;
@@ -41,7 +49,4 @@ public class ItemFormRequest {
     @NotNull(message = "Warehouse ID is required")
     private Long warehouse_id;
 
-    @NotEmpty(message = "At least one tag is required")
-    @Size(min = 1, message = "At least one tag is required")
-    private List<String> tags;
 }

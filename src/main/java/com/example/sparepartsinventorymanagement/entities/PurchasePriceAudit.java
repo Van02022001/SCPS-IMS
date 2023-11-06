@@ -21,11 +21,6 @@ public class PurchasePriceAudit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-
-    @Column(name = "changed_by", nullable = false)
-    private Long changedBy;
-
     @Column(name = "change_date", nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
@@ -40,4 +35,8 @@ public class PurchasePriceAudit {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "purchase_price_change_id")
     private PurchasePrice purchasePrice;
+
+    @ManyToOne
+    @JoinColumn(name = "changed_by")
+    private User changedBy;
 }

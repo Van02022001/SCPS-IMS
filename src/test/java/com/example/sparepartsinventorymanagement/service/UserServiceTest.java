@@ -3,7 +3,6 @@ package com.example.sparepartsinventorymanagement.service;
 import com.example.sparepartsinventorymanagement.dto.request.CreateAccountForm;
 import com.example.sparepartsinventorymanagement.entities.Role;
 import com.example.sparepartsinventorymanagement.entities.User;
-import com.example.sparepartsinventorymanagement.repository.CompanyRepository;
 import com.example.sparepartsinventorymanagement.repository.RoleRepository;
 import com.example.sparepartsinventorymanagement.repository.UserRepository;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
@@ -36,8 +35,7 @@ class UserServiceTest {
 
     @MockBean
     private RoleRepository roleRepository;
-    @MockBean
-    private CompanyRepository companyRepository;
+
     @MockBean
     private PasswordEncoder passwordEncoder;
 

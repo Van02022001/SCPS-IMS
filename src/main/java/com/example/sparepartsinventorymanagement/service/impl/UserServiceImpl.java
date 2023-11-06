@@ -38,9 +38,6 @@ public class UserServiceImpl implements UserService {
     private EmailService emailService;
 
     @Autowired
-    private CompanyRepository companyRepository;
-
-    @Autowired
     private WarehouseRepository warehouseRepository;
     @Autowired
     private PermissionRepository permissionRepository;
@@ -70,14 +67,6 @@ public class UserServiceImpl implements UserService {
                 ));
             }
 
-            // Lấy thông tin công ty
-            Company company = companyRepository.findCompanyByName("CÔNG TY TNHH SÀI GÒN KỸ THUẬT ĐIỀU KHIỂN");
-
-            if (company == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                        HttpStatus.NOT_FOUND.toString(), "Company not found.", null
-                ));
-            }
             // Khởi tạo thông tin user
             User user = new User();
             user.setFirstName(form.getFirstName());

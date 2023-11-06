@@ -53,7 +53,7 @@ public class Item {
 
     @ManyToOne
     @JsonIgnore
-    @JoinColumn(name = "updated_by_id", nullable = false)
+    @JoinColumn(name = "updated_by_id")
     private User updatedBy;
 
     @Column(name="status", nullable = false)
@@ -92,7 +92,7 @@ public class Item {
     private Origin origin;
 
     @ManyToOne
-    @JoinColumn(name = "location_id", nullable = false)
+    @JoinColumn(name = "location_id")
     private Location location;
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -106,5 +106,14 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "warehouse_id")
     private Warehouse warehouse;
+
+    @OneToMany(mappedBy = "changedBy")
+    @JsonIgnore
+    private Set<PurchasePriceAudit> purchasePrices;
+
+    @OneToMany(mappedBy = "changedBy")
+    @JsonIgnore
+    private Set<PricingAudit> pricingAudits;
+
     // Getters and setters (omitted for brevity)
 }

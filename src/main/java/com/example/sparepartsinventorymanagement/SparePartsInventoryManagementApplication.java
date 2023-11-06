@@ -30,16 +30,14 @@ public class SparePartsInventoryManagementApplication {
     private PermissionRepository permissionRepository;
 
     @Autowired
-    private CompanyRepository companyRepository;
-    @Autowired
     private PasswordEncoder passwordEncoder;
     @Bean
-    public CommandLineRunner initData(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository, CompanyRepository companyRepository, PasswordEncoder passwordEncoder,
+    public CommandLineRunner initData(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository,  PasswordEncoder passwordEncoder,
                                       WarehouseRepository warehouseRepository){
         return (args) -> {
 
-//
-//
+
+
 //            Warehouse warehouse1 = new Warehouse();
 //            warehouse1.setName("Kho 1");
 //            warehouse1.setStatus(WarehouseStatus.Active);

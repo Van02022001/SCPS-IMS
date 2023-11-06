@@ -58,23 +58,23 @@ public class ProductController {
             @RequestParam(name = "id", required = true) Set<Long> ids){
         return productService.getProductsByCategory(ids);
     }
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @Operation(summary = "For create product")
-    @PostMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createProduct(
-            @Valid @RequestBody ProductFormRequest form
-    ) {
-        return productService.createProduct(form);
-    }
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @Operation(summary = "For update product")
-    @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateProduct(
-            @Parameter(description = "enter product id", required = true, example = "1") @NotNull @PathVariable(name = "id") Long id,
-            @Valid @RequestBody ProductFormRequest form
-    ) {
-        return productService.updateProduct(id, form);
-    }
+//    @PreAuthorize("hasRole('ROLE_MANAGER')")
+//    @Operation(summary = "For create product")
+//    @PostMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
+//    public ResponseEntity<?> createProduct(
+//            @Valid @RequestBody ProductFormRequest form
+//    ) {
+//        return productService.createProduct(form);
+//    }
+//    @PreAuthorize("hasRole('ROLE_MANAGER')")
+//    @Operation(summary = "For update product")
+//    @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+//    public ResponseEntity<?> updateProduct(
+//            @Parameter(description = "enter product id", required = true, example = "1") @NotNull @PathVariable(name = "id") Long id,
+//            @Valid @RequestBody ProductFormRequest form
+//    ) {
+//        return productService.updateProduct(id, form);
+//    }
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @Operation(summary = "For update status of product")
     @PutMapping(value = "/product-status/{id}", produces = MediaType.APPLICATION_JSON_VALUE)

@@ -21,7 +21,7 @@ public class PurchasePriceAudit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "purchase_price_id", nullable = false)
+    @Column(name = "purchase_price_change_id", nullable = false)
     private Long purchasePriceId;
 
     @Column(name = "changed_by", nullable = false)

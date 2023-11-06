@@ -1,11 +1,5 @@
 package com.example.sparepartsinventorymanagement.dto.response;
 
-import com.example.sparepartsinventorymanagement.entities.Company;
-import com.example.sparepartsinventorymanagement.entities.Image;
-import com.example.sparepartsinventorymanagement.entities.Role;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -19,10 +19,13 @@ public class Location {
     @Column(name="location_id")
     private Long id;
 
-    @ElementCollection
-    @CollectionTable(name = "location_tags", joinColumns = @JoinColumn(name = "location_id"))
-    @Column(name = "tag")
-    private List<String> tags;
+
+
+    @Column(name = "shelf_number")
+    private String shelfNumber; // số kệ
+
+    @Column(name = "bin_number")
+    private String binNumber; // số ngăn:
 
     @ManyToOne
     @JoinColumn(name = "warehouse_id") // Foreign key column pointing to Warehouse
@@ -30,4 +33,12 @@ public class Location {
 
     @OneToMany(mappedBy = "locations", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Item> items;
+
+    @ManyToMany
+    @JoinTable(
+            name = "location_tag",
+            joinColumns = @JoinColumn(name = "location_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private List<LocationTag> tags;
 }

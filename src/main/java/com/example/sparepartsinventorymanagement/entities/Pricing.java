@@ -19,6 +19,7 @@ public class Pricing {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "pricing_id")
     private Long id;
 
     @Column(name = "start_date", nullable = false)

@@ -71,15 +71,15 @@ public class WarehouseController {
         return warehouseService.updateWarehouse(id, form);
     }
 
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @Operation(summary = "For update status of warehouse")
-    @PutMapping(value = "/warehouse-status/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateWarehouseStatus(
-            @Parameter(description = "Enter warehouse id", required = true, example = "1")
-            @NotNull @NotEmpty @PathVariable(name = "id") Long id,
-            @Parameter(description = "Warehouse status (Active or Inactive)", required = true)
-            @NotNull @NotEmpty @Pattern(regexp = "Active|Inactive") @RequestParam(name = "status") WarehouseStatus status
-    ) {
-        return warehouseService.updateWarehouseStatus(id, status);
-    }
+//    @PreAuthorize("hasRole('ROLE_MANAGER')")
+//    @Operation(summary = "For update status of warehouse")
+//    @PutMapping(value = "/warehouse-status/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+//    public ResponseEntity<?> updateWarehouseStatus(
+//            @Parameter(description = "Enter warehouse id", required = true, example = "1")
+//            @NotNull @NotEmpty @PathVariable(name = "id") Long id,
+//            @Parameter(description = "Warehouse status (Active or Inactive)", required = true)
+//            @NotNull @NotEmpty @Pattern(regexp = "Active|Inactive") @RequestParam(name = "status") WarehouseStatus status
+//    ) {
+//        return warehouseService.updateWarehouseStatus(id, status);
+//    }
 }

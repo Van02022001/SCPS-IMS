@@ -19,6 +19,7 @@ public class PurchasePrice {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "purchase_price_id")
     private Long id;
 
     @Column(name = "effective_date", nullable = false)

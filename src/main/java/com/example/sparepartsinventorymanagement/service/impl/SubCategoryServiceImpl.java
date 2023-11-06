@@ -117,136 +117,136 @@ public class SubCategoryServiceImpl implements SubCategoryService {
         ));
     }
 
-    @Override
-    public ResponseEntity<?> createProduct(ProductFormRequest form) {
+//    @Override
+//    public ResponseEntity<?> createProduct(ProductFormRequest form) {
+//
+//        Set<Category> categories = new HashSet<>();
+//        for (Long id : form.getCategories_id()
+//             ) {
+//            Category category = categoryRepository.findById(id).orElseThrow(
+//                    ()-> new NotFoundException("Category not found")
+//            );
+//            if(category.getStatus() == CategoryStatus.Inactive){
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+//                        HttpStatus.BAD_REQUEST.toString(), "Category " + category.getName() + " was inactive." , null
+//                ));
+//            }
+//           categories.add(category);
+//        }
+//        if(categories.size() < 1){
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+//                    HttpStatus.BAD_REQUEST.toString(), "Product must have at least one category", null
+//            ));
+//        }
+//
+//        if(productRepository.existsByName(form.getName())){
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+//               HttpStatus.BAD_REQUEST.toString(), "Product name already exists", null
+//            ));
+//        }
+//        //check unit
+//        Unit unit = unitRepository.findById(form.getUnit_id()).orElseThrow(
+//                ()-> new NotFoundException("Unit not found")
+//        );
+//        //check unit of measurement id
+//        UnitMeasurement unitMeasurement = unitMeasurementRepository.findById(form.getUnit_mea_id()).orElseThrow(
+//                ()-> new NotFoundException("Unit of measurement not found")
+//        );
+//        Size size = Size.builder()
+//                .height(form.getHeight())
+//                .length(form.getLength())
+//                .width(form.getWidth())
+//                .diameter(form.getDiameter())
+//                .unitMeasurement(unitMeasurement)
+//                .build();
+//        Date currentDate = new Date();
+//        SubCategory subCategory = SubCategory.builder()
+//                .name(form.getName())
+//                .description(form.getDescription())
+//                .minStockLevel(form.getMinStockLevel())
+//                .maxStockLevel(form.getMaxStockLevel())
+//                .createdAt(currentDate)
+//                .updatedAt(currentDate)
+//                .categories(categories)
+//                .status(ProductStatus.Active)
+//                .unit(unit)
+//                .size(size)
+//                .build();
+//
+//        size.setSubCategory(subCategory);
+//        sizeRepository.save(size);
+//        productRepository.save(subCategory);
+//        ModelMapper mapper =  new ModelMapper();
+//        ProductDTO res = mapper.map(subCategory, ProductDTO.class);
+//        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+//                HttpStatus.OK.toString(), "Create product successfully.", res
+//        ));
+//    }
 
-        Set<Category> categories = new HashSet<>();
-        for (Long id : form.getCategories_id()
-             ) {
-            Category category = categoryRepository.findById(id).orElseThrow(
-                    ()-> new NotFoundException("Category not found")
-            );
-            if(category.getStatus() == CategoryStatus.Inactive){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                        HttpStatus.BAD_REQUEST.toString(), "Category " + category.getName() + " was inactive." , null
-                ));
-            }
-           categories.add(category);
-        }
-        if(categories.size() < 1){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Product must have at least one category", null
-            ));
-        }
-
-        if(productRepository.existsByName(form.getName())){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-               HttpStatus.BAD_REQUEST.toString(), "Product name already exists", null
-            ));
-        }
-        //check unit
-        Unit unit = unitRepository.findById(form.getUnit_id()).orElseThrow(
-                ()-> new NotFoundException("Unit not found")
-        );
-        //check unit of measurement id
-        UnitMeasurement unitMeasurement = unitMeasurementRepository.findById(form.getUnit_mea_id()).orElseThrow(
-                ()-> new NotFoundException("Unit of measurement not found")
-        );
-        Size size = Size.builder()
-                .height(form.getHeight())
-                .length(form.getLength())
-                .width(form.getWidth())
-                .diameter(form.getDiameter())
-                .unitMeasurement(unitMeasurement)
-                .build();
-        Date currentDate = new Date();
-        SubCategory subCategory = SubCategory.builder()
-                .name(form.getName())
-                .description(form.getDescription())
-                .minStockLevel(form.getMinStockLevel())
-                .maxStockLevel(form.getMaxStockLevel())
-                .createdAt(currentDate)
-                .updatedAt(currentDate)
-                .categories(categories)
-                .status(ProductStatus.Active)
-                .unit(unit)
-                .size(size)
-                .build();
-
-        size.setSubCategory(subCategory);
-        sizeRepository.save(size);
-        productRepository.save(subCategory);
-        ModelMapper mapper =  new ModelMapper();
-        ProductDTO res = mapper.map(subCategory, ProductDTO.class);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Create product successfully.", res
-        ));
-    }
-
-    @Override
-    public ResponseEntity<?> updateProduct(Long id, ProductFormRequest form) {
-        Set<Category> categories = new HashSet<>();
-
-        SubCategory subCategory = productRepository.findById(id).orElseThrow(
-                ()-> new NotFoundException("Product not found")
-        );
-        for (Long ct_di : form.getCategories_id()
-        ) {
-            Category category = categoryRepository.findById(ct_di).orElseThrow(
-                    ()-> new NotFoundException("Category not found")
-            );
-            if(category.getStatus() == CategoryStatus.Inactive){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                        HttpStatus.BAD_REQUEST.toString(), "Category " + category.getName() + " was inactive." , null
-                ));
-            }
-            categories.add(category);
-        }
-        if(categories.size() < 1){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Product must have at least one category", null
-            ));
-        }
-        if(!subCategory.getName().equalsIgnoreCase(form.getName())){
-            if(productRepository.existsByName(form.getName())){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                        HttpStatus.BAD_REQUEST.toString(), "Product name already exists", null
-                ));
-            }
-        }
-        //check unit
-        Unit unit = unitRepository.findById(form.getUnit_id()).orElseThrow(
-                ()-> new NotFoundException("Unit not found")
-        );
-        //check unit of measurement id
-        UnitMeasurement unitMeasurement = unitMeasurementRepository.findById(form.getUnit_mea_id()).orElseThrow(
-                ()-> new NotFoundException("Unit of measurement not found")
-        );
-        Size size = sizeRepository.findByProduct(subCategory).orElseThrow(
-                ()-> new NotFoundException("Size of product not found")
-        );
-
-        subCategory.setName(form.getName());
-        subCategory.setDescription(form.getDescription());
-        subCategory.setMinStockLevel(form.getMinStockLevel());
-        subCategory.setMaxStockLevel(form.getMaxStockLevel());
-        subCategory.setCategories(categories);
-        Date currentDate = new Date();
-        subCategory.setUpdatedAt(currentDate);
-        subCategory.getSize().setHeight(form.getHeight());
-        subCategory.getSize().setWidth(form.getWidth());
-        subCategory.getSize().setLength(form.getLength());
-        subCategory.getSize().setDiameter(form.getDiameter());
-        subCategory.getSize().setUnitMeasurement(unitMeasurement);
-        subCategory.setUnit(unit);
-        sizeRepository.save(size);
-        productRepository.save(subCategory);
-        ModelMapper mapper = new ModelMapper();
-        ProductDTO res = mapper.map(subCategory, ProductDTO.class);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Update product successfully.", res
-        ));
-    }
+//    @Override
+//    public ResponseEntity<?> updateProduct(Long id, ProductFormRequest form) {
+//        Set<Category> categories = new HashSet<>();
+//
+//        SubCategory subCategory = productRepository.findById(id).orElseThrow(
+//                ()-> new NotFoundException("Product not found")
+//        );
+//        for (Long ct_di : form.getCategories_id()
+//        ) {
+//            Category category = categoryRepository.findById(ct_di).orElseThrow(
+//                    ()-> new NotFoundException("Category not found")
+//            );
+//            if(category.getStatus() == CategoryStatus.Inactive){
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+//                        HttpStatus.BAD_REQUEST.toString(), "Category " + category.getName() + " was inactive." , null
+//                ));
+//            }
+//            categories.add(category);
+//        }
+//        if(categories.size() < 1){
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+//                    HttpStatus.BAD_REQUEST.toString(), "Product must have at least one category", null
+//            ));
+//        }
+//        if(!subCategory.getName().equalsIgnoreCase(form.getName())){
+//            if(productRepository.existsByName(form.getName())){
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+//                        HttpStatus.BAD_REQUEST.toString(), "Product name already exists", null
+//                ));
+//            }
+//        }
+//        //check unit
+//        Unit unit = unitRepository.findById(form.getUnit_id()).orElseThrow(
+//                ()-> new NotFoundException("Unit not found")
+//        );
+//        //check unit of measurement id
+//        UnitMeasurement unitMeasurement = unitMeasurementRepository.findById(form.getUnit_mea_id()).orElseThrow(
+//                ()-> new NotFoundException("Unit of measurement not found")
+//        );
+//        Size size = sizeRepository.findByProduct(subCategory).orElseThrow(
+//                ()-> new NotFoundException("Size of product not found")
+//        );
+//
+//        subCategory.setName(form.getName());
+//        subCategory.setDescription(form.getDescription());
+//        subCategory.setMinStockLevel(form.getMinStockLevel());
+//        subCategory.setMaxStockLevel(form.getMaxStockLevel());
+//        subCategory.setCategories(categories);
+//        Date currentDate = new Date();
+//        subCategory.setUpdatedAt(currentDate);
+//        subCategory.getSize().setHeight(form.getHeight());
+//        subCategory.getSize().setWidth(form.getWidth());
+//        subCategory.getSize().setLength(form.getLength());
+//        subCategory.getSize().setDiameter(form.getDiameter());
+//        subCategory.getSize().setUnitMeasurement(unitMeasurement);
+//        subCategory.setUnit(unit);
+//        sizeRepository.save(size);
+//        productRepository.save(subCategory);
+//        ModelMapper mapper = new ModelMapper();
+//        ProductDTO res = mapper.map(subCategory, ProductDTO.class);
+//        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+//                HttpStatus.OK.toString(), "Update product successfully.", res
+//        ));
+//    }
 
     @Override
     public ResponseEntity<?> updateProductStatus(Long id, ProductStatus status) {

@@ -18,6 +18,7 @@ import java.util.Date;
 public class Receipt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="created_by_id")
     private Long id;
 
 
@@ -37,11 +38,14 @@ public class Receipt {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "created_by", nullable = false)
-    private Long createdBy;
+    @ManyToOne
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
 
-    @Column(name = "updated_by")
-    private Long updatedBy;
+
+    @ManyToOne
+    @JoinColumn(name = "updated_by")
+    private User updateBy;
 
 
     @Column(name = "created_at", nullable = false)
@@ -55,8 +59,4 @@ public class Receipt {
     private Date updatedAt;
 
 
-    @ManyToOne
-    @JoinColumn(name = "customer_id")
-    private Customer customer;
-    // Getters and setters (omitted for brevity)
 }

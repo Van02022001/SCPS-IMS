@@ -3,12 +3,14 @@ package com.example.sparepartsinventorymanagement.entities;
 import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -72,16 +74,37 @@ public class User {
     private Role role;
 
 
-    @OneToOne
-    @JoinColumn(name = "warehouse_id")
-    @JsonBackReference
-    private Warehouse warehouse;
+
 
     @OneToMany(mappedBy = "createdBy")
+
     private List<Item> createdItems;
 
     @OneToMany(mappedBy = "updatedBy")
     private List<Item> updatedItems;
 
+    @OneToMany(mappedBy = "createdBy")
+    @JsonIgnore
+    private Set<Receipt> createdReceipts;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "updateBy")
+    private Set<Receipt> updatedReceipts;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "createdRequestBy")
+    private Set<CustomerRequestReceipt> createdCustomerRequestReceipts;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "approvedRequestBy")
+    private Set<CustomerRequestReceipt> approvedCustomerRequestReceipts;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "completedRequestBy")
+    private Set<CustomerRequestReceipt> completedCustomerRequestReceipts;
+
+    @ManyToOne
+    @JoinColumn(name = "warehouse_id")
+    private Warehouse warehouse;
     // Getters and setters (omitted for brevity)
 }

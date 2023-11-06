@@ -47,8 +47,8 @@ public class Warehouse {
     @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Location> locations = new ArrayList<>();
 
-    @OneToOne(mappedBy = "warehouse", cascade = CascadeType.ALL)
-    private User inventoryStaff;
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
+    private List<User> users;
 
 
 }

@@ -46,7 +46,7 @@ public class ReceiptDetail {
 
 
     @ManyToOne
-    @JoinColumn(name = "pricing_id")
+    @JoinColumn(name = "purchase_price_id")
     private PurchasePrice purchasePrice;
 
     @ManyToOne

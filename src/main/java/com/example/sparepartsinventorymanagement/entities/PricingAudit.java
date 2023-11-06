@@ -20,7 +20,7 @@ public class PricingAudit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "pricing_id", nullable = false)
+    @Column(name = "pricing_change_id", nullable = false)
     private Long pricingId;
 
     @Column(name = "changed_by", nullable = false)

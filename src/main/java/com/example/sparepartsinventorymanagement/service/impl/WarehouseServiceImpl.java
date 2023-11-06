@@ -157,34 +157,34 @@ public class WarehouseServiceImpl implements WarehouseService {
         ));
     }
 
-    @Override
-    public ResponseEntity<?> updateWarehouseStatus(Long id, WarehouseStatus status) {
-        Warehouse warehouse = warehouseRepository.findById(id).orElseThrow(
-                ()-> new NotFoundException("Warehouse not found")
-        );
-        Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
-                ()-> new NotFoundException("User not found")
-        );
-        ModelMapper mapper = new ModelMapper();
-        if(status == WarehouseStatus.Active){
-            warehouse.setStatus(WarehouseStatus.Active);
-        }else {
-            warehouse.setStatus(WarehouseStatus.Inactive);
-           if(warehouse.getLocations().size() > 0){
-               for (Location l : warehouse.getLocations()
-               ) {
-                   l.getItem().setStatus(ItemStatus.Inactive);
-                   l.getItem().setUpdatedAt(new Date());
-                   l.getItem().setUpdatedBy(user);
-                   itemRepository.save(l.getItem());
-               }
-           }
-        }
-        warehouseRepository.save(warehouse);
-        WarehouseDTO res = mapper.map(warehouse, WarehouseDTO.class);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Update status of warehouse successfully.", res
-        ));
-    }
+//    @Override
+//    public ResponseEntity<?> updateWarehouseStatus(Long id, WarehouseStatus status) {
+//        Warehouse warehouse = warehouseRepository.findById(id).orElseThrow(
+//                ()-> new NotFoundException("Warehouse not found")
+//        );
+//        Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
+//                ()-> new NotFoundException("User not found")
+//        );
+//        ModelMapper mapper = new ModelMapper();
+//        if(status == WarehouseStatus.Active){
+//            warehouse.setStatus(WarehouseStatus.Active);
+//        }else {
+//            warehouse.setStatus(WarehouseStatus.Inactive);
+//           if(warehouse.getLocations().size() > 0){
+//               for (Location l : warehouse.getLocations()
+//               ) {
+//                   l.getItem().setStatus(ItemStatus.Inactive);
+//                   l.getItem().setUpdatedAt(new Date());
+//                   l.getItem().setUpdatedBy(user);
+//                   itemRepository.save(l.getItem());
+//               }
+//           }
+//        }
+//        warehouseRepository.save(warehouse);
+//        WarehouseDTO res = mapper.map(warehouse, WarehouseDTO.class);
+//        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+//                HttpStatus.OK.toString(), "Update status of warehouse successfully.", res
+//        ));
+//    }
 }

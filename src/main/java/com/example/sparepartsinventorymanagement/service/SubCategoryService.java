@@ -12,7 +12,7 @@ public interface SubCategoryService {
     ResponseEntity<?> findByName(String name);
     ResponseEntity<?> getActiveProducts();
     ResponseEntity<?> getProductsByCategory(Set<Long> categoryIds);
-    ResponseEntity<?> createProduct(ProductFormRequest form);
-    ResponseEntity<?> updateProduct(Long id,ProductFormRequest form);
+    //ResponseEntity<?> createProduct(ProductFormRequest form);
+    //ResponseEntity<?> updateProduct(Long id,ProductFormRequest form);
     ResponseEntity<?> updateProductStatus(Long id,ProductStatus status);
 }

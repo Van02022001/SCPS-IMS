@@ -11,5 +11,5 @@ public interface WarehouseService {
     ResponseEntity<?> getWarehouseByName(String keyword);
     ResponseEntity<?> createWarehouse(WarehouseFormRequest form);
     ResponseEntity<?> updateWarehouse(Long id,WarehouseFormRequest form);
-    ResponseEntity<?> updateWarehouseStatus(Long id, WarehouseStatus status);
+   // ResponseEntity<?> updateWarehouseStatus(Long id, WarehouseStatus status);
 }

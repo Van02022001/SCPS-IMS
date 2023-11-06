@@ -1,7 +1,6 @@
 package com.example.sparepartsinventorymanagement.service;
 
 import com.example.sparepartsinventorymanagement.dto.request.CreateAccountForm;
-import com.example.sparepartsinventorymanagement.entities.Company;
 import com.example.sparepartsinventorymanagement.entities.Role;
 import com.example.sparepartsinventorymanagement.entities.User;
 import com.example.sparepartsinventorymanagement.repository.CompanyRepository;

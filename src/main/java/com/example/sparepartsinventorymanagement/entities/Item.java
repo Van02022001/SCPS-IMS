@@ -93,6 +93,9 @@ public class Item {
     @JoinColumn(name = "location_id", nullable = false)
     private Location locations;
 
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ItemMovement> movements;
+
     @OneToMany(mappedBy = "items", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CustomerRequestReceiptDetail> customerRequestReceiptDetailList;
 

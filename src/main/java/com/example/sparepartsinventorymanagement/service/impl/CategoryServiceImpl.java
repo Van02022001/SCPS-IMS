@@ -5,7 +5,7 @@ import com.example.sparepartsinventorymanagement.dto.request.UpdateCategoryForm;
 import com.example.sparepartsinventorymanagement.entities.Category;
 import com.example.sparepartsinventorymanagement.entities.CategoryStatus;
 import com.example.sparepartsinventorymanagement.entities.SubCategory;
-import com.example.sparepartsinventorymanagement.entities.ProductStatus;
+import com.example.sparepartsinventorymanagement.entities.SubCategoryStatus;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.CategoryRepository;
 import com.example.sparepartsinventorymanagement.repository.ProductRepository;
@@ -111,7 +111,7 @@ public class CategoryServiceImpl implements CategoryService {
                 for (SubCategory subCategory : category.getSubCategories()
                 ) {
                     if(subCategory.getCategories().size() == 1){
-                        subCategory.setStatus(ProductStatus.Inactive);
+                        subCategory.setStatus(SubCategoryStatus.Inactive);
                     }else{
                         subCategory.getCategories().remove(category);
                     }
@@ -123,7 +123,7 @@ public class CategoryServiceImpl implements CategoryService {
             if(category.getSubCategories().size() > 0){
                 for (SubCategory subCategory : category.getSubCategories()
                 ) {
-                    subCategory.setStatus(ProductStatus.Active);
+                    subCategory.setStatus(SubCategoryStatus.Active);
                     productRepository.save(subCategory);
                 }
             }

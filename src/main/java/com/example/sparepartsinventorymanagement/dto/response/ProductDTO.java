@@ -31,7 +31,7 @@ public class ProductDTO {
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
 
-    private ProductStatus status;
+    private SubCategoryStatus status;
 
     private UnitDTO unit;
 

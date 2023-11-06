@@ -2,13 +2,11 @@ package com.example.sparepartsinventorymanagement.entities;
 
 import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -43,14 +41,9 @@ public class SubCategory {
     private Date updatedAt;
 
     @Column(name="status", nullable = false)
-    private ProductStatus status;
+    private SubCategoryStatus status;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JsonIgnore
-    @JoinTable(name = "product_category",
-            joinColumns = @JoinColumn(name = "product_id"),
-            inverseJoinColumns = @JoinColumn(name = "category_id")
-    )
+    @ManyToMany(mappedBy = "subCategories")
     private Set<Category> categories;
 
     @OneToOne

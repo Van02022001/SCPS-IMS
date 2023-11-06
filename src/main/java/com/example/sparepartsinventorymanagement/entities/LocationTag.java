@@ -1,8 +1,11 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -26,5 +29,4 @@ public class LocationTag {
     // Định nghĩa mối quan hệ ngược lại từ Tag đến Location
     @ManyToMany(mappedBy = "tags")
     private List<Location> locations;
-
 }

@@ -31,14 +31,15 @@ public class Location {
     @JoinColumn(name = "warehouse_id") // Foreign key column pointing to Warehouse
     private Warehouse warehouse;
 
-    @OneToMany(mappedBy = "locations", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Item> items;
 
     @ManyToMany
     @JoinTable(
-            name = "location_tag",
-            joinColumns = @JoinColumn(name = "location_id"),
-            inverseJoinColumns = @JoinColumn(name = "tag_id")
+            name = "location_location_tag", // tên bảng liên kết
+            joinColumns = @JoinColumn(name = "location_id"), // khóa ngoại cho Location
+            inverseJoinColumns = @JoinColumn(name = "tag_id") // khóa ngoại cho LocationTag
     )
     private List<LocationTag> tags;
+
+    @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Item> items;
 }

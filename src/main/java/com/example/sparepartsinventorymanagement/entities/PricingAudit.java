@@ -20,8 +20,6 @@ public class PricingAudit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "pricing_change_id", nullable = false)
-    private Long pricingId;
 
     @Column(name = "changed_by", nullable = false)
     private Long changedBy;
@@ -36,5 +34,10 @@ public class PricingAudit {
 
     @Column(name = "new_price")
     private double newPrice;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pricing_change_id")
+    private Pricing pricing; // This maps back to the Pricing entity
+
 
 }

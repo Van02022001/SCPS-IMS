@@ -1,6 +1,6 @@
 package com.example.sparepartsinventorymanagement.entities;
 
-public enum ProductStatus {
+public enum SubCategoryStatus {
     Inactive,
     Active
 }

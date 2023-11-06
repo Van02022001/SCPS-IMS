@@ -7,6 +7,7 @@ import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -38,4 +39,7 @@ public class Pricing {
     @ManyToOne
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
+
+    @OneToMany(mappedBy = "pricing", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PricingAudit> pricingAudits; // This will hold the audit history for the pricing
 }

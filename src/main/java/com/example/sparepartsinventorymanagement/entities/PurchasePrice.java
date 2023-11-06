@@ -7,6 +7,7 @@ import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Getter
@@ -33,5 +34,8 @@ public class PurchasePrice {
     @ManyToOne
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
+
+    @OneToMany(mappedBy = "purchasePrice", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PurchasePriceAudit> purchasePriceAudits;
 
 }

@@ -1,11 +1,9 @@
 package com.example.sparepartsinventorymanagement.controller;
 
-import com.example.sparepartsinventorymanagement.dto.request.ProductFormRequest;
-import com.example.sparepartsinventorymanagement.entities.ProductStatus;
+import com.example.sparepartsinventorymanagement.entities.SubCategoryStatus;
 import com.example.sparepartsinventorymanagement.service.impl.SubCategoryServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -82,7 +80,7 @@ public class ProductController {
             @Parameter(description = "enter product id", required = true, example = "1")
             @NotNull @NotEmpty @PathVariable(name = "id") Long id,
             @Parameter(description = "Product status (Active or Inactive)", required = true)
-            @NotNull @NotEmpty @Pattern(regexp = "Active|Inactive") @RequestParam(name = "status") ProductStatus status
+            @NotNull @NotEmpty @Pattern(regexp = "Active|Inactive") @RequestParam(name = "status") SubCategoryStatus status
     ) {
         return productService.updateProductStatus(id, status);
     }

@@ -40,6 +40,12 @@ public class Item {
     @Column(name = "defective", nullable = false)
     private int defective;
 
+    @Column(name = "min_stock_level", nullable = false)
+    private int minStockLevel;
+
+    @Column(name = "max_stock_level", nullable = false)
+    private int maxStockLevel;
+
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "created_by_id", nullable = false)
@@ -72,11 +78,7 @@ public class Item {
     @JoinColumn(name = "brand_id", nullable = false)
     private Brand brand;
 
-    @Column(name = "min_stock_level", nullable = false)
-    private int minStockLevel;
 
-    @Column(name = "max_stock_level", nullable = false)
-    private int maxStockLevel;
 
     @OneToMany(mappedBy = "item")
     private List<Inventory> inventoryList;
@@ -91,7 +93,7 @@ public class Item {
 
     @ManyToOne
     @JoinColumn(name = "location_id", nullable = false)
-    private Location locations;
+    private Location location;
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemMovement> movements;

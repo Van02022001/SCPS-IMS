@@ -42,7 +42,12 @@ public class Category {
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
 
-    @ManyToMany(mappedBy = "categories")
+    @ManyToMany
+    @JoinTable(
+            name = "category_subcategory", // tên bảng liên kết
+            joinColumns = @JoinColumn(name = "category_id"), // khóa ngoại cho Category
+            inverseJoinColumns = @JoinColumn(name = "subcategory_id") // khóa ngoại cho SubCategory
+    )
     @JsonIgnore
     private Set<SubCategory> subCategories;
 }

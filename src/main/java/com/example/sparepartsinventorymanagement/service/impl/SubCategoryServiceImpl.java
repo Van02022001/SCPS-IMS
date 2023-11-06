@@ -1,6 +1,5 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
-import com.example.sparepartsinventorymanagement.dto.request.ProductFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ProductDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
@@ -78,7 +77,7 @@ public class SubCategoryServiceImpl implements SubCategoryService {
 
     @Override
     public ResponseEntity<?> getActiveProducts() {
-        List<SubCategory> subCategories = productRepository.findByStatus(ProductStatus.Active);
+        List<SubCategory> subCategories = productRepository.findByStatus(SubCategoryStatus.Active);
         if(subCategories.size() > 0){
             ModelMapper mapper = new ModelMapper();
             List<ProductDTO> res = mapper.map(subCategories, new TypeToken<List<ProductDTO>>() {
@@ -249,14 +248,14 @@ public class SubCategoryServiceImpl implements SubCategoryService {
 //    }
 
     @Override
-    public ResponseEntity<?> updateProductStatus(Long id, ProductStatus status) {
+    public ResponseEntity<?> updateProductStatus(Long id, SubCategoryStatus status) {
         SubCategory subCategory = productRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Product not found")
         );
-        if(status == ProductStatus.Active){
-            subCategory.setStatus(ProductStatus.Active);
+        if(status == SubCategoryStatus.Active){
+            subCategory.setStatus(SubCategoryStatus.Active);
         }else {
-            subCategory.setStatus(ProductStatus.Inactive);
+            subCategory.setStatus(SubCategoryStatus.Inactive);
         }
         productRepository.save(subCategory);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(

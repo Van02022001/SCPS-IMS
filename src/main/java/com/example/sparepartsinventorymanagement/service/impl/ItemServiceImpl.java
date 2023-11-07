@@ -208,7 +208,8 @@ public class ItemServiceImpl implements ItemService {
                 .effectiveDate(currentDate)
                 .item(item)
                 .build();
-
+        pricingRepository.save(pricing);
+        purchasePriceRepository.save(purchasePrice);
 
         List<Inventory> inventoryList = new ArrayList<>();
         Inventory inventory = Inventory.builder()
@@ -224,12 +225,13 @@ public class ItemServiceImpl implements ItemService {
                 .period(getPeriod())
                 .build();
 
-
         location.setItem(item);
         item.setPricing(pricing);
         item.setPurchasePrice(purchasePrice);
         item.setInventoryList(inventoryList);
         item.setLocations(locations);
+
+
         itemRepository.save(item);
         inventoryRepository.save(inventory);
 

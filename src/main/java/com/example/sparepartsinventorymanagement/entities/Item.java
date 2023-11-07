@@ -105,7 +105,7 @@ public class Item {
     @OneToOne(mappedBy = "item")
     private PurchasePrice purchasePrice;
 
-    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
     private List<Location> locations;
 
     // Getters and setters (omitted for brevity)

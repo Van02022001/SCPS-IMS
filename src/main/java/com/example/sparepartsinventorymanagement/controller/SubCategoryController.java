@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Set;
 
 @RestController
-@RequestMapping("/api/v1/products")
+@RequestMapping("/api/v1/sub-categories")
 public class SubCategoryController {
     @Autowired
     private SubCategoryServiceImpl subCategoryService;

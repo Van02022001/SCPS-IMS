@@ -14,12 +14,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/productMetas")
+@RequestMapping("/api/v1/sub-category-metas")
 public class SubCategoryMetaController {
     @Autowired
     private SubCategoryMetaServiceImpl productMetaService;
 
-    @Operation(summary = "For get list of product meta by product")
+    @Operation(summary = "For get list of sub category meta by product")
     @GetMapping(value = "/getProductMetasByProduct/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAll(
             @Parameter(description = "Enter sub category id to get", example = "1", required = true)

@@ -21,15 +21,12 @@ public class Period {
     @Column(name="period_id")
     private Long id;
 
-    @Column(name = "period_name", nullable = false)
-    private String periodName; // Tên kỳ (ví dụ: Tháng 1, Quý 1,...)
-
     @Column(name = "start_date", nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date startDate;
 
-    @Column(name = "end_date", nullable = false)
+    @Column(name = "end_date")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date endDate;

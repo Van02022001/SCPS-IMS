@@ -1,8 +1,11 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
+import com.example.sparepartsinventorymanagement.dto.request.CreateLocationForm;
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
+import com.example.sparepartsinventorymanagement.dto.request.UpdateItemForm;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
+import com.example.sparepartsinventorymanagement.entities.Period;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
 import com.example.sparepartsinventorymanagement.repository.*;
@@ -16,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.*;
 import java.util.*;
 
 @Service
@@ -49,6 +53,17 @@ public class ItemServiceImpl implements ItemService {
 
     @Autowired
     private LocationRepository locationRepository;
+
+    @Autowired
+    private PricingAuditRepository pricingAuditRepository;
+
+    @Autowired
+    private PurchasePriceAuditRepository purchasePriceAuditRepository;
+
+    @Autowired
+    private InventoryRepository inventoryRepository;
+    @Autowired
+    private  PeriodRepository periodRepository;
     @Override
     public ResponseEntity<?> getAll() {
         List<Item> items = itemRepository.findAll();
@@ -149,12 +164,21 @@ public class ItemServiceImpl implements ItemService {
                 ()-> new NotFoundException("User not found")
         );
         //Location
+        List<Location> locations = new ArrayList<>();
         Location location = Location.builder()
                 .warehouse(warehouse)
                 .build();
+        locations.add(location);
+
+        if(itemRepository.existsBySubCategoryAndOriginAndBrandAndSupplier(subCategory, origin, brand, supplier)){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(), "Item was existed", null
+            ));
+        }
 
         //Create code
         String code = createItemCode(subCategory.getName().trim(), subCategory.getSize(), brand.getName().trim(), origin.getName().trim(), origin.getName().trim());
+
         //Create item
         Date currentDate = new Date();
 
@@ -171,7 +195,7 @@ public class ItemServiceImpl implements ItemService {
                 .brand(brand)
                 .origin(origin)
                 .supplier(supplier)
-                .location(location)
+                .locations(locations)
                 .build();
 
         Pricing pricing = Pricing.builder()
@@ -185,21 +209,30 @@ public class ItemServiceImpl implements ItemService {
                 .item(item)
                 .build();
 
-        Set<Pricing> pricings = new HashSet<>();
-        pricings.add(pricing);
-        item.setPricings(pricings);
 
-        Set<PurchasePrice> purchasePrices = new HashSet<>();
-        purchasePrices.add(purchasePrice);
-        item.setPurchasePrices(purchasePrices);
+        List<Inventory> inventoryList = new ArrayList<>();
+        Inventory inventory = Inventory.builder()
+                .openingStockValue(form.getPurchasePrice()* form.getQuantity())
+                .openingStockQuantity(form.getQuantity())
+                .inboundQuantity(form.getQuantity())
+                .inboundValue(form.getPurchasePrice())
+                .isActive(true)
+                .discrepancyQuantity(0)
+                .discrepancyValue(0)
+                .item(item)
+                .warehouse(warehouse)
+                .period(getPeriod())
+                .build();
 
-        List<Item> items = new ArrayList<>();
-        items.add(item);
-        location.setItems(items);
-        locationRepository.save(location);
+
+        location.setItem(item);
+        item.setPricing(pricing);
+        item.setPurchasePrice(purchasePrice);
+        item.setInventoryList(inventoryList);
+        item.setLocations(locations);
         itemRepository.save(item);
-        pricingRepository.save(pricing);
-        purchasePriceRepository.save(purchasePrice);
+        inventoryRepository.save(inventory);
+
 
         ModelMapper mapper = new ModelMapper();
         ItemDTO res = mapper.map(item, ItemDTO.class);
@@ -210,7 +243,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ResponseEntity<?> updateItem(Long id, ItemFormRequest form) {
+    public ResponseEntity<?> updateItem(Long id, UpdateItemForm form) {
         //Check Item
         Item item = itemRepository.findById(id).orElseThrow(
                 () -> new NotFoundException("Item not found")
@@ -245,6 +278,8 @@ public class ItemServiceImpl implements ItemService {
             code = createItemCode(subCategory.getName().trim(), subCategory.getSize(), brand.getName().trim(), origin.getName().trim(), origin.getName().trim());
             item.setCode(code);
         }
+
+        Date date = new Date();
         //update item
         item.setSubCategory(subCategory);
         item.setBrand(brand);
@@ -252,10 +287,34 @@ public class ItemServiceImpl implements ItemService {
         item.setSupplier(supplier);
         item.setUpdatedBy(user);
         item.setQuantity(form.getQuantity());
-        item.setUpdatedAt(new Date());
+        item.setUpdatedAt(date);
 
         //Price
+        if(item.getPricing().getPrice() != form.getPricingPrice()){
 
+            PricingAudit pricingAudit = PricingAudit.builder()
+                    .pricing(item.getPricing())
+                    .newPrice(form.getPricingPrice())
+                    .oldPrice(item.getPricing().getPrice())
+                    .changedBy(user)
+                    .changeDate(date)
+                    .build();
+            item.getPricing().setPrice(form.getPricingPrice());
+            item.getPricing().setStartDate(date);
+        }
+
+        if(item.getPurchasePrice().getPrice()!= form.getPurchasePrice()){
+            PurchasePriceAudit purchasePriceAudit = PurchasePriceAudit.builder()
+                    .oldPrice(item.getPurchasePrice().getPrice())
+                    .newPrice(form.getPurchasePrice())
+                    .changeDate(date)
+                    .changedBy(user)
+                    .purchasePrice(item.getPurchasePrice())
+                    .build();
+            item.getPurchasePrice().setPrice(form.getPurchasePrice());
+            item.getPurchasePrice().setEffectiveDate(date);
+
+        }
         itemRepository.save(item);
 
         ModelMapper mapper = new ModelMapper();
@@ -281,6 +340,61 @@ public class ItemServiceImpl implements ItemService {
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(), "Update item status by id successfully.", null
         ));
+    }
+
+    @Override
+    public ResponseEntity<?> changeItemLocation(Long id, Long toLocationId) {
+//        //Check Item
+//        Item item = itemRepository.findById(id).orElseThrow(
+//                () -> new NotFoundException("Item not found")
+//        );
+//        Location toLocation = locationRepository.findById(toLocationId).orElseThrow(
+//                () -> new NotFoundException("Location not found")
+//        );
+//        if(item.getLocation().getWarehouse().getId() != toLocation.getWarehouse().getId()){
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+//                    HttpStatus.BAD_REQUEST.toString(), "This warehouse don't have this location", null
+//            ));
+//        }
+//        if(item.getLocation().getId() == toLocation.getId()){
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+//                    HttpStatus.BAD_REQUEST.toString(), "Location is not change", null
+//            ));
+//        }
+//        //Check inventory staff
+//        Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
+//                () -> new NotFoundException("User not found")
+//        );
+//        List<ItemMovement> movements = new ArrayList<>();
+//        ItemMovement itemMovement = ItemMovement.builder()
+//                .fromLocation(item.getLocation())
+//                .toLocation(toLocation)
+//                .movedAt(new Date())
+//                .movedBy(user)
+//                .quantity()
+//                .build();
+//
+//        item.setLocation(toLocation);
+//
+
+
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<?> createItemLocation(Long id, CreateLocationForm form) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<?> getItemMovements(Long id) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<?> getHistoryPriceChange(Long id) {
+        return null;
     }
 
     private String createItemCode(String productName, Size size, String brandName, String originName, String supplierName){
@@ -333,5 +447,24 @@ public class ItemServiceImpl implements ItemService {
             }
         }
         return result.toString();
+    }
+    private Period getPeriod(){
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        Instant instant = startOfDay.atZone(ZoneId.systemDefault()).toInstant();
+        Date sdate = Date.from(instant);
+        LocalTime endOfDay = LocalTime.of(23, 59, 59, 999999999); // 23:59:59.999999999
+        LocalDateTime endOfToday = LocalDateTime.of(today, endOfDay);
+        Instant instantEndOfDay = endOfToday.atZone(ZoneId.systemDefault()).toInstant();
+        Date edate = Date.from(instantEndOfDay);
+        Period period = periodRepository.findByStartDateAndEndDate(sdate, edate);
+        if(period == null){
+            period = Period.builder()
+                    .startDate(sdate)
+                    .endDate(edate)
+                    .build();
+            periodRepository.save(period);
+        }
+        return period;
     }
 }

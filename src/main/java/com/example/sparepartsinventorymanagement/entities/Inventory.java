@@ -29,10 +29,10 @@ public class Inventory {
     @Column(name = "opening_stock_value", nullable = false)
     private double openingStockValue; // Giá trị tồn đầu kỳ
 
-    @Column(name = "closing_stock_quantity", nullable = false)
+    @Column(name = "closing_stock_quantity")
     private int closingStockQuantity; // Số lượng tồn cuối kỳ
 
-    @Column(name = "closing_stock_value", nullable = false)
+    @Column(name = "closing_stock_value")
     private double closingStockValue; // Giá trị tồn cuối kỳ
 
     @Column(name = "inbound_quantity", nullable = false)
@@ -41,13 +41,13 @@ public class Inventory {
     @Column(name = "inbound_value", nullable = false)
     private double inboundValue; // Giá trị nhập
 
-    @Column(name = "outbound_quantity", nullable = false)
+    @Column(name = "outbound_quantity")
     private int outboundQuantity; // Số lượng xuất
 
-    @Column(name = "outbound_value", nullable = false)
+    @Column(name = "outbound_value")
     private double outboundValue; // Giá trị xuất
 
-    @Column(name = "total_value", nullable = false)
+    @Column(name = "total_value")
     private double totalValue; // Giá trị xuất
 
 
@@ -66,6 +66,10 @@ public class Inventory {
     @ManyToOne
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
+
+    @ManyToOne
+    @JoinColumn(name = "warehouse_id", nullable = false)
+    private Warehouse warehouse;
 
     @ManyToOne
     @JoinColumn(name = "period_id", nullable = false)

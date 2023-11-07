@@ -47,12 +47,10 @@ public class Item {
     private int maxStockLevel;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "created_by_id", nullable = false)
     private User createdBy;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "updated_by_id")
     private User updatedBy;
 
@@ -71,7 +69,7 @@ public class Item {
 
 
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "subcategory_id", nullable = false)
     private SubCategory subCategory;
 
     @ManyToOne
@@ -81,6 +79,7 @@ public class Item {
 
 
     @OneToMany(mappedBy = "item")
+    @JsonIgnore
     private List<Inventory> inventoryList;
 
     @ManyToOne
@@ -100,12 +99,14 @@ public class Item {
     private List<CustomerRequestReceiptDetail> customerRequestReceiptDetailList;
 
 
-    @OneToOne(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    @OneToOne(mappedBy = "item")
     private Pricing pricing;
 
-    @OneToOne(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    @OneToOne(mappedBy = "item")
     private PurchasePrice purchasePrice;
 
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Location> locations;
 
     // Getters and setters (omitted for brevity)
 }

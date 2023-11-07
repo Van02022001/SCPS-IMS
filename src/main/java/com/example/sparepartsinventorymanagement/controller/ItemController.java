@@ -1,6 +1,7 @@
 package com.example.sparepartsinventorymanagement.controller;
 
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
+import com.example.sparepartsinventorymanagement.dto.request.UpdateItemForm;
 import com.example.sparepartsinventorymanagement.entities.ItemStatus;
 import com.example.sparepartsinventorymanagement.service.impl.ItemServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +37,7 @@ public class ItemController {
         return itemService.getItemById(id);
     }
     @Operation(summary = "For get items by sub category id")
-    @GetMapping(value = "/items-by-product/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/items-by-sub-category/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getItemsByProduct(
             @Parameter(description = "Enter id to get", example = "1", required = true) @PathVariable(name = "id") @NotBlank Long id
     ) {
@@ -63,7 +64,7 @@ public class ItemController {
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateItem(
             @Parameter(description = "Enter id", required = true, example = "1") @NotNull @PathVariable(name = "id") Long id,
-            @Valid @RequestBody ItemFormRequest form
+            @Valid @RequestBody UpdateItemForm form
     ) {
         return itemService.updateItem(id, form);
     }

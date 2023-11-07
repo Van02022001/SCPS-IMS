@@ -21,6 +21,11 @@ public class PurchasePriceAudit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
+    @ManyToOne
+    @JoinColumn(name = "changed_by")
+    private User changedBy;
+
     @Column(name = "change_date", nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
@@ -33,10 +38,6 @@ public class PurchasePriceAudit {
     private double newPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "purchase_price_change_id")
-    private PurchasePrice purchasePrice;
-
-    @ManyToOne
-    @JoinColumn(name = "changed_by")
-    private User changedBy;
+    @JoinColumn(name = "purchase_price_id") // thay đổi từ purchase_price_change_id sang purchase_price_id
+    private PurchasePrice purchasePrice; // Liên kết ngược lại với PurchasePrice
 }

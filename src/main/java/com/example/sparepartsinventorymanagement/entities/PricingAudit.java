@@ -33,8 +33,8 @@ public class PricingAudit {
     private double newPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pricing_change_id")
-    private Pricing pricing; // This maps back to the Pricing entity
+    @JoinColumn(name = "pricing_id") // thay đổi từ pricing_change_id sang pricing_id
+    private Pricing pricing; // Liên kết ngược lại với Pricing
 
     @ManyToOne
     @JoinColumn(name = "changed_by")

@@ -31,7 +31,7 @@ public class PurchasePrice {
     @Column(name = "price", nullable = false)
     private double price; // Giá mua vào
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 

@@ -40,6 +40,5 @@ public class Location {
     )
     private List<LocationTag> tags;
 
-    @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Item> items;
+
 }

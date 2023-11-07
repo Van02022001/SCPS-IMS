@@ -36,7 +36,7 @@ public class Pricing {
     @Column(name = "price")
     private double price;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 

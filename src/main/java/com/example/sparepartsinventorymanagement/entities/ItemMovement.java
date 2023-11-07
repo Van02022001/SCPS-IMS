@@ -22,15 +22,15 @@ public class ItemMovement {
 
 
 
-    @ManyToOne
-    @JoinColumn(name = "moved_by", nullable = false)
-    private User movedBy;
-
     @Column(name = "quantity", nullable = false)
     private int quantity;
 
     @Column(name = "notes")
     private String notes;
+
+    @Column(name = "moved_at", nullable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
+    private Date movedAt;
 
     @ManyToOne
     @JoinColumn(name = "item_id", nullable = false)
@@ -44,7 +44,8 @@ public class ItemMovement {
     @JoinColumn(name = "to_location_id", nullable = false)
     private Location toLocation;
 
-    @Column(name = "moved_at", nullable = false)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
-    private Date movedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "moved_by", nullable = false)
+    private User movedBy;
 }

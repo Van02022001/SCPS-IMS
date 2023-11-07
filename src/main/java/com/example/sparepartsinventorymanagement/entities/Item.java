@@ -91,9 +91,7 @@ public class Item {
     @JoinColumn(name = "origin_id", nullable = false)
     private Origin origin;
 
-    @ManyToOne
-    @JoinColumn(name = "location_id", nullable = false)
-    private Location location;
+
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemMovement> movements;
@@ -102,11 +100,11 @@ public class Item {
     private List<CustomerRequestReceiptDetail> customerRequestReceiptDetailList;
 
 
-    @OneToMany(mappedBy = "item")
-    private Set<Pricing> pricings;
+    @OneToOne(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    private Pricing pricing;
 
-    @OneToMany(mappedBy = "item")
-    private Set<PurchasePrice> purchasePrices;
+    @OneToOne(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    private PurchasePrice purchasePrice;
 
 
     // Getters and setters (omitted for brevity)

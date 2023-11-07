@@ -22,7 +22,7 @@ public class Image {
     @Column(name="image_id")
     private Long id;
 
-    @Column(name = "name", nullable = false, length = 1024)
+    @Column(name = "name", length = 1024)
     private String name;
 
     @Column(name = "title", length = 2048)

@@ -38,6 +38,6 @@ public class PurchasePriceAudit {
     private double newPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "purchase_price_change_id")
-    private PurchasePrice purchasePrice;
+    @JoinColumn(name = "purchase_price_id") // thay đổi từ purchase_price_change_id sang purchase_price_id
+    private PurchasePrice purchasePrice; // Liên kết ngược lại với PurchasePrice
 }

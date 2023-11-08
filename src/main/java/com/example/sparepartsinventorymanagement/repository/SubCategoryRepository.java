@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ProductRepository extends JpaRepository<SubCategory, Long> {
+public interface SubCategoryRepository extends JpaRepository<SubCategory, Long> {
     boolean existsByName(String name);
     List<SubCategory> findByNameContaining(String name);
     List<SubCategory> findByStatus(SubCategoryStatus status);

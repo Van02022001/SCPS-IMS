@@ -30,7 +30,7 @@ public class Size {
     private float diameter;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "product_id")
+    @JoinColumn(name = "subcategory_id")
     private SubCategory subCategory;
 
     @ManyToOne

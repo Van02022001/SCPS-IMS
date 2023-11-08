@@ -22,9 +22,9 @@ public class PurchasePriceAudit {
     private Long id;
 
 
-
-    @Column(name = "changed_by", nullable = false)
-    private Long changedBy;
+    @ManyToOne
+    @JoinColumn(name = "changed_by")
+    private User changedBy;
 
     @Column(name = "change_date", nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)

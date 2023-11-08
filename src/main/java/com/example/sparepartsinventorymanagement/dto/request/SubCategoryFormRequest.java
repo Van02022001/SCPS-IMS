@@ -12,7 +12,7 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductFormRequest {
+public class SubCategoryFormRequest {
     @Schema(description = "Name of product", example = "Bạc lót 220x157 Hold")
     @Size(min = 1, max = 100)
     @NotBlank(message = "Name of product not null")
@@ -27,13 +27,6 @@ public class ProductFormRequest {
     private String description;
 
 
-    @Min(value = 0, message = "Minimum stock level cannot be less than 0")
-    @NotNull(message = "Minimum stock level is required")
-    private int minStockLevel;
-
-    @Min(value = 0, message = "Maximum stock level cannot be less than 0")
-    @NotNull(message = "Maximum stock level is required")
-    private int maxStockLevel;
 
     @Schema(description = "List category id")
     @NotNull(message = "Required field")

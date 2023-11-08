@@ -1,5 +1,6 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -40,5 +41,7 @@ public class Location {
     )
     private List<LocationTag> tags;
 
-
+    @ManyToOne
+    @JoinColumn(name = "item_id")
+    private Item item;
 }

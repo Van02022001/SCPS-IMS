@@ -1,22 +1,16 @@
 package com.example.sparepartsinventorymanagement.dto.request;
 
-import com.example.sparepartsinventorymanagement.entities.*;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ItemFormRequest {
-
+public class UpdateItemForm {
     @Positive(message = "Purchase Price must be a positive value")
     private double purchasePrice;
 
@@ -45,8 +39,4 @@ public class ItemFormRequest {
 
     @NotNull(message = "Origin ID is required")
     private Long origin_id;
-
-    @NotNull(message = "Warehouse ID is required")
-    private Long warehouse_id;
-
 }

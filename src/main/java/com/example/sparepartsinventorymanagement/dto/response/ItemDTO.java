@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -19,9 +21,10 @@ public class ItemDTO {
 
     private String code;
 
-    private double costPrice;
+    private PricingDTO pricing;
 
-    private double salePrice;
+    private PurchasePriceDTO purchasePrice;
+
 
     private int quantity;
 
@@ -46,16 +49,13 @@ public class ItemDTO {
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
 
-
-    private ItemProductDTO product;
+    private ItemProductDTO subCategory;
 
     private BrandDTO brand;
-
-    //private List<Inventory> inventoryList;
 
     private ItemSupplierDTO supplier;
 
     private OriginDTO origin;
 
-    private LocationDTO location;
+    private List<LocationDTO> locations;
 }

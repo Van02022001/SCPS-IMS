@@ -21,9 +21,6 @@ public class PricingAudit {
     private Long id;
 
 
-    @Column(name = "changed_by", nullable = false)
-    private Long changedBy;
-
     @Column(name = "change_date", nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
@@ -39,5 +36,8 @@ public class PricingAudit {
     @JoinColumn(name = "pricing_id") // thay đổi từ pricing_change_id sang pricing_id
     private Pricing pricing; // Liên kết ngược lại với Pricing
 
+    @ManyToOne
+    @JoinColumn(name = "changed_by")
+    private User changedBy;
 
 }

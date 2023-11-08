@@ -28,15 +28,10 @@ public class Pricing {
     @DateTimeFormat(pattern = DateTimeUtils.DATE_FORMAT)
     private Date startDate;
 
-    @Column(name = "end_date")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATE_FORMAT)
-    @DateTimeFormat(pattern = DateTimeUtils.DATE_FORMAT)
-    private Date endDate;
-
     @Column(name = "price")
     private double price;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 

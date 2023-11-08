@@ -45,10 +45,14 @@ public class Warehouse {
     private String address;
 
     @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Location> locations = new ArrayList<>();
 
     @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<User> users;
 
-
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Inventory> inventoryList;
 }

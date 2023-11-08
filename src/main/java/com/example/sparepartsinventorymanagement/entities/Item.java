@@ -92,7 +92,6 @@ public class Item {
     private Origin origin;
 
 
-
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemMovement> movements;
 

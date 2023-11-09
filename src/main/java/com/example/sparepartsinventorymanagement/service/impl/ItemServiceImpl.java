@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ItemServiceImpl implements ItemService {
@@ -64,6 +65,9 @@ public class ItemServiceImpl implements ItemService {
     private InventoryRepository inventoryRepository;
     @Autowired
     private  PeriodRepository periodRepository;
+
+    @Autowired
+    private ModelMapper modelMapper;
     @Override
     public ResponseEntity<?> getAll() {
         List<Item> items = itemRepository.findAll();
@@ -397,6 +401,29 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ResponseEntity<?> getHistoryPriceChange(Long id) {
         return null;
+    }
+
+    @Override
+    public ResponseEntity<?> findBySubCategory_NameContainingIgnoreCase(String name) {
+        List<SubCategory> subCategories = subCategoryRepository.findByNameContaining(name);
+        List<ItemDTO> itemDTOs = new ArrayList<>();
+        for(SubCategory subCategory: subCategories){
+            List<Item> items = itemRepository.findBySubCategory(subCategory);
+            List<ItemDTO> subCategoryItemDTOs = items.stream()
+                    .map(item -> modelMapper.map(item, ItemDTO.class))
+                    .collect(Collectors.toList());
+            itemDTOs.addAll(subCategoryItemDTOs);
+        }
+
+        if(itemDTOs.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(), "No items found with the subcategory name " + name, null
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(), "Items found with the subcategory name containing: " + name, itemDTOs
+        ));
+
     }
 
     private String createItemCode(String productName, Size size, String brandName, String originName, String supplierName){

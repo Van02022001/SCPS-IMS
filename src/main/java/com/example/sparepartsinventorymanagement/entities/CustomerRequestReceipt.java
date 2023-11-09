@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Builder
@@ -47,5 +48,9 @@ public class CustomerRequestReceipt {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private CustomerRequestReceiptStatus status;
+
+
+    @OneToMany(mappedBy = "customerRequestReceipt")
+    private Set<Receipt> receipts;
 
 }

@@ -59,4 +59,9 @@ public class Receipt {
     private Date updatedAt;
 
 
+    @ManyToOne
+    @JoinColumn(name = "customer_request_receipt_id")
+    private CustomerRequestReceipt customerRequestReceipt;
+
+
 }

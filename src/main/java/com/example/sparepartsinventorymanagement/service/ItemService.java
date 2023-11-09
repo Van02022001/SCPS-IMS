@@ -18,4 +18,6 @@ public interface ItemService {
     ResponseEntity<?> createItemLocation(Long id, CreateLocationForm form);
     ResponseEntity<?> getItemMovements(Long id);
     ResponseEntity<?> getHistoryPriceChange(Long id);
+
+    ResponseEntity<?> findBySubCategory_NameContainingIgnoreCase(String name);
 }

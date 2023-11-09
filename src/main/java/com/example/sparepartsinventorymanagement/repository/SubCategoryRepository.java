@@ -1,6 +1,7 @@
 package com.example.sparepartsinventorymanagement.repository;
 
 import com.example.sparepartsinventorymanagement.entities.Category;
+import com.example.sparepartsinventorymanagement.entities.Item;
 import com.example.sparepartsinventorymanagement.entities.SubCategory;
 import com.example.sparepartsinventorymanagement.entities.SubCategoryStatus;
 import org.springframework.data.jpa.repository.JpaRepository;

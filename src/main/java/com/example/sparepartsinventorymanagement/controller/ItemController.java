@@ -80,4 +80,13 @@ public class ItemController {
     ) {
         return itemService.updateItemStatus(id, status);
     }
+
+    @Operation(summary = "Search for items by subcategory name ")
+    @GetMapping()
+    public ResponseEntity<?> searchItemBySubCategory_NameContainingIgnoreCase(
+            @Parameter(description = "Subcategory name to search for ", example = "Bạc")
+            @RequestParam(name = "partialName") String name
+    ){
+        return itemService.findBySubCategory_NameContainingIgnoreCase(name);
+    }
 }

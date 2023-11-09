@@ -52,4 +52,8 @@ public class Notification {
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "event_type")
+    private EventType eventType;
+
 }

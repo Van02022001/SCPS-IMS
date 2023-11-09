@@ -171,9 +171,15 @@ public class SubCategoryServiceImpl implements SubCategoryService {
                 .size(size)
                 .build();
 
+
         size.setSubCategory(subCategory);
         sizeRepository.save(size);
         subCategoryRepository.save(subCategory);
+        for (Category category: categories
+        ) {
+            category.getSubCategories().add(subCategory);
+            categoryRepository.save(category);
+        }
         ModelMapper mapper =  new ModelMapper();
         ProductDTO res = mapper.map(subCategory, ProductDTO.class);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(

@@ -1,7 +1,6 @@
 package com.example.sparepartsinventorymanagement.controller;
 
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
-import com.example.sparepartsinventorymanagement.dto.request.UpdateItemForm;
 import com.example.sparepartsinventorymanagement.entities.ItemStatus;
 import com.example.sparepartsinventorymanagement.service.impl.ItemServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -64,7 +63,7 @@ public class ItemController {
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateItem(
             @Parameter(description = "Enter id", required = true, example = "1") @NotNull @PathVariable(name = "id") Long id,
-            @Valid @RequestBody UpdateItemForm form
+            @Valid @RequestBody ItemFormRequest form
     ) {
         return itemService.updateItem(id, form);
     }

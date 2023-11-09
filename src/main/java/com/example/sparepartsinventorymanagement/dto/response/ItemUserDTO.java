@@ -8,5 +8,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ItemUserDTO {
-    private String email;
+    private String firstName;
+
+    private String middleName;
+
+    private String lastName;
 }

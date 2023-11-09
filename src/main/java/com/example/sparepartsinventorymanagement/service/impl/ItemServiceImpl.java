@@ -2,7 +2,6 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.CreateLocationForm;
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
-import com.example.sparepartsinventorymanagement.dto.request.UpdateItemForm;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.entities.Period;
@@ -148,14 +147,9 @@ public class ItemServiceImpl implements ItemService {
         Supplier supplier = supplierRepository.findById(form.getSupplier_id()).orElseThrow(
                 ()-> new NotFoundException("Supplier not found")
         );
-        //Check product
-        SubCategory subCategory = subCategoryRepository.findById(form.getProduct_id()).orElseThrow(
+        //Check sub category
+        SubCategory subCategory = subCategoryRepository.findById(form.getSub_category_id()).orElseThrow(
                 ()-> new NotFoundException("SubCategory not found")
-        );
-
-        //Check warehouse
-        Warehouse warehouse = warehouseRepository.findById(form.getWarehouse_id()).orElseThrow(
-                ()-> new NotFoundException("Warehouse not found")
         );
 
         //Check manager
@@ -163,12 +157,7 @@ public class ItemServiceImpl implements ItemService {
         User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
                 ()-> new NotFoundException("User not found")
         );
-        //Location
-        List<Location> locations = new ArrayList<>();
-        Location location = Location.builder()
-                .warehouse(warehouse)
-                .build();
-        locations.add(location);
+
 
         if(itemRepository.existsBySubCategoryAndOriginAndBrandAndSupplier(subCategory, origin, brand, supplier)){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
@@ -186,7 +175,6 @@ public class ItemServiceImpl implements ItemService {
                 .code(code)
                 .minStockLevel(form.getMinStockLevel())
                 .maxStockLevel(form.getMaxStockLevel())
-                .quantity(form.getQuantity())
                 .status(ItemStatus.Active)
                 .createdAt(currentDate)
                 .updatedAt(currentDate)
@@ -195,57 +183,19 @@ public class ItemServiceImpl implements ItemService {
                 .brand(brand)
                 .origin(origin)
                 .supplier(supplier)
-                .locations(locations)
                 .build();
-
-        Pricing pricing = Pricing.builder()
-                .price(form.getPricingPrice())
-                .startDate(currentDate)
-                .item(item)
-                .build();
-        PurchasePrice purchasePrice = PurchasePrice.builder()
-                .price(form.getPurchasePrice())
-                .effectiveDate(currentDate)
-                .item(item)
-                .build();
-        pricingRepository.save(pricing);
-        purchasePriceRepository.save(purchasePrice);
-
-        List<Inventory> inventoryList = new ArrayList<>();
-        Inventory inventory = Inventory.builder()
-                .openingStockValue(form.getPurchasePrice()* form.getQuantity())
-                .openingStockQuantity(form.getQuantity())
-                .inboundQuantity(form.getQuantity())
-                .inboundValue(form.getPurchasePrice())
-                .isActive(true)
-                .discrepancyQuantity(0)
-                .discrepancyValue(0)
-                .item(item)
-                .warehouse(warehouse)
-                .period(getPeriod())
-                .build();
-
-        location.setItem(item);
-        item.setPricing(pricing);
-        item.setPurchasePrice(purchasePrice);
-        item.setInventoryList(inventoryList);
-        item.setLocations(locations);
-
 
         itemRepository.save(item);
-        inventoryRepository.save(inventory);
-
 
         ModelMapper mapper = new ModelMapper();
         ItemDTO res = mapper.map(item, ItemDTO.class);
-
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(), "Get item successfully.", res
         ));
     }
 
     @Override
-    public ResponseEntity<?> updateItem(Long id, UpdateItemForm form) {
+    public ResponseEntity<?> updateItem(Long id, ItemFormRequest form) {
         //Check Item
         Item item = itemRepository.findById(id).orElseThrow(
                 () -> new NotFoundException("Item not found")
@@ -263,7 +213,7 @@ public class ItemServiceImpl implements ItemService {
                 () -> new NotFoundException("Supplier not found")
         );
         //Check product
-        SubCategory subCategory = subCategoryRepository.findById(form.getProduct_id()).orElseThrow(
+        SubCategory subCategory = subCategoryRepository.findById(form.getSub_category_id()).orElseThrow(
                 () -> new NotFoundException("SubCategory not found")
         );
 
@@ -275,7 +225,7 @@ public class ItemServiceImpl implements ItemService {
 
         //Create code
         String code = "";
-        if (item.getSubCategory().getId() != form.getProduct_id() || item.getBrand().getId() != form.getBrand_id()
+        if (item.getSubCategory().getId() != form.getSub_category_id() || item.getBrand().getId() != form.getBrand_id()
                 || item.getOrigin().getId() != form.getOrigin_id() || item.getSupplier().getId() != form.getSupplier_id()) {
             code = createItemCode(subCategory.getName().trim(), subCategory.getSize(), brand.getName().trim(), origin.getName().trim(), origin.getName().trim());
             item.setCode(code);
@@ -288,40 +238,12 @@ public class ItemServiceImpl implements ItemService {
         item.setOrigin(origin);
         item.setSupplier(supplier);
         item.setUpdatedBy(user);
-        item.setQuantity(form.getQuantity());
         item.setUpdatedAt(date);
 
-        //Price
-        if(item.getPricing().getPrice() != form.getPricingPrice()){
-
-            PricingAudit pricingAudit = PricingAudit.builder()
-                    .pricing(item.getPricing())
-                    .newPrice(form.getPricingPrice())
-                    .oldPrice(item.getPricing().getPrice())
-                    .changedBy(user)
-                    .changeDate(date)
-                    .build();
-            item.getPricing().setPrice(form.getPricingPrice());
-            item.getPricing().setStartDate(date);
-        }
-
-        if(item.getPurchasePrice().getPrice()!= form.getPurchasePrice()){
-            PurchasePriceAudit purchasePriceAudit = PurchasePriceAudit.builder()
-                    .oldPrice(item.getPurchasePrice().getPrice())
-                    .newPrice(form.getPurchasePrice())
-                    .changeDate(date)
-                    .changedBy(user)
-                    .purchasePrice(item.getPurchasePrice())
-                    .build();
-            item.getPurchasePrice().setPrice(form.getPurchasePrice());
-            item.getPurchasePrice().setEffectiveDate(date);
-
-        }
         itemRepository.save(item);
 
         ModelMapper mapper = new ModelMapper();
         ItemDTO res = mapper.map(item, ItemDTO.class);
-
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(), "Update item by id successfully.", res
         ));

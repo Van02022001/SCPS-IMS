@@ -135,6 +135,11 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ResponseEntity<?> createItem(ItemFormRequest form) {
+        if(form.getMinStockLevel()>= form.getMaxStockLevel()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(), "Min stock cannot be greater than max stock", null
+            ));
+        }
         //Check brand
         Brand brand = brandRepository.findById(form.getBrand_id()).orElseThrow(
                 ()-> new NotFoundException("Brand not found")

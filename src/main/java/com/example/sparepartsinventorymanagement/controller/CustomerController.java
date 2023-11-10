@@ -7,6 +7,7 @@ import com.example.sparepartsinventorymanagement.service.CustomerService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,13 +19,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(value = "/customers")
+@RequestMapping(value = "api/v1/customers")
+@Tag(name = "customer")
 public class CustomerController {
 
     @Autowired
     private CustomerService customerService;
 
-    @PreAuthorize("hasRole('ROLE_SALE_STAFF') or hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_SALE_STAFF') ")
     @Operation(summary = "For creating  a new customer")
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createCustomer(@Valid @RequestBody CreateCustomerForm form) {
@@ -53,7 +55,7 @@ public class CustomerController {
 
     }
 
-    @PreAuthorize("hasRole('ROLE_SALE_STAFF') or hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_SALE_STAFF') ")
     @Operation(summary = "For updating a customer by id")
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateCustomer(
@@ -66,14 +68,14 @@ public class CustomerController {
 
     }
 
-    @PreAuthorize("hasRole('ROLE_SALE_STAFF') or hasRole('ROLE_MANAGER')")
-    @Operation(summary = "For deleting a customer")
-    @DeleteMapping(value = "/{id}")
+    @PreAuthorize("hasRole('ROLE_SALE_STAFF')")
+    @Operation(summary = "For updating a supplier status by  supplier id")
+    @PutMapping(value = "status/{id}")
     public ResponseEntity<?> deleteCustomer(
-            @Parameter(description = "Enter customer id to delete", example = "1", required = true)
+            @Parameter(description = "Enter customer id ", example = "1", required = true)
             @PathVariable @NotNull Long id) {
 
-            return customerService.deleteCustomerById(id);
+            return customerService.updateCustomerStatus(id);
 
     }
 

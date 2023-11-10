@@ -44,6 +44,10 @@ public class Customer {
     @Column(name = "address", nullable =false)
     private String address;
 
+
+    @Column(name = "status")
+    private boolean status;
+
     @Column(name="customer_type", nullable =false)
     @Enumerated(EnumType.STRING)
     private CustomerType type;

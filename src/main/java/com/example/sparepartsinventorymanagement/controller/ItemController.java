@@ -5,6 +5,7 @@ import com.example.sparepartsinventorymanagement.entities.ItemStatus;
 import com.example.sparepartsinventorymanagement.service.impl.ItemServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/items")
+@Tag(name = "item")
 public class ItemController {
     @Autowired
     private ItemServiceImpl itemService;
@@ -81,7 +83,7 @@ public class ItemController {
     }
 
     @Operation(summary = "Search for items by subcategory name ")
-    @GetMapping()
+    @GetMapping("subcategoryName")
     public ResponseEntity<?> searchItemBySubCategory_NameContainingIgnoreCase(
             @Parameter(description = "Subcategory name to search for ", example = "Bạc")
             @RequestParam(name = "partialName") String name

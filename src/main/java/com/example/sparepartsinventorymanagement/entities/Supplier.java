@@ -43,6 +43,9 @@ public class Supplier {
     @Column(name = "address", nullable =false)
     private String address;
 
+    @Column(name = "status")
+    private boolean status;
+
     @Column(name = "created_at", nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)

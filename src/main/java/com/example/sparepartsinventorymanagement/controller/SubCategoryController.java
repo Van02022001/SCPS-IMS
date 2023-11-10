@@ -5,6 +5,7 @@ import com.example.sparepartsinventorymanagement.entities.SubCategoryStatus;
 import com.example.sparepartsinventorymanagement.service.impl.SubCategoryServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -20,6 +21,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/sub-categories")
+@Tag(name = "sub-category")
 public class SubCategoryController {
     @Autowired
     private SubCategoryServiceImpl subCategoryService;

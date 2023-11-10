@@ -4,6 +4,7 @@ import com.example.sparepartsinventorymanagement.dto.request.CreateCustomerForm;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateCustomerForm;
 import com.example.sparepartsinventorymanagement.entities.Customer;
 import com.example.sparepartsinventorymanagement.entities.CustomerType;
+import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.CustomerRepository;
 import com.example.sparepartsinventorymanagement.service.CustomerService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
@@ -39,6 +40,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .description(form.getDescription())
                 .type(form.getType())
                 .createdAt(new Date())
+                .status(true)
                 .build();
         customerRepository.save(customer);
         return ResponseEntity.ok().body(new ResponseObject(
@@ -111,17 +113,20 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<?> deleteCustomerById(Long id) {
-        if(!customerRepository.existsById(id)) {
-            // Nếu không tồn tại bản ghi với ID đó
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                    HttpStatus.NOT_FOUND.toString(), "Customer is not found!", null
-            ));
+    public ResponseEntity<?> updateCustomerStatus(Long id) {
+        Customer customer = customerRepository.findById(id)
+                        .orElseThrow(() -> new NotFoundException("Customer not found"));
+
+        if(customer.isStatus()){
+            customer.setStatus(false);
+        } else{
+            customer.setStatus(true);
         }
-        // Nếu tồn tại thì tiến hành xóa
-        customerRepository.deleteById(id);
+
+        customerRepository.save(customer);
+
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Deleted customer successfully!", null
+                HttpStatus.OK.toString(), "Update customer status successfully!", null
         ));
     }
 

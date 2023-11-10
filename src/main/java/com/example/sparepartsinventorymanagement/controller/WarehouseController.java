@@ -5,6 +5,7 @@ import com.example.sparepartsinventorymanagement.entities.WarehouseStatus;
 import com.example.sparepartsinventorymanagement.service.impl.WarehouseServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/warehouses")
+@Tag(name = "warehouse")
 public class WarehouseController {
     @Autowired
     private WarehouseServiceImpl warehouseService;

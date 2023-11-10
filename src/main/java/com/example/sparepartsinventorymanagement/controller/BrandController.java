@@ -5,6 +5,7 @@ import com.example.sparepartsinventorymanagement.dto.request.UpdateBrandFrom;
 import com.example.sparepartsinventorymanagement.service.impl.BrandServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/brands")
+@Tag(name = "brand")
 public class BrandController {
 
     @Autowired

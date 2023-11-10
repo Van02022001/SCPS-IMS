@@ -9,5 +9,5 @@ public interface SupplierService {
     ResponseEntity<?> getAllSuppliers();
     ResponseEntity<?> getSupplierById(Long id);
     ResponseEntity<?> updateSupplier(Long id, UpdateSupplierForm form);
-    ResponseEntity<?> deleteSupplierById(Long id);
+    ResponseEntity<?> updateSupplierStatus(Long id);
 }

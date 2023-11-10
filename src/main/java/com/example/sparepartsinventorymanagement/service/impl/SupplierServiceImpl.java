@@ -4,6 +4,7 @@ import com.example.sparepartsinventorymanagement.dto.request.CreateSupplierForm;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateSupplierForm;
 import com.example.sparepartsinventorymanagement.dto.response.SuppliersDTO;
 import com.example.sparepartsinventorymanagement.entities.Supplier;
+import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.SupplierRepository;
 import com.example.sparepartsinventorymanagement.service.SupplierService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
@@ -36,6 +37,7 @@ public class SupplierServiceImpl implements SupplierService {
                 .address(form.getAddress())
                 .createdAt(new Date())
                 .updatedAt(new Date())
+                .status(true)
                 .build();
         Supplier createSupplier = supplierRepository.save(supplier);
         SuppliersDTO response = modelMapper.map(createSupplier, SuppliersDTO.class);
@@ -50,7 +52,7 @@ public class SupplierServiceImpl implements SupplierService {
         List<Supplier> suppliers = supplierRepository.findAll();
 
         List<SuppliersDTO> response = suppliers.stream()
-                .map(supplier -> modelMapper.map(suppliers, SuppliersDTO.class))
+                .map(supplier -> modelMapper.map(supplier, SuppliersDTO.class))
                 .collect(Collectors.toList());
         if(!response.isEmpty()){
             return ResponseEntity.ok().body(new ResponseObject(
@@ -66,17 +68,18 @@ public class SupplierServiceImpl implements SupplierService {
     public ResponseEntity<?> getSupplierById(Long id) {
         Optional<Supplier> supplierOpt = supplierRepository.findById(id);
 
-        List<SuppliersDTO> response = supplierOpt.stream()
-                .map(supplier -> modelMapper.map(supplierOpt, SuppliersDTO.class))
-                .collect(Collectors.toList());
-        if(!response.isEmpty()){
+        if(supplierOpt.isPresent()){
+            SuppliersDTO response = modelMapper.map(supplierOpt.get(), SuppliersDTO.class);
+            return ResponseEntity.ok().body(new ResponseObject(
+                    HttpStatus.OK.toString(), "Get supplier successfully!", response
+            ));
+        } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                    HttpStatus.NOT_FOUND.toString(), "Customer is not found!", null
+                    HttpStatus.NOT_FOUND.toString(), "Supplier is not found!", null
             ));
         }
-        return ResponseEntity.ok().body(new ResponseObject(
-                HttpStatus.OK.toString(), "Get supplier successfully!", response
-        ));
+
+
     }
 
     @Override
@@ -102,6 +105,7 @@ public class SupplierServiceImpl implements SupplierService {
                 .address(form.getAddress() != null ? form.getAddress() : existingSupplier.getAddress())
                 .createdAt(existingSupplier.getCreatedAt())
                 .updatedAt(new Date())
+                .status(existingSupplier.isStatus())
                 .build();
 
         Supplier supplier = supplierRepository.save(updatedSupplier);
@@ -112,15 +116,20 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
-    public ResponseEntity<?> deleteSupplierById(Long id) {
-        if(!supplierRepository.existsById(id)){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                    HttpStatus.NOT_FOUND.toString(), "Supplier is not found!", null
-            ));
+    public ResponseEntity<?> updateSupplierStatus(Long id) {
+
+        Supplier supplier = supplierRepository.findById(id)
+                        .orElseThrow(() -> new NotFoundException("Supplier not found"));
+
+        if(supplier.isStatus()){
+            supplier.setStatus(false);
+        } else {
+            supplier.setStatus(true);
         }
-        supplierRepository.deleteById(id);
+
+        supplierRepository.save(supplier);
         return ResponseEntity.ok().body(new ResponseObject(
-                HttpStatus.OK.toString(), "Deleted supplier successfully!", null
+                HttpStatus.OK.toString(), "Update supplier status successfully!", null
         ));
     }
 }

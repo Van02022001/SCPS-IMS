@@ -11,5 +11,5 @@ public interface CustomerService {
     ResponseEntity<?> getCustomerById(Long id);
     ResponseEntity<?> updateCustomer(Long id, UpdateCustomerForm form);
 
-    ResponseEntity<?> deleteCustomerById(Long id);
+    ResponseEntity<?> updateCustomerStatus(Long id);
 }

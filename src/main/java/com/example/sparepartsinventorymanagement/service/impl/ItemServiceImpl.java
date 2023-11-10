@@ -184,7 +184,10 @@ public class ItemServiceImpl implements ItemService {
                 .code(code)
                 .minStockLevel(form.getMinStockLevel())
                 .maxStockLevel(form.getMaxStockLevel())
-                .status(ItemStatus.Active)
+                .quantity(0)
+                .sold(0)
+                .available(0)
+                .status(ItemStatus.Inactive)
                 .createdAt(currentDate)
                 .updatedAt(currentDate)
                 .createdBy(user)
@@ -192,6 +195,8 @@ public class ItemServiceImpl implements ItemService {
                 .brand(brand)
                 .origin(origin)
                 .supplier(supplier)
+                .updatedBy(user)
+
                 .build();
 
         itemRepository.save(item);

@@ -5,6 +5,7 @@ import com.example.sparepartsinventorymanagement.dto.request.UpdateSupplierForm;
 import com.example.sparepartsinventorymanagement.service.SupplierService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(value = "/suppliers")
+@RequestMapping(value = "api/v1/suppliers")
+@Tag(name = "supplier")
 public class SupplierController {
     @Autowired
     private SupplierService supplierService;
@@ -48,11 +50,11 @@ public class SupplierController {
         return supplierService.updateSupplier(id, form);
     }
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @Operation(summary = "For deleting a supplier by id")
-    @DeleteMapping(value = "/{id}")
+    @Operation(summary = "For updating a supplier status by  supplier id")
+    @PutMapping(value = "status/{id}")
     public ResponseEntity<?> deleteSupplier(
             @Parameter(description = "Enter supplier Id to delete", example = "1", required = true)
             @PathVariable @NotNull Long id) {
-        return supplierService.deleteSupplierById(id);
+        return supplierService.updateSupplierStatus(id);
     }
 }

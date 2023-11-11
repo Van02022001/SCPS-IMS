@@ -40,6 +40,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .description(form.getDescription())
                 .type(form.getType())
                 .createdAt(new Date())
+                .address(form.getAddress())
                 .status(true)
                 .build();
         customerRepository.save(customer);

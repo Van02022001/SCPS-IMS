@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductMetaDTO {
+public class SubCategoryMetaDTO {
     private Long id;
 
     private String key;

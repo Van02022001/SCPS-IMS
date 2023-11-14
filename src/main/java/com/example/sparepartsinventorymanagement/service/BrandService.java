@@ -1,14 +1,14 @@
 package com.example.sparepartsinventorymanagement.service;
 
-import com.example.sparepartsinventorymanagement.dto.request.CreateBrandFrom;
-import com.example.sparepartsinventorymanagement.dto.request.UpdateBrandFrom;
-import org.springframework.http.ResponseEntity;
+import com.example.sparepartsinventorymanagement.dto.request.BrandFromRequest;
+import com.example.sparepartsinventorymanagement.dto.response.GetBrandDTO;
+
+import java.util.List;
 
 public interface BrandService {
-    ResponseEntity<?> getAll();
-    ResponseEntity<?> getBrandById(Long id);
-    ResponseEntity<?> createBrand(CreateBrandFrom from);
-    ResponseEntity<?> updateBrand(Long id, UpdateBrandFrom from);
-    ResponseEntity<?> getBrandByName(String name);
-
+    List<GetBrandDTO> getAll();
+    GetBrandDTO getBrandById(Long id);
+    GetBrandDTO createBrand(BrandFromRequest from);
+    GetBrandDTO updateBrand(Long id, BrandFromRequest from);
+    List<GetBrandDTO> getBrandByName(String name);
 }

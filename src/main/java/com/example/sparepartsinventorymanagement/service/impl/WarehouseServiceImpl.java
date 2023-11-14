@@ -3,19 +3,15 @@ package com.example.sparepartsinventorymanagement.service.impl;
 import com.example.sparepartsinventorymanagement.dto.request.WarehouseFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.WarehouseDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
+import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
-import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
 import com.example.sparepartsinventorymanagement.repository.ItemRepository;
 import com.example.sparepartsinventorymanagement.repository.UserRepository;
 import com.example.sparepartsinventorymanagement.repository.WarehouseRepository;
 import com.example.sparepartsinventorymanagement.service.WarehouseService;
-import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -31,87 +27,47 @@ public class WarehouseServiceImpl implements WarehouseService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private ModelMapper mapper;
 
     @Override
-    public ResponseEntity<?> getAll() {
+    public List<WarehouseDTO> getAll() {
         List<Warehouse> warehouses = warehouseRepository.findAll();
-        if(warehouses.size() > 0){
-
-            ModelMapper mapper = new ModelMapper();
-            List<WarehouseDTO> res = mapper.map(warehouses, new TypeToken<List<WarehouseDTO>>() {
+        return mapper.map(warehouses, new TypeToken<List<WarehouseDTO>>() {
             }.getType());
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Get list warehouse successfully.", res
-            ));
-        }
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                HttpStatus.NOT_FOUND.toString(), "List empty.", null
-        ));
     }
 
     @Override
-    public ResponseEntity<?> getWarehouseById(Long id) {
+    public WarehouseDTO getWarehouseById(Long id) {
         Warehouse warehouse = warehouseRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Warehouse not found")
         );
-        ModelMapper mapper = new ModelMapper();
-        WarehouseDTO res = mapper.map(warehouse, WarehouseDTO.class);
-
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Get warehouse by id successfully.", res
-        ));
+        return mapper.map(warehouse, WarehouseDTO.class);
     }
 
     @Override
-    public ResponseEntity<?> getWarehousesByActiveStatus() {
+    public List<WarehouseDTO> getWarehousesByActiveStatus() {
         List<Warehouse> warehouses = warehouseRepository.findByStatus(WarehouseStatus.Active);
-        if(warehouses.size() > 0){
-
-            ModelMapper mapper = new ModelMapper();
-            List<WarehouseDTO> res = mapper.map(warehouses, new TypeToken<List<WarehouseDTO>>() {
+        return mapper.map(warehouses, new TypeToken<List<WarehouseDTO>>() {
             }.getType());
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Get list warehouse successfully.", res
-            ));
-        }
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                HttpStatus.NOT_FOUND.toString(), "List empty.", null
-        ));
     }
 
     @Override
-    public ResponseEntity<?> getWarehouseByName(String keyword) {
+    public List<WarehouseDTO> getWarehouseByName(String keyword) {
         List<Warehouse> whs = warehouseRepository.findByNameContaining(keyword);
-        if(whs.size() > 0){
-
-            ModelMapper mapper = new ModelMapper();
-            List<WarehouseDTO> res = mapper.map(whs, new TypeToken<List<WarehouseDTO>>() {
+        return mapper.map(whs, new TypeToken<List<WarehouseDTO>>() {
             }.getType());
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Get list warehouse successfully.", res
-            ));
-        }
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                HttpStatus.NOT_FOUND.toString(), "List empty.", null
-        ));
     }
 
     @Override
-    public ResponseEntity<?> createWarehouse(WarehouseFormRequest form) {
+    public WarehouseDTO createWarehouse(WarehouseFormRequest form) {
         //check name and address of warehouse
 
         if(warehouseRepository.existsByName(form.getName())){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Name of warehouse was existed.", null
-            ));
+            throw new DuplicateResourceException("Name of warehouse was existed.");
         }
         if(warehouseRepository.existsByAddress(form.getAddress())){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Address of warehouse was existed.", null
-            ));
+           throw new DuplicateResourceException("Address of warehouse was existed.");
         }
         Date cDate = new Date();
         Warehouse warehouse = Warehouse.builder()
@@ -122,39 +78,27 @@ public class WarehouseServiceImpl implements WarehouseService {
                 .updatedAt(cDate)
                 .build();
         warehouseRepository.save(warehouse);
-        ModelMapper mapper = new ModelMapper();
-        WarehouseDTO res = mapper.map(warehouse, WarehouseDTO.class);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Create warehouse successfully.", res
-        ));
+        return mapper.map(warehouse, WarehouseDTO.class);
     }
 
     @Override
-    public ResponseEntity<?> updateWarehouse(Long id, WarehouseFormRequest form) {
+    public WarehouseDTO updateWarehouse(Long id, WarehouseFormRequest form) {
         //check name and address of warehouse
         Warehouse warehouse = warehouseRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Warehouse not found")
         );
         if(warehouseRepository.existsByName(form.getName()) && !form.getName().equalsIgnoreCase(warehouse.getName())){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Name of warehouse was existed.", null
-            ));
+            throw new DuplicateResourceException("Name of warehouse was existed.");
         }
         if(warehouseRepository.existsByAddress(form.getAddress()) && !form.getAddress().equalsIgnoreCase(warehouse.getAddress())){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Address of warehouse was existed.", null
-            ));
+            throw new DuplicateResourceException("Address of warehouse was existed.");
         }
 
         warehouse.setName(form.getName());
         warehouse.setAddress(form.getAddress());
         warehouse.setUpdatedAt(new Date());
         warehouseRepository.save(warehouse);
-        ModelMapper mapper = new ModelMapper();
-        WarehouseDTO res = mapper.map(warehouse, WarehouseDTO.class);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Update warehouse successfully.", res
-        ));
+        return mapper.map(warehouse, WarehouseDTO.class);
     }
 
 //    @Override

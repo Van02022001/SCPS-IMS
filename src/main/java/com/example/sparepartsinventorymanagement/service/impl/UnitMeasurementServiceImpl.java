@@ -1,13 +1,12 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
-import com.example.sparepartsinventorymanagement.entities.Unit;
+import com.example.sparepartsinventorymanagement.dto.response.UnitMeasurementDTO;
 import com.example.sparepartsinventorymanagement.entities.UnitMeasurement;
 import com.example.sparepartsinventorymanagement.repository.UnitMeasurementRepository;
 import com.example.sparepartsinventorymanagement.service.UnitMeasurementService;
-import com.example.sparepartsinventorymanagement.utils.ResponseObject;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,21 +16,12 @@ public class UnitMeasurementServiceImpl implements UnitMeasurementService {
 
     @Autowired
     private UnitMeasurementRepository repository;
+    @Autowired
+    private ModelMapper mapper;
     @Override
-    public ResponseEntity<?> getAll() {
+    public List<UnitMeasurementDTO> getAll() {
         List<UnitMeasurement> unitMeasurements = repository.findAll();
-
-        if(unitMeasurements.isEmpty()){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body( new ResponseObject(
-                    HttpStatus.NOT_FOUND.toString(),
-                    "List is empty",
-                    null
-            ));
-        }
-        return ResponseEntity.status(HttpStatus.OK).body( new ResponseObject(
-                HttpStatus.OK.toString(),
-                "Get list Unit Measurement successfully.",
-                unitMeasurements
-        ));
+        return mapper.map(unitMeasurements, new TypeToken<List<UnitMeasurementDTO>>(){}
+                .getType());
     }
 }

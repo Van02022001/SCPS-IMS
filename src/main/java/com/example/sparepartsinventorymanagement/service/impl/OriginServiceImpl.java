@@ -1,15 +1,17 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.OriginFormRequest;
+import com.example.sparepartsinventorymanagement.dto.response.OriginDTO;
+import com.example.sparepartsinventorymanagement.entities.Item;
 import com.example.sparepartsinventorymanagement.entities.Origin;
+import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
+import com.example.sparepartsinventorymanagement.repository.ItemRepository;
 import com.example.sparepartsinventorymanagement.repository.OriginRepository;
-import com.example.sparepartsinventorymanagement.repository.SubCategoryRepository;
 import com.example.sparepartsinventorymanagement.service.OriginService;
-import com.example.sparepartsinventorymanagement.utils.ResponseObject;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,88 +21,83 @@ public class OriginServiceImpl implements OriginService {
 
     @Autowired
     private OriginRepository originRepository;
-
     @Autowired
-    private SubCategoryRepository subCategoryRepository;
+    private ModelMapper mapper;
+    @Autowired
+    private ItemRepository itemRepository;
 
     @Override
-    public ResponseEntity<?> getAll() {
+    public List<OriginDTO> getAll() {
         List<Origin> origins = originRepository.findAll();
-        if(origins.isEmpty()){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body( new ResponseObject(
-                    HttpStatus.NOT_FOUND.toString(),
-                    "List is empty",
-                    null
-            ));
-        }
-        return ResponseEntity.status(HttpStatus.OK).body( new ResponseObject(
-                HttpStatus.OK.toString(),
-                "Get list units successfully.",
-                origins
-        ));
+        return mapper.map(origins, new TypeToken<List<OriginDTO>>(){}.getType());
     }
 
     @Override
-    public ResponseEntity<?> createOrigin(OriginFormRequest form) {
+    public OriginDTO getById(Long id) {
+        Origin origin = originRepository.findById(id).orElseThrow(
+                ()-> new NotFoundException("Origin not found")
+        );
+        return mapper.map(origin, OriginDTO.class);
+    }
+
+    @Override
+    public OriginDTO createOrigin(OriginFormRequest form) {
         if(originRepository.existsByName(form.getName())){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body( new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(),
-                    "Name of origin already exists.",
-                    null
-            ));
+            throw new DuplicateResourceException("Name was existed");
         }
         Origin origin = Origin.builder()
                 .name(form.getName())
                 .build();
         originRepository.save(origin);
-        return ResponseEntity.status(HttpStatus.OK).body( new ResponseObject(
-                HttpStatus.OK.toString(),
-                "Add origin successfully.",
-                origin
-        ));
+        return mapper.map(origin, OriginDTO.class);
     }
 
     @Override
-    public ResponseEntity<?> updateOrigin(Long id, OriginFormRequest form) {
+    public OriginDTO updateOrigin(Long id, OriginFormRequest form) {
         Origin origin = originRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Origin not found")
         );
-        origin.setName(form.getName());
-        originRepository.save(origin);
-        return ResponseEntity.status(HttpStatus.OK).body( new ResponseObject(
-                HttpStatus.OK.toString(),
-                "Update origin successfully.",
-                origin
-        ));
-    }
+        if (!origin.getName().equalsIgnoreCase(form.getName().trim())){
+            if (originRepository.existsByName(form.getName().trim())){
+                throw new DuplicateResourceException("Name was existed");
+            }
+            origin.setName(form.getName().trim());
+            if(!origin.getItems().isEmpty()){
+                for (Item item: origin.getItems()
+                ) {
+                    int v1 = item.getCode().indexOf("-");
+                    int v2 = item.getCode().indexOf("-", v1 + 1) ;
+                    int v3 = item.getCode().indexOf("-", v2 + 1);
+                    StringBuilder result = new StringBuilder();
+                    String[] ws = origin.getName().split(" ");
+                    for (String word : ws) {
+                        if (!word.isEmpty()) {
+                            result.append(word.substring(0, 1).toUpperCase());
+                        }
+                    }
 
-    @Override
-    public ResponseEntity<?> deleteOrigin(Long id) {
-        Origin origin = originRepository.findById(id).orElseThrow(
-                ()-> new NotFoundException("Origin not found")
-        );
-        originRepository.delete(origin);
-        return ResponseEntity.status(HttpStatus.OK).body( new ResponseObject(
-                HttpStatus.OK.toString(),
-                "Delete origin successfully.",
-                null
-        ));
-    }
-
-    @Override
-    public ResponseEntity<?> findByName(String keyword) {
-        List<Origin> origins = originRepository.findByNameContaining(keyword);
-        if(origins.isEmpty()){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body( new ResponseObject(
-                    HttpStatus.NOT_FOUND.toString(),
-                    "List is empty",
-                    null
-            ));
+                    String code = item.getCode().substring(0, v2) +"-"+ result +"-"+ item.getCode().substring(v3+1);
+                    if(!item.getCode().substring(v2+1, v3).equalsIgnoreCase(result.toString())){
+                        String newCode = code;
+                        int count = 0;
+                        while (itemRepository.existsItemByCodeEqualsIgnoreCase(newCode)){
+                            count++;
+                            newCode = code + "-N" + count;
+                        }
+                        item.setCode(newCode);
+                        itemRepository.save(item);
+                    }
+                }
+            }
         }
-        return ResponseEntity.status(HttpStatus.OK).body( new ResponseObject(
-                HttpStatus.OK.toString(),
-                "Get list units successfully.",
-                origins
-        ));
+        originRepository.save(origin);
+        return mapper.map(origin, OriginDTO.class);
+    }
+
+
+    @Override
+    public List<OriginDTO> findByName(String keyword) {
+        List<Origin> origins = originRepository.findByNameContaining(keyword);
+        return mapper.map(origins, new TypeToken<List<OriginDTO>>(){}.getType());
     }
 }

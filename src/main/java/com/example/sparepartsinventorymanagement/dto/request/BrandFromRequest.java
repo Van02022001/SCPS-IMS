@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateBrandFrom {
+public class BrandFromRequest {
     @Schema(description = "Name of brand", example = "Sai Gon Golden")
     @Size(min = 1, max = 100)
     @NotBlank(message = "Name not null")

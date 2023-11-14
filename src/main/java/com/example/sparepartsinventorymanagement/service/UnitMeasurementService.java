@@ -1,7 +1,9 @@
 package com.example.sparepartsinventorymanagement.service;
 
-import org.springframework.http.ResponseEntity;
+import com.example.sparepartsinventorymanagement.dto.response.UnitMeasurementDTO;
+
+import java.util.List;
 
 public interface UnitMeasurementService {
-    ResponseEntity<?> getAll();
+    List<UnitMeasurementDTO> getAll();
 }

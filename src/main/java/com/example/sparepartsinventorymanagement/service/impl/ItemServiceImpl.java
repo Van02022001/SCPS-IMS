@@ -1,10 +1,10 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
-import com.example.sparepartsinventorymanagement.dto.request.CreateLocationForm;
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.entities.Period;
+import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
 import com.example.sparepartsinventorymanagement.repository.*;
@@ -68,82 +68,38 @@ public class ItemServiceImpl implements ItemService {
     @Autowired
     private ModelMapper modelMapper;
     @Override
-    public ResponseEntity<?> getAll() {
+    public List<ItemDTO> getAll() {
         List<Item> items = itemRepository.findAll();
-        if(!items.isEmpty()){
-
-            ModelMapper mapper = new ModelMapper();
-            List<ItemDTO> res = mapper.map(items, new TypeToken<List<ItemDTO>>() {
-            }.getType());
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Get list items successfully.", res
-            ));
-        }
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                HttpStatus.NOT_FOUND.toString(), "List empty.", null
-        ));
+        return modelMapper.map(items, new TypeToken<List<ItemDTO>>(){}.getType());
     }
 
     @Override
-    public ResponseEntity<?> getItemById(Long id) {
+    public ItemDTO getItemById(Long id) {
         Item item = itemRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Item not found")
         );
-        ModelMapper mapper = new ModelMapper();
-        ItemDTO res = mapper.map(item, ItemDTO.class);
-
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Get item by id successfully.", res
-        ));
+        return modelMapper.map(item, ItemDTO.class);
     }
 
     @Override
-    public ResponseEntity<?> getItemBySubCategory(Long productId) {
+    public List<ItemDTO> getItemBySubCategory(Long productId) {
         SubCategory subCategory = subCategoryRepository.findById(productId).orElseThrow(
                 ()-> new NotFoundException("SubCategory not found")
         );
         List<Item> items = itemRepository.findBySubCategory(subCategory);
-        if(!items.isEmpty()){
-
-            ModelMapper mapper = new ModelMapper();
-            List<ItemDTO> res = mapper.map(items, new TypeToken<List<ItemDTO>>() {
-            }.getType());
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Get list items successfully.", res
-            ));
-        }
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                HttpStatus.NOT_FOUND.toString(), "List empty.", null
-        ));
+        return modelMapper.map(items, new TypeToken<List<ItemDTO>>() {
+        }.getType());
     }
 
     @Override
-    public ResponseEntity<?> getItemByActiveStatus() {
+    public List<ItemDTO> getItemByActiveStatus() {
         List<Item> items = itemRepository.findByStatus(ItemStatus.Active);
-        if(!items.isEmpty()){
-
-            ModelMapper mapper = new ModelMapper();
-            List<ItemDTO> res = mapper.map(items, new TypeToken<List<ItemDTO>>() {
-            }.getType());
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Get list items successfully.", res
-            ));
-        }
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                HttpStatus.NOT_FOUND.toString(), "List empty.", null
-        ));
+        return modelMapper.map(items, new TypeToken<List<ItemDTO>>(){}.getType());
     }
 
     @Override
-    public ResponseEntity<?> createItem(ItemFormRequest form) {
-        if(form.getMinStockLevel()>= form.getMaxStockLevel()){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Min stock cannot be greater than max stock", null
-            ));
-        }
+    public ItemDTO createItem(ItemFormRequest form) {
+
         //Check brand
         Brand brand = brandRepository.findById(form.getBrand_id()).orElseThrow(
                 ()-> new NotFoundException("Brand not found")
@@ -153,14 +109,13 @@ public class ItemServiceImpl implements ItemService {
                 ()-> new NotFoundException("Origin not found")
         );
         //Check supplier
-        Supplier supplier = supplierRepository.findById(form.getSupplier_id()).orElseThrow(
-                ()-> new NotFoundException("Supplier not found")
+        Supplier supplier = supplierRepository.findByIdAndStatus(form.getSupplier_id(), true).orElseThrow(
+                ()-> new RuntimeException("Supplier is invalid")
         );
         //Check sub category
-        SubCategory subCategory = subCategoryRepository.findById(form.getSub_category_id()).orElseThrow(
-                ()-> new NotFoundException("SubCategory not found")
+        SubCategory subCategory = subCategoryRepository.findByIdAndStatus(form.getSub_category_id(), SubCategoryStatus.Active).orElseThrow(
+                ()-> new RuntimeException("SubCategory is invalid")
         );
-
         //Check manager
         Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
@@ -169,19 +124,17 @@ public class ItemServiceImpl implements ItemService {
 
 
         if(itemRepository.existsBySubCategoryAndOriginAndBrandAndSupplier(subCategory, origin, brand, supplier)){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Item was existed", null
-            ));
+            throw new DuplicateResourceException("Item was existed");
         }
 
         //Create code
-        String code = createItemCode(subCategory.getName().trim(), subCategory.getSize(), brand.getName().trim(), origin.getName().trim(), origin.getName().trim());
-
+        String code = createItemCode(subCategory.getName().trim(), subCategory.getSize(), brand.getName().trim(), origin.getName().trim(), supplier.getName().trim());
+        String newCode = checkCode(code);
         //Create item
         Date currentDate = new Date();
 
         Item item = Item.builder()
-                .code(code)
+                .code(newCode)
                 .minStockLevel(form.getMinStockLevel())
                 .maxStockLevel(form.getMaxStockLevel())
                 .quantity(0)
@@ -200,16 +153,11 @@ public class ItemServiceImpl implements ItemService {
                 .build();
 
         itemRepository.save(item);
-
-        ModelMapper mapper = new ModelMapper();
-        ItemDTO res = mapper.map(item, ItemDTO.class);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Get item successfully.", res
-        ));
+        return modelMapper.map(item, ItemDTO.class);
     }
 
     @Override
-    public ResponseEntity<?> updateItem(Long id, ItemFormRequest form) {
+    public ItemDTO updateItem(Long id, ItemFormRequest form) {
         //Check Item
         Item item = itemRepository.findById(id).orElseThrow(
                 () -> new NotFoundException("Item not found")
@@ -237,12 +185,15 @@ public class ItemServiceImpl implements ItemService {
                 () -> new NotFoundException("User not found")
         );
 
-        //Create code
+        //Create code if something on change
         String code = "";
-        if (item.getSubCategory().getId() != form.getSub_category_id() || item.getBrand().getId() != form.getBrand_id()
-                || item.getOrigin().getId() != form.getOrigin_id() || item.getSupplier().getId() != form.getSupplier_id()) {
+        if (!Objects.equals(item.getSubCategory().getId(), form.getSub_category_id()) || !Objects.equals(item.getBrand().getId(), form.getBrand_id())
+                || !Objects.equals(item.getOrigin().getId(), form.getOrigin_id()) || !Objects.equals(item.getSupplier().getId(), form.getSupplier_id())) {
             code = createItemCode(subCategory.getName().trim(), subCategory.getSize(), brand.getName().trim(), origin.getName().trim(), origin.getName().trim());
-            item.setCode(code);
+            if(!code.equalsIgnoreCase(item.getCode())){
+                String newCode = checkCode(code);
+                item.setCode(newCode);
+            }
         }
 
         Date date = new Date();
@@ -256,15 +207,11 @@ public class ItemServiceImpl implements ItemService {
 
         itemRepository.save(item);
 
-        ModelMapper mapper = new ModelMapper();
-        ItemDTO res = mapper.map(item, ItemDTO.class);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Update item by id successfully.", res
-        ));
+        return modelMapper.map(item, ItemDTO.class);
     }
 
     @Override
-    public ResponseEntity<?> updateItemStatus(Long id, ItemStatus status) {
+    public ItemDTO updateItemStatus(Long id, ItemStatus status) {
         //Check Item
         Item item = itemRepository.findById(id).orElseThrow(
                 () -> new NotFoundException("Item not found")
@@ -275,65 +222,9 @@ public class ItemServiceImpl implements ItemService {
             item.setStatus(ItemStatus.Inactive);
         }
         itemRepository.save(item);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Update item status by id successfully.", null
-        ));
+        return modelMapper.map(item, ItemDTO.class);
     }
 
-    @Override
-    public ResponseEntity<?> changeItemLocation(Long id, Long toLocationId) {
-//        //Check Item
-//        Item item = itemRepository.findById(id).orElseThrow(
-//                () -> new NotFoundException("Item not found")
-//        );
-//        Location toLocation = locationRepository.findById(toLocationId).orElseThrow(
-//                () -> new NotFoundException("Location not found")
-//        );
-//        if(item.getLocation().getWarehouse().getId() != toLocation.getWarehouse().getId()){
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-//                    HttpStatus.BAD_REQUEST.toString(), "This warehouse don't have this location", null
-//            ));
-//        }
-//        if(item.getLocation().getId() == toLocation.getId()){
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
-//                    HttpStatus.BAD_REQUEST.toString(), "Location is not change", null
-//            ));
-//        }
-//        //Check inventory staff
-//        Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
-//                () -> new NotFoundException("User not found")
-//        );
-//        List<ItemMovement> movements = new ArrayList<>();
-//        ItemMovement itemMovement = ItemMovement.builder()
-//                .fromLocation(item.getLocation())
-//                .toLocation(toLocation)
-//                .movedAt(new Date())
-//                .movedBy(user)
-//                .quantity()
-//                .build();
-//
-//        item.setLocation(toLocation);
-//
-
-
-        return null;
-    }
-
-    @Override
-    public ResponseEntity<?> createItemLocation(Long id, CreateLocationForm form) {
-        return null;
-    }
-
-    @Override
-    public ResponseEntity<?> getItemMovements(Long id) {
-        return null;
-    }
-
-    @Override
-    public ResponseEntity<?> getHistoryPriceChange(Long id) {
-        return null;
-    }
 
     @Override
     public ResponseEntity<?> findBySubCategory_NameContainingIgnoreCase(String name) {
@@ -343,7 +234,7 @@ public class ItemServiceImpl implements ItemService {
             List<Item> items = itemRepository.findBySubCategory(subCategory);
             List<ItemDTO> subCategoryItemDTOs = items.stream()
                     .map(item -> modelMapper.map(item, ItemDTO.class))
-                    .collect(Collectors.toList());
+                    .toList();
             itemDTOs.addAll(subCategoryItemDTOs);
         }
 
@@ -357,7 +248,6 @@ public class ItemServiceImpl implements ItemService {
         ));
 
     }
-
     private String createItemCode(String productName, Size size, String brandName, String originName, String supplierName){
         StringBuilder itemCode = new StringBuilder();
 
@@ -366,18 +256,8 @@ public class ItemServiceImpl implements ItemService {
             itemCode.append("-");
         }
 
-        if (size != null) {
-            if (size.getLength() > 0 || size.getWidth() > 0 || size.getHeight() > 0) {
-                itemCode.append((int)size.getLength() + "x" +(int) size.getWidth() + "x" +(int)size.getHeight());
-                itemCode.append("-");
-            }
-            itemCode.append((int) size.getDiameter());
-        }
 
         if (brandName != null && !brandName.isEmpty()) {
-            if (productName != null && !productName.isEmpty()) {
-                itemCode.append("-");
-            }
             itemCode.append(getFirstLetters(brandName));
         }
 
@@ -387,17 +267,19 @@ public class ItemServiceImpl implements ItemService {
             }
             itemCode.append(getFirstLetters(originName));
         }
-
+        itemCode.append("-");
         if (supplierName != null && !supplierName.isEmpty()) {
-            if (originName != null && !originName.isEmpty()) {
-                itemCode.append("-");
-            }
             itemCode.append(getFirstLetters(supplierName));
         }
-
-        String finalItemCode = itemCode.toString();
-
-        return finalItemCode;
+        itemCode.append("-");
+        if (size != null) {
+            if (size.getLength() > 0 || size.getWidth() > 0 || size.getHeight() > 0) {
+                itemCode.append((int) size.getLength()).append("x").append((int) size.getWidth()).append("x").append((int) size.getHeight());
+                itemCode.append("-");
+            }
+            itemCode.append((int) size.getDiameter());
+        }
+        return itemCode.toString();
     }
     private String getFirstLetters(String words){
         StringBuilder result = new StringBuilder();
@@ -408,6 +290,15 @@ public class ItemServiceImpl implements ItemService {
             }
         }
         return result.toString();
+    }
+    private String checkCode(String code){
+        int count = 0;
+        String newCode = code;
+        while(itemRepository.existsItemByCodeEqualsIgnoreCase(newCode)){
+            count++;
+            newCode = code + "-N" + count;
+        }
+        return newCode;
     }
     private Period getPeriod(){
         LocalDate today = LocalDate.now();

@@ -1,8 +1,9 @@
 package com.example.sparepartsinventorymanagement.controller;
 
 import com.example.sparepartsinventorymanagement.dto.request.WarehouseFormRequest;
-import com.example.sparepartsinventorymanagement.entities.WarehouseStatus;
+import com.example.sparepartsinventorymanagement.dto.response.WarehouseDTO;
 import com.example.sparepartsinventorymanagement.service.impl.WarehouseServiceImpl;
+import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,12 +11,14 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/warehouses")
@@ -27,7 +30,19 @@ public class WarehouseController {
     @Operation(summary = "For get list of warehouses")
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAll() {
-        return warehouseService.getAll();
+        List<WarehouseDTO> res = warehouseService.getAll();
+        if(res.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "List is empty",
+                    null
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Get list warehouse successfully",
+                res
+        ));
     }
 
     @Operation(summary = "For get warehouse by id")
@@ -35,7 +50,12 @@ public class WarehouseController {
     public ResponseEntity<?> getWarehouseById(
             @Parameter(description = "Enter id to get", example = "1", required = true) @PathVariable(name = "id") @NotBlank Long id
     ) {
-        return warehouseService.getWarehouseById(id);
+        WarehouseDTO res = warehouseService.getWarehouseById(id);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Get warehouse successfully",
+                res
+        ));
     }
 
     @Operation(summary = "For get warehouses contains keyword by name")
@@ -44,13 +64,37 @@ public class WarehouseController {
             @Parameter(description = "Enter keyword to search", required = true)
             @NotEmpty @NotBlank String keyword
     ) {
-        return warehouseService.getWarehouseByName(keyword);
+        List<WarehouseDTO> res = warehouseService.getWarehouseByName(keyword);
+        if(res.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "List is empty",
+                    null
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Get list warehouse by name successfully",
+                res
+        ));
     }
 
     @Operation(summary = "For get warehouses by active status")
     @GetMapping(value = "/active-warehouses", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getActiveWarehouses() {
-        return warehouseService.getWarehousesByActiveStatus();
+        List<WarehouseDTO> res = warehouseService.getWarehousesByActiveStatus();
+        if(res.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "List is empty",
+                    null
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Get list warehouse active status successfully",
+                res
+        ));
     }
 
 
@@ -60,7 +104,19 @@ public class WarehouseController {
     public ResponseEntity<?> createWarehouse(
             @Valid @RequestBody WarehouseFormRequest form
     ) {
-        return warehouseService.createWarehouse(form);
+        WarehouseDTO res = warehouseService.createWarehouse(form);
+        if(res == null){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(),
+                    "Create warehouse failed",
+                    null
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Create warehouse successfully",
+                res
+        ));
     }
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
@@ -70,7 +126,19 @@ public class WarehouseController {
             @Parameter(description = "Enter id", required = true, example = "1") @NotNull @PathVariable(name = "id") Long id,
             @Valid @RequestBody WarehouseFormRequest form
     ) {
-        return warehouseService.updateWarehouse(id, form);
+        WarehouseDTO res = warehouseService.updateWarehouse(id, form);
+        if(res == null){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(),
+                    "Update warehouse failed",
+                    null
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Update warehouse successfully",
+                res
+        ));
     }
 
 //    @PreAuthorize("hasRole('ROLE_MANAGER')")

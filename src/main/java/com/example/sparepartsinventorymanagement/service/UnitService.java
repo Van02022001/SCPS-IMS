@@ -1,14 +1,14 @@
 package com.example.sparepartsinventorymanagement.service;
 
 import com.example.sparepartsinventorymanagement.dto.request.UnitFormRequest;
-import org.springframework.http.ResponseEntity;
+import com.example.sparepartsinventorymanagement.dto.response.UnitDTO;
+
+import java.util.List;
 
 public interface UnitService {
-    ResponseEntity<?> getAll();
-    ResponseEntity<?> findByName(String keyword);
-
-    ResponseEntity<?> createUnit(UnitFormRequest form);
-    ResponseEntity<?> updateUnit(Long id, UnitFormRequest form);
-    ResponseEntity<?> deleteUnit(Long id);
-
+    List<UnitDTO> getAll();
+    List<UnitDTO> findByName(String keyword);
+    UnitDTO getUnitById(Long id);
+    UnitDTO createUnit(UnitFormRequest form);
+    UnitDTO updateUnit(Long id, UnitFormRequest form);
 }

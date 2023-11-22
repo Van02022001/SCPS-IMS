@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class PurchasePriceDTO {
     private Long id;
     private double price;
+
 }

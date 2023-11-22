@@ -5,6 +5,7 @@ import com.example.sparepartsinventorymanagement.dto.request.LogoutForm;
 import com.example.sparepartsinventorymanagement.dto.request.RefreshTokenRequest;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateUserForm;
 import com.example.sparepartsinventorymanagement.entities.User;
+import com.example.sparepartsinventorymanagement.entities.Warehouse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +23,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByPhone(String phone);
 
 
-
-
-
     User getUserById(Long id);
 
     void deleteUserById(Long id);
 
 
     Optional<User> findByUsername(String username);
+
+    List<User> findAllByWarehouseAndRoleName(Warehouse warehouse, String roleName);
 }

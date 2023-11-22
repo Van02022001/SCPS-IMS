@@ -9,10 +9,9 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-
-public class ReceiptForm {
-    private String type;
+public class ImportRequestReceiptForm {
+    private Long warehouseId;
+    private Long inventoryStaffId;
     private String description;
-    private Long createdBy;
-    private List<ReceiptDetailForm>  details;
+    private List<ImportRequestReceiptDetailForm>  details;
 }

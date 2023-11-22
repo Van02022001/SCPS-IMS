@@ -11,11 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class CreateSupplierForm {
-    @Schema(description = "Supplier code", example = "C1234")
-    @Size(min = 1, max = 100)
-    @NotBlank(message = "Supplier code cannot be null")
-    @NotEmpty(message = "Required field.")
-    private String code;
+
 
     @Schema(description = "Supplier name", example = "John Doe")
     @Size(min = 1, max = 100)

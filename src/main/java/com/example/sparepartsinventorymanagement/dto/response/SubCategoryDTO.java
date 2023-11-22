@@ -16,7 +16,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductDTO {
+public class SubCategoryDTO {
     private Long id;
 
     private String name;
@@ -37,7 +37,7 @@ public class ProductDTO {
 
     private Set<CategoryDTO> categories;
 
-    private List<ProductMetaDTO> productMetas;
+    private List<SubCategoryMetaDTO> productMetas;
 
     private SizeDTO size;
 }

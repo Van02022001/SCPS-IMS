@@ -12,11 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 
 public class CreateCustomerForm {
-    @Schema(description = "Customer code", example = "C1234")
-    @Size(min = 1, max = 100)
-    @NotBlank(message = "Customer code cannot be null")
-    @NotEmpty(message = "Required field.")
-    private String code;
+
 
     @Schema(description = "Customer name", example = "John Doe")
     @Size(min = 1, max = 100)

@@ -12,6 +12,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class NotificationServiceImpl implements NotificationService {
@@ -29,33 +31,75 @@ public class NotificationServiceImpl implements NotificationService {
     private UserRepository userRepository;
 
 
-    @Override
-    public void notifyCustomerRequest(Long receiptId, Long managerId) {
-        User manager = userRepository.findById(managerId)
-                .orElseThrow(() -> new NotFoundException("Manager not found"));
 
-        NotificationTemplate template = notificationTemplateRepository.findByType(NotificationType.YEU_CAU_XUAT_KHO)
+
+    @Override
+    public void createAndSendNotification(SourceType sourceType, EventType eventType, Long sourceId, Long userId, NotificationType notificationType, String customMessage) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        NotificationTemplate template = notificationTemplateRepository.findByType(notificationType)
                 .orElseThrow(() -> new NotFoundException("Notification template not found"));
 
-        Date currentTime = new Date();
-
-        //Tao thong bao moi
-
         Notification notification = Notification.builder()
-                .user(manager)
-                .sourceId(receiptId)
-                .sourceType(template.getSourceType())
-                .type(NotificationType.YEU_CAU_XUAT_KHO)
+                .user(user)
+                .sourceId(sourceId)
+                .sourceType(sourceType)
+                .eventType(eventType)
+                .type(notificationType)
                 .seen(false)
                 .trash(false)
-                .createdAt(currentTime)
-                .updatedAt(currentTime)
-                .content(template.getContent().replace("{requestId}", receiptId.toString()))
-                .eventType(EventType.REQUEST_CREATED)
+                .createdAt(new Date())
+                .content(String.format(template.getContent(), customMessage))
                 .build();
-        notification = notificationRepository.save(notification);
 
-        //Gui thong bao qua WebSocket
-        messagingTemplate.convertAndSendToUser(manager.getUsername(), "/topic/notification", notification);
+        notificationRepository.save(notification);
+
+        // Gửi thông báo qua WebSocket
+        messagingTemplate.convertAndSendToUser(user.getUsername(), "/topic/notification", notification);
+    }
+
+    @Override
+    public void markNotificationAsRead(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new NotFoundException("Notification not found"));
+        notification.setSeen(true);
+        notificationRepository.save(notification);
+    }
+
+    @Override
+    public List<Notification> getNotificationsForUser(Long userId, Optional<Boolean> isRead, Optional<NotificationType> type) {
+        if(isRead.isPresent() && type.isPresent()){
+            return notificationRepository.findByUserIdAndSeenAndType(userId, isRead, type.get());
+        } else if(isRead.isPresent()){
+            return notificationRepository.findByUserIdAndSeen(userId, isRead.get());
+        } else if(type.isPresent()){
+            return notificationRepository.findByUserIdAndType(userId, type.get());
+        } else{
+            return notificationRepository.findByUserId(userId);
+        }
+    }
+
+    @Override
+    public void deleteNotification(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new NotFoundException("Notification not found"));
+        notification.setTrash(true);// Mark as trash instead of deleting
+        notificationRepository.save(notification);
+    }
+
+    @Override
+    public void markAllNotificationsAsReadForUser(Long userId) {
+        List<Notification> notifications = notificationRepository.findByUserIdAndSeen(userId, false);
+        notifications.forEach(notification -> notification.setSeen(true));
+        notificationRepository.saveAll(notifications);
+    }
+
+    @Override
+    public void restoreNotificationFromTrash(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new NotFoundException("Notification not found"));
+        notification.setTrash(false);
+        notificationRepository.save(notification);
     }
 }

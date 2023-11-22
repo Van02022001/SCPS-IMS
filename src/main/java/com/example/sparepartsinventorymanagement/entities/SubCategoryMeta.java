@@ -1,6 +1,5 @@
 package com.example.sparepartsinventorymanagement.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,7 +24,6 @@ public class SubCategoryMeta {
     private String description;
 
     @OneToOne(mappedBy = "subCategoryMeta")
-    @JsonIgnore
     private SubCategory subCategory;
 
 }

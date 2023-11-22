@@ -1,26 +1,28 @@
 package com.example.sparepartsinventorymanagement.entities;
-
+import com.example.sparepartsinventorymanagement.audit.Auditable;
 import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
+@SuperBuilder
 @Getter
 @Setter
-@Builder
 @Table(name = "receipts")
-public class Receipt {
+public class Receipt extends Auditable<User> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="created_by_id")
     private Long id;
 
+    @Column(name = "code", nullable = false, unique = true)
+    private String code;
 
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -34,34 +36,24 @@ public class Receipt {
     @Column(name = "tax", nullable = false)
     private float tax;
 
+    @Column(name = "total_price")
+    private double totalPrice;
+
+
+    @Column(name = "total_quantity")
+    private int totalQuantity;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "created_by", nullable = false)
-    private User createdBy;
-
-
-    @ManyToOne
-    @JoinColumn(name = "updated_by")
-    private User updateBy;
-
-
-    @Column(name = "created_at", nullable = false)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
-    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
-    private Date createdAt;
-
-    @Column(name = "updated_at")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
-    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
-    private Date updatedAt;
-
+    @OneToMany(mappedBy = "receipt", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReceiptDetail> details;
 
     @ManyToOne
     @JoinColumn(name = "customer_request_receipt_id")
     private CustomerRequestReceipt customerRequestReceipt;
-
+    public Receipt() {
+        // Constructor mặc định cần thiết cho JPA
+    }
 
 }

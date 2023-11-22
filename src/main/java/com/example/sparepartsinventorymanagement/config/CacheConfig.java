@@ -6,12 +6,18 @@ import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 
+import java.time.Duration;
 import java.util.Arrays;
 @Configuration
 @EnableCaching
 public class CacheConfig {
-    @Bean
+    @Bean(name = "simpleCacheManager")
+    @Primary
     public CacheManager cacheManager() {
         SimpleCacheManager cacheManager = new SimpleCacheManager();
         cacheManager.setCaches(Arrays.asList(
@@ -20,4 +26,6 @@ public class CacheConfig {
 
         return cacheManager;
     }
+
+
 }

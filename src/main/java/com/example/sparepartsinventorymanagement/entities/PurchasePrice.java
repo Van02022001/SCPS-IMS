@@ -38,4 +38,6 @@ public class PurchasePrice {
     @OneToMany(mappedBy = "purchasePrice", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PurchasePriceAudit> purchasePriceAudits;
 
+
+
 }

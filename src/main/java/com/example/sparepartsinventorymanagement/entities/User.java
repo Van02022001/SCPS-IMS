@@ -88,7 +88,7 @@ public class User {
     private Set<Receipt> createdReceipts;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "updateBy")
+    @OneToMany(mappedBy = "lastModifiedBy")
     private Set<Receipt> updatedReceipts;
 
     @JsonIgnore

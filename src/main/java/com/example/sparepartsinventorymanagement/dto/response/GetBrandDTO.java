@@ -5,12 +5,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class ProductMetaDTO {
+@AllArgsConstructor
+public class GetBrandDTO {
     private Long id;
 
-    private String key;
+    private String name;
 
     private String description;
 }

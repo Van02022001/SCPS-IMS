@@ -1,18 +1,17 @@
 package com.example.sparepartsinventorymanagement.service;
 
-import com.example.sparepartsinventorymanagement.dto.request.CreateCategoryForm;
-import com.example.sparepartsinventorymanagement.dto.request.UpdateCategoryForm;
+import com.example.sparepartsinventorymanagement.dto.request.CategoryFormRequest;
+import com.example.sparepartsinventorymanagement.dto.response.GetCategoryDTO;
 import com.example.sparepartsinventorymanagement.entities.CategoryStatus;
-import org.springframework.http.ResponseEntity;
+
+import java.util.List;
 
 public interface CategoryService {
-    ResponseEntity getAll();
-    ResponseEntity getCategoryById(Long id);
-    ResponseEntity searchCategoryByName(String name);
-    ResponseEntity createCategory(CreateCategoryForm form);
-
-    ResponseEntity updateCategory(Long id, UpdateCategoryForm form);
-
-    ResponseEntity updateCategoryStatus(Long id, CategoryStatus status);
-    ResponseEntity getActiveCategories();
+    List<GetCategoryDTO> getAll();
+    GetCategoryDTO getCategoryById(Long id);
+    List<GetCategoryDTO> searchCategoryByName(String name);
+    GetCategoryDTO createCategory(CategoryFormRequest form);
+    GetCategoryDTO updateCategory(Long id, CategoryFormRequest form);
+    GetCategoryDTO updateCategoryStatus(Long id, CategoryStatus status);
+    List<GetCategoryDTO> getActiveCategories();
 }

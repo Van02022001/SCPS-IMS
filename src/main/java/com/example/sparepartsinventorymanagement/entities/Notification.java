@@ -27,9 +27,11 @@ public class Notification {
     @Column(name = "source_id", nullable = false)
     private Long sourceId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "source_type", length = 50, nullable = false)
-    private String sourceType;
+    private SourceType sourceType;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     private NotificationType type;
 

@@ -3,9 +3,8 @@ package com.example.sparepartsinventorymanagement.jwt.userprincipal;
 import com.example.sparepartsinventorymanagement.entities.Role;
 import com.example.sparepartsinventorymanagement.entities.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,7 +13,10 @@ import java.util.*;
 
 @NoArgsConstructor
 @AllArgsConstructor
+@Setter
+@Getter
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Principal implements UserDetails {
 
     private Long id;
@@ -28,6 +30,8 @@ public class Principal implements UserDetails {
     private String email;
     private String username;
 
+
+    private String name;
 
     private Boolean status;
     private Role role;
@@ -45,6 +49,7 @@ public class Principal implements UserDetails {
                 .username(user.getUsername())
                 .password(user.getPassword())
                 .role(user.getRole())
+                .name(user.getRole().getName())
                 .grantedAuthorities(grantedAuthorities)
                 .build();
     }
@@ -84,6 +89,12 @@ public class Principal implements UserDetails {
     public String getEmail() {
         return email;
     }
+
+
+    public String getName() {
+        return name;
+    }
+
 
 
     public Boolean getStatus() {
@@ -140,8 +151,6 @@ public class Principal implements UserDetails {
     }
 
 
-    public String getName() {
-        return String.valueOf(id);
-    }
+
 
 }

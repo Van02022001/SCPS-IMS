@@ -12,15 +12,15 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UpdateBrandFrom {
-    @Schema(description = "Name of brand", example = "Sai Gon Golden")
+public class CategoryFormRequest {
+    @Schema(description = "Name of category", example = "Ron")
     @Size(min = 1, max = 100)
-    @NotBlank(message = "Name not null")
+    @NotBlank(message = "Name of category not null")
     @NotEmpty(message = "Required field.")
     @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")
     private String name;
 
-    @Schema(description = "Brand description", example = "Là doanh nghiệp...")
+    @Schema(description = "Category description", example = "Ron cao su hay còn được gọi bằng các tên khác nhau như gioăng cao su, vòng đệm cao su. Sản phẩm được làm từ cao su tự nhiên hoặc cao su tổng hợp, có khả năng làm kín các các chi tiết kỹ thuật, cách nhiệt, chống ồn, chống thấm nước, chống chảy dầu rất tốt.")
     @NotBlank(message = "Description not null")
     @NotEmpty(message = "Required field")
     @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")

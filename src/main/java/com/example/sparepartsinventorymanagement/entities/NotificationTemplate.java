@@ -26,16 +26,16 @@ public class NotificationTemplate {
 
     @Column(name = "type", nullable = false)
     private NotificationType type;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source_type")
+    private SourceType sourceType;
 
-    @Column(name = "source_type", nullable = false)
-    private String sourceType;
-
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
     @Column(name = "updated_at")
-    @Temporal(TemporalType.TIMESTAMP)
+
     private Date updatedAt;
 
     @Column(name = "content", columnDefinition = "TEXT")

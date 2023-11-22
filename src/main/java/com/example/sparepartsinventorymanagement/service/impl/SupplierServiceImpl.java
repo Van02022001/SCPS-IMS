@@ -8,8 +8,13 @@ import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.SupplierRepository;
 import com.example.sparepartsinventorymanagement.service.SupplierService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
+import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -17,19 +22,38 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Random;
 
 @Service
+@CacheConfig(cacheNames = "suppliersCache", cacheManager = "redisCacheManager")
+@RequiredArgsConstructor
 public class SupplierServiceImpl implements SupplierService {
-    @Autowired
-    private SupplierRepository supplierRepository;
-    @Autowired
-    private ModelMapper modelMapper;
+
+    private final SupplierRepository supplierRepository;
+
+    private final ModelMapper modelMapper;
+    private final EntityManager entityManager;
+
 
     @Override
+    //@CachePut(key = "#result.id")
     public ResponseEntity<?> createSupplier(CreateSupplierForm form) {
+        if (supplierRepository.existsByEmail(form.getEmail())) {
+            return ResponseEntity.badRequest().body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(), "Email already in use!", null));
+        }
+
+        if (supplierRepository.existsByPhone(form.getPhone())) {
+            return ResponseEntity.badRequest().body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(), "Phone number already in use!", null));
+        }
+
+        if (supplierRepository.existsByTaxCode(form.getTaxCode())) {
+            return ResponseEntity.badRequest().body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(), "Tax code already in use!", null));
+        }
         Supplier supplier = Supplier.builder()
-                .code(form.getCode())
+                .code(generateRandomSupplierCode())
                 .name(form.getName())
                 .phone(form.getPhone())
                 .email(form.getEmail())
@@ -47,57 +71,56 @@ public class SupplierServiceImpl implements SupplierService {
         ));
     }
 
+
+    @Cacheable()
     @Override
-    public ResponseEntity<?> getAllSuppliers() {
+    public List<SuppliersDTO> getAllSuppliers() {
         List<Supplier> suppliers = supplierRepository.findAll();
 
-        List<SuppliersDTO> response = suppliers.stream()
+        return suppliers.stream()
                 .map(supplier -> modelMapper.map(supplier, SuppliersDTO.class))
-                .collect(Collectors.toList());
-        if(!response.isEmpty()){
-            return ResponseEntity.ok().body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Get list Supplier successfully!", response
-            ));
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                HttpStatus.NOT_FOUND.toString(), "List suppliers is empty!", null
-        ));
+                .toList();
     }
 
     @Override
-    public ResponseEntity<?> getSupplierById(Long id) {
-        Optional<Supplier> supplierOpt = supplierRepository.findById(id);
-
-        if(supplierOpt.isPresent()){
-            SuppliersDTO response = modelMapper.map(supplierOpt.get(), SuppliersDTO.class);
-            return ResponseEntity.ok().body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Get supplier successfully!", response
-            ));
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                    HttpStatus.NOT_FOUND.toString(), "Supplier is not found!", null
-            ));
-        }
-
-
+    //@Cacheable( key = "#id")
+    public SuppliersDTO getSupplierById(Long id) {
+        return supplierRepository.findById(id)
+                .map(supplier -> modelMapper.map(supplier, SuppliersDTO.class))
+                .orElseThrow(() -> new NotFoundException("Supplier not found with id: " + id)); // Trả về null nếu không tìm thấy
     }
 
+
+
     @Override
+    //@CachePut(key = "#id")
     public ResponseEntity<?> updateSupplier(Long id, UpdateSupplierForm form) {
         Optional<Supplier> supplierOpt = supplierRepository.findById(id);
 
-        if(supplierOpt.isEmpty()){
+        if (supplierOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
                     HttpStatus.NOT_FOUND.toString(), "Supplier is not found!", null
             ));
         }
+        if (supplierRepository.existsByEmail(form.getEmail())) {
+            return ResponseEntity.badRequest().body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(), "Email already in use!", null));
+        }
 
+        if (supplierRepository.existsByPhone(form.getPhone())) {
+            return ResponseEntity.badRequest().body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(), "Phone number already in use!", null));
+        }
+
+        if (supplierRepository.existsByTaxCode(form.getTaxCode())) {
+            return ResponseEntity.badRequest().body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(), "Tax code already in use!", null));
+        }
         Supplier existingSupplier = supplierOpt.get();
 
         // Ensure we don't overwrite the existing Supplier's ID with a new one.
         Supplier updatedSupplier = Supplier.builder()
                 .id(existingSupplier.getId()) // Ensure the ID remains the same
-                .code(form.getCode() != null ? form.getCode() : existingSupplier.getCode())
                 .name(form.getName() != null ? form.getName() : existingSupplier.getName())
                 .phone(form.getPhone() != null ? form.getPhone() : existingSupplier.getPhone())
                 .email(form.getEmail() != null ? form.getEmail() : existingSupplier.getEmail())
@@ -116,12 +139,13 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+   // @CacheEvict(key = "#id")
     public ResponseEntity<?> updateSupplierStatus(Long id) {
 
         Supplier supplier = supplierRepository.findById(id)
-                        .orElseThrow(() -> new NotFoundException("Supplier not found"));
+                .orElseThrow(() -> new NotFoundException("Supplier not found"));
 
-        if(supplier.isStatus()){
+        if (supplier.isStatus()) {
             supplier.setStatus(false);
         } else {
             supplier.setStatus(true);
@@ -131,5 +155,24 @@ public class SupplierServiceImpl implements SupplierService {
         return ResponseEntity.ok().body(new ResponseObject(
                 HttpStatus.OK.toString(), "Update supplier status successfully!", null
         ));
+    }
+
+
+    private boolean isSupplierCodeExist(String code) {
+        Long count = entityManager.createQuery(
+                        "SELECT COUNT(s) FROM Supplier s WHERE s.code = :code", Long.class)
+                .setParameter("code", code)
+                .getSingleResult();
+        return count > 0;
+    }
+
+    public String generateRandomSupplierCode() {
+        String code;
+        do {
+            Random random = new Random();
+            int randomNumber = 100 + random.nextInt(900); // generates a number between 100 and 999
+            code = "S" + randomNumber;
+        } while (isSupplierCodeExist(code));
+        return code;
     }
 }

@@ -11,7 +11,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -33,6 +32,10 @@ public class ItemDTO {
     private int available;
 
     private int defective;
+
+    private int minStockLevel;
+
+    private int maxStockLevel;
 
     private ItemUserDTO createdBy;
 

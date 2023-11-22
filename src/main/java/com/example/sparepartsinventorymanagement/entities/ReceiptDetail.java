@@ -1,45 +1,40 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.example.sparepartsinventorymanagement.audit.Auditable;
 import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @Table(name = "receipt_details")
-public class ReceiptDetail {
+public class ReceiptDetail  extends Auditable<User> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
 
-
     @Column(name = "quantity", nullable = false)
     private int quantity;
 
-    @Column(name = "created_by", nullable = false)
-    private Long createdBy;
 
-    @Column(name = "updated_by")
-    private Long updatedBy;
+    @Column(name = "unit_name")
+    private String unitName;
 
-    @Column(name = "created_at", nullable = false)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
-    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
-    private Date createdAt;
+    @Column(name = "total_price")
+    private double totalPrice;
 
-    @Column(name = "updated_at")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
-    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
-    private Date updatedAt;
+
+    @Column(name = "total_quantity")
+    private int totalQuantity;
+
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
@@ -59,4 +54,8 @@ public class ReceiptDetail {
     @ManyToOne
     @JoinColumn(name = "receipt_id", nullable = false)
     private Receipt receipt;
+
+    public ReceiptDetail() {
+        // Constructor mặc định cần thiết cho JPA
+    }
 }

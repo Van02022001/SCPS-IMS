@@ -7,9 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReceiptDetailResponse {
+public class SubCategoryMetaDTO {
     private Long id;
-    private Long itemId;
-    private int quantity;
-    private float unitPrice;
+
+    private String key;
+
+    private String description;
 }

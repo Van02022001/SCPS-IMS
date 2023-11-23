@@ -12,12 +12,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PurchasePriceService {
-    CreatePurchasePriceDTO createPurchasePrice(CreatePurchasePriceRequest request);
-    UpdatePurchasePriceDTO updatePurchasePrice(UpdatePurchasePriceRequest request);
-
     List<GetListPurchasePriceDTO> getAllPurchasePrice();
 
 
 
-    List<GetListPurchasePriceDTO> getHistoricalPricesForItem(Long itemId);
+
 }

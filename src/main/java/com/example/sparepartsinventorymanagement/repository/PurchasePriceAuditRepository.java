@@ -13,5 +13,9 @@ import java.util.List;
 public interface PurchasePriceAuditRepository extends JpaRepository<PurchasePriceAudit, Long> {
     @Query("SELECT a FROM PurchasePriceAudit a WHERE (a.purchasePrice.item.id = :#{#criteria.itemId} OR :#{#criteria.itemId} IS NULL) AND (a.changedBy.id = :#{#criteria.userId} OR :#{#criteria.userId} IS NULL) AND (a.changeDate BETWEEN :#{#criteria.startDate} AND :#{#criteria.endDate})")
     List<PurchasePriceAudit> searchWithCriteria(@Param("criteria") AuditSearchCriteriaForm criteria);
+
+
+    List<PurchasePriceAudit> findByPurchasePrice_IdOrderByChangeDateDesc(Long purchasePriceId);
+
 }
 

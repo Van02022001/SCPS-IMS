@@ -149,9 +149,15 @@ public class ReceiptServiceImpl implements ReceiptService {
     @Override
     @Transactional
     public ImportRequestReceiptResponse createImportRequestReceipt(ImportRequestReceiptForm importRequestReceiptForm) {
+       // Warehouse warehouse = warehouseRepository.findById(importRequestReceiptForm.getWarehouseId())
+//                .orElseThrow(() -> new NotFoundException("Warehouse not found!"));
         // Check warehouse
-        Warehouse warehouse = warehouseRepository.findById(importRequestReceiptForm.getWarehouseId())
+        List<Warehouse> warehouseList = warehouseRepository.findAll();
+        Warehouse warehouse = warehouseList.stream()
+                .filter( warehouse1 -> warehouse1.getId().equals(importRequestReceiptForm.getWarehouseId()))
+                .findFirst()
                 .orElseThrow(() -> new NotFoundException("Warehouse not found!"));
+
 
         // Check inventory staff
         List<User> inventoryStaffList = userRepository.findAllByWarehouseAndRoleName(warehouse, "INVENTORY_STAFF");
@@ -190,34 +196,41 @@ public class ReceiptServiceImpl implements ReceiptService {
             // Capture old price for auditing
             double oldPrice = (existingPrice != null) ? existingPrice.getPrice() : 0.0;
 
-            // Create or update PurchasePrice
-            if (existingPrice == null) {
-                // Nếu chưa có, thì tạo mới PurchasePrice
-                PurchasePrice activePurchasePrice = PurchasePrice.builder()
+            if (existingPrice != null) {
+                if (existingPrice.getPrice() != detailForm.getUnitPrice()) {
+                    // Cập nhật giá và tạo bản ghi kiểm toán
+                    existingPrice.setPrice(detailForm.getUnitPrice());
+                    purchasePriceRepository.save(existingPrice);
+
+                    PurchasePriceAudit priceAudit = PurchasePriceAudit.builder()
+                            .changedBy(getCurrentAuthenticatedUser())
+                            .changeDate(new Date())
+                            .oldPrice(oldPrice)
+                            .newPrice(detailForm.getUnitPrice())
+                            .purchasePrice(existingPrice)
+                            .build();
+                    purchasePriceAuditRepository.save(priceAudit);
+                }
+            } else {
+                // Tạo mới PurchasePrice và PurchasePriceAudit
+                PurchasePrice newPrice = PurchasePrice.builder()
                         .item(item)
                         .price(detailForm.getUnitPrice())
                         .effectiveDate(new Date())
                         .build();
-                purchasePriceRepository.save(activePurchasePrice);
-            } else {
-                // Nếu đã có, cập nhật giá trị mới
-                if (existingPrice.getPrice() != detailForm.getUnitPrice() || existingPrice.getPrice() == detailForm.getUnitPrice()) {
-                    existingPrice.setPrice(detailForm.getUnitPrice());
-                    purchasePriceRepository.save(existingPrice);
-                }
-            }
+                purchasePriceRepository.save(newPrice);
 
-            // Create PurchasePriceAudit if price changed
-            if (existingPrice != null && oldPrice != detailForm.getUnitPrice()) {
                 PurchasePriceAudit priceAudit = PurchasePriceAudit.builder()
                         .changedBy(getCurrentAuthenticatedUser())
                         .changeDate(new Date())
-                        .oldPrice(oldPrice)
+                        .oldPrice(0.0)
                         .newPrice(detailForm.getUnitPrice())
-                        .purchasePrice(existingPrice)
+                        .purchasePrice(newPrice)
                         .build();
                 purchasePriceAuditRepository.save(priceAudit);
             }
+
+
 
             // Create receipt detail
             ReceiptDetail receiptDetail = ReceiptDetail.builder()
@@ -268,12 +281,19 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .map(detail -> {
                     ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
                     detailResponse.setId(detail.getId());
-                    detailResponse.setItemName(detail.getItem().getSubCategory().getName());
+                    if (detail.getItem() != null && detail.getItem().getSubCategory() != null) {
+                        detailResponse.setItemName(detail.getItem().getSubCategory().getName());
+                    } else {
+                        detailResponse.setItemName("N/A"); // Hoặc xử lý khác
+                    }
                     detailResponse.setQuantity(detail.getQuantity());
                     detailResponse.setUnitName(detail.getUnitName());
-                    detailResponse.setPrice(detail.getPurchasePrice().getPrice());
+                    if (detail.getPurchasePrice() != null) {
+                        detailResponse.setPrice(detail.getPurchasePrice().getPrice());
+                    } else {
+                        detailResponse.setPrice(0.0); // Hoặc xử lý khác
+                    }
                     detailResponse.setTotalPrice(detail.getTotalPrice());
-
                     return detailResponse;
                 })
                 .collect(Collectors.toList());
@@ -281,143 +301,140 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         return response;
     }
-
-
-
     @Override
     @Transactional
     public ImportRequestReceiptResponse updateImportRequestReceipt(Long id, UpdateImportRequestReceipt importRequestReceiptForm) {
-        // Kiểm tra xem phiếu nhập kho có tồn tại hay không
-        Receipt existingReceipt = receiptRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Import Request Receipt not found"));
+        // Tìm phiếu nhập kho và kiểm tra loại phiếu
+        Receipt receipt = receiptRepository.findById(id)
+                .filter(r -> r.getType() == ReceiptType.PHIEU_YEU_CAU_NHAP_KHO)
+                .orElseThrow(() -> new NotFoundException("Receipt with ID " + id + " not found or not of type PHIEU_YEU_CAU_NHAP_KHO"));
 
-        // Kiểm tra xem phiếu nhập kho có trong trạng thái cho phép cập nhật không
-        if (existingReceipt.getStatus() != ReceiptStatus.Pending_Approval) {
-            throw new NotFoundException("Cannot update Import Request Receipt in its current status");
-        }
+        // Cập nhật thông tin chung của phiếu
+        receipt.setDescription(importRequestReceiptForm.getDescription());
 
-        // Kiểm tra xem warehouse có tồn tại không
-        Warehouse warehouse = warehouseRepository.findById(importRequestReceiptForm.getWarehouseId())
-                .orElseThrow(() -> new NotFoundException("Warehouse not found"));
+        // Tìm nạp tất cả chi tiết phiếu hiện có từ cơ sở dữ liệu
+        List<ReceiptDetail> existingDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
 
-        // Kiểm tra xem inventory staff có tồn tại không
-        List<User> inventoryStaffList = userRepository.findAllByWarehouseAndRoleName(warehouse, "INVENTORY_STAFF");
-        User inventoryStaff = inventoryStaffList.stream()
-                .filter(user -> user.getId().equals(importRequestReceiptForm.getInventoryStaffId()))
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("Inventory Staff not found"));
+        // Xác định các chi tiết phiếu được gửi từ client
+        Set<Long> formDetailIds = importRequestReceiptForm.getDetails().stream()
+                .map(UpdateImportRequestReceiptDetail::getId)
+                .collect(Collectors.toSet());
 
-        // Cập nhật thông tin của phiếu nhập kho
-        existingReceipt.setDescription(importRequestReceiptForm.getDescription());
-
-        // Xóa tất cả chi tiết cũ của phiếu nhập kho
-        receiptDetailRepository.deleteAll(existingReceipt.getDetails());
-
-        // Tạo danh sách chi tiết mới
-        List<ReceiptDetail> receiptDetails = new ArrayList<>();
-        int totalQuantity = 0;
-        double totalPrice = 0;
+        // Xử lý và cập nhật các chi tiết phiếu được gửi từ client
+        List<ReceiptDetail> updatedDetails = new ArrayList<>();
 
         for (UpdateImportRequestReceiptDetail detailForm : importRequestReceiptForm.getDetails()) {
-            // Kiểm tra xem sản phẩm có tồn tại không
-            Item item = itemRepository.findById(detailForm.getItemId())
-                    .orElseThrow(() -> new NotFoundException("Item not found"));
+            // Tìm nạp hoặc tạo mới chi tiết phiếu dựa trên ID
+            ReceiptDetail detail = existingDetails.stream()
+                    .filter(d -> d.getId().equals(detailForm.getId()))
+                    .findFirst()
+                    .orElse(new ReceiptDetail());
 
-            // Kiểm tra xem đơn vị có tồn tại không
-            Unit unit = unitRepository.findById(detailForm.getUnitId())
-                    .orElseThrow(() -> new NotFoundException("Unit not found"));
+            detail.setReceipt(receipt);
+            detail.setItem(itemRepository.findById(detailForm.getItemId())
+                    .orElseThrow(() -> new NotFoundException("Item not found")));
+            detail.setQuantity(detailForm.getQuantity());
+            detail.setUnitName(unitRepository.findById(detailForm.getUnitId())
+                    .orElseThrow(() -> new NotFoundException("Unit not found")).getName());
 
-            // Tạo PurchasePrice nếu chưa có
-            PurchasePrice existingPrice = purchasePriceRepository.findByItem(item);
-            PurchasePrice activePurchasePrice;
+            // Check and update PurchasePrice
+            PurchasePrice existingPrice = purchasePriceRepository.findByItem(detail.getItem());
             double oldPrice = (existingPrice != null) ? existingPrice.getPrice() : 0.0;
 
-            if (existingPrice == null) {
-                activePurchasePrice = PurchasePrice.builder()
-                        .item(item)
+            if (existingPrice != null) {
+                if (existingPrice.getPrice() != detailForm.getUnitPrice()) {
+                    // Update price and create audit record
+                    existingPrice.setPrice(detailForm.getUnitPrice());
+                    purchasePriceRepository.save(existingPrice);
+
+                    PurchasePriceAudit priceAudit = PurchasePriceAudit.builder()
+                            .changedBy(getCurrentAuthenticatedUser())
+                            .changeDate(new Date())
+                            .oldPrice(oldPrice)
+                            .newPrice(detailForm.getUnitPrice())
+                            .purchasePrice(existingPrice)
+                            .build();
+                    purchasePriceAuditRepository.save(priceAudit);
+                }
+                detail.setPurchasePrice(existingPrice);
+            } else {
+                // Create new PurchasePrice and PurchasePriceAudit
+                PurchasePrice newPrice = PurchasePrice.builder()
+                        .item(detail.getItem())
                         .price(detailForm.getUnitPrice())
                         .effectiveDate(new Date())
                         .build();
-            } else {
-                activePurchasePrice = existingPrice;
-                activePurchasePrice.setPrice(detailForm.getUnitPrice());
-            }
+                purchasePriceRepository.save(newPrice);
 
-            purchasePriceRepository.save(activePurchasePrice);
-
-            // Kiểm tra xem giá trị của PurchasePrice có thay đổi không và tạo PurchasePriceAudit nếu có thay đổi
-            if (existingPrice != null && oldPrice != detailForm.getUnitPrice()) {
                 PurchasePriceAudit priceAudit = PurchasePriceAudit.builder()
                         .changedBy(getCurrentAuthenticatedUser())
                         .changeDate(new Date())
-                        .oldPrice(oldPrice)
+                        .oldPrice(0.0)
                         .newPrice(detailForm.getUnitPrice())
-                        .purchasePrice(existingPrice)
+                        .purchasePrice(newPrice)
                         .build();
                 purchasePriceAuditRepository.save(priceAudit);
+                detail.setPurchasePrice(newPrice);
             }
 
-            // Tạo chi tiết phiếu nhập kho
-            ReceiptDetail receiptDetail = ReceiptDetail.builder()
-                    .item(item)
-                    .quantity(detailForm.getQuantity())
-                    .unitName(unit.getName())
-                    .purchasePrice(activePurchasePrice)
-                    .totalPrice(detailForm.getUnitPrice() * detailForm.getQuantity())
-                    .receipt(existingReceipt)
-                    .build();
-
-            receiptDetails.add(receiptDetail);
-
-            totalQuantity += detailForm.getQuantity();
-            totalPrice += receiptDetail.getTotalPrice();
+            detail.setTotalPrice(detailForm.getUnitPrice() * detailForm.getQuantity());
+            updatedDetails.add(detail);
         }
 
-        // Cập nhật chi tiết mới cho phiếu nhập kho
-        existingReceipt.setDetails(receiptDetails);
-        existingReceipt.setTotalQuantity(totalQuantity);
-        existingReceipt.setTotalPrice(totalPrice);
+        // Xóa các chi tiết phiếu cũ không còn tồn tại trong request cập nhật
+        List<ReceiptDetail> detailsToRemove = existingDetails.stream()
+                .filter(detail -> !formDetailIds.contains(detail.getId()))
+                .collect(Collectors.toList());
+        receiptDetailRepository.deleteAll(detailsToRemove);
 
-        // Lưu phiếu nhập kho cập nhật
-        Receipt savedReceipt = receiptRepository.save(existingReceipt);
+        // Lưu danh sách chi tiết phiếu đã cập nhật
+        updatedDetails = receiptDetailRepository.saveAll(updatedDetails);
 
-        // Tạo và gửi thông báo
-        notificationService.createAndSendNotification(
-                SourceType.RECEIPT,
-                EventType.UPDATED,
-                savedReceipt.getId(),
-                inventoryStaff.getId(),
-                NotificationType.YEU_CAU_NHAP_KHO,
-                "Phiếu yêu cầu nhập kho #" + savedReceipt.getId() + " đã được cập nhật."
-        );
+        // Tính lại totalPrice và totalQuantity
+        double totalPrice = updatedDetails.stream().mapToDouble(detail -> detail.getTotalPrice()).sum();
+        int totalQuantity = updatedDetails.stream().mapToInt(ReceiptDetail::getQuantity).sum();
+
+        // Cập nhật lại totalPrice và totalQuantity cho phiếu
+        receipt.setTotalPrice(totalPrice);
+        receipt.setTotalQuantity(totalQuantity);
+        receiptRepository.save(receipt);
 
         // Tạo và trả về response
         ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
-        response.setId(savedReceipt.getId());
-        response.setCode(savedReceipt.getCode());
-        response.setType(savedReceipt.getType());
-        response.setStatus(savedReceipt.getStatus());
-        response.setDescription(savedReceipt.getDescription());
-        response.setCreatedBy(savedReceipt.getCreatedBy().getLastName() + " " + savedReceipt.getCreatedBy().getMiddleName() + " " + savedReceipt.getCreatedBy().getFirstName());
-        response.setLastModifiedBy(savedReceipt.getLastModifiedBy() != null ? savedReceipt.getLastModifiedBy().getLastName() + " " + savedReceipt.getLastModifiedBy().getLastName() + " " + savedReceipt.getLastModifiedBy().getFirstName() : null);
-        response.setCreatedAt(savedReceipt.getCreationDate());
-        response.setUpdatedAt(savedReceipt.getLastModifiedDate());
+
+        response.setId(receipt.getId());
+        response.setCode(receipt.getCode());
+        response.setType(receipt.getType());
+        response.setStatus(receipt.getStatus());
+        response.setDescription(receipt.getDescription());
+        response.setCreatedBy(receipt.getCreatedBy().getLastName() + " " + receipt.getCreatedBy().getMiddleName() + " " + receipt.getCreatedBy().getFirstName());
+        response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() + " " + receipt.getLastModifiedBy().getLastName() + " " + receipt.getLastModifiedBy().getFirstName() : null);
+        response.setCreatedAt(receipt.getCreationDate());
+        response.setUpdatedAt(receipt.getLastModifiedDate());
         response.setTotalQuantity(totalQuantity);
         response.setTotalPrice(totalPrice);
 
-        List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+        List<ImportRequestReceiptDetailResponse> detailResponses = updatedDetails.stream()
                 .map(detail -> {
                     ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
                     detailResponse.setId(detail.getId());
-                    detailResponse.setItemName(detail.getItem().getSubCategory().getName());
+                    if (detail.getItem() != null && detail.getItem().getSubCategory() != null) {
+                        detailResponse.setItemName(detail.getItem().getSubCategory().getName());
+                    } else {
+                        detailResponse.setItemName("N/A");
+                    }
                     detailResponse.setQuantity(detail.getQuantity());
                     detailResponse.setUnitName(detail.getUnitName());
-                    detailResponse.setPrice(detail.getPurchasePrice().getPrice());
+                    if (detail.getPurchasePrice() != null) {
+                        detailResponse.setPrice(detail.getPurchasePrice().getPrice());
+                    } else {
+                        detailResponse.setPrice(0.0);
+                    }
                     detailResponse.setTotalPrice(detail.getTotalPrice());
-
                     return detailResponse;
                 })
                 .collect(Collectors.toList());
+
         response.setDetails(detailResponses);
 
         return response;
@@ -426,16 +443,8 @@ public class ReceiptServiceImpl implements ReceiptService {
 
 
 
-    private void createPriceAudit(PurchasePrice oldPurchasePrice, double newUnitPrice, PurchasePrice newPurchasePrice) {
-        PurchasePriceAudit audit = PurchasePriceAudit.builder()
-                .changedBy(getCurrentAuthenticatedUser())
-                .changeDate(new Date())
-                .oldPrice(oldPurchasePrice != null ? oldPurchasePrice.getPrice() : null)
-                .newPrice(newUnitPrice)
-                .purchasePrice(newPurchasePrice)
-                .build();
-        purchasePriceAuditRepository.save(audit);
-    }
+
+
     private User getCurrentAuthenticatedUser() {
         // Logic to get the current authenticated user
         return userRepository.findById(((Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId())

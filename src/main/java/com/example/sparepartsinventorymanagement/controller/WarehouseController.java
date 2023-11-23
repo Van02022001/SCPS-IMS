@@ -1,6 +1,7 @@
 package com.example.sparepartsinventorymanagement.controller;
 
 import com.example.sparepartsinventorymanagement.dto.request.WarehouseFormRequest;
+import com.example.sparepartsinventorymanagement.dto.response.InventoryStaffDTO;
 import com.example.sparepartsinventorymanagement.dto.response.WarehouseDTO;
 import com.example.sparepartsinventorymanagement.service.impl.WarehouseServiceImpl;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,11 +23,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/warehouses")
 @Tag(name = "warehouse")
 public class WarehouseController {
-    @Autowired
-    private WarehouseServiceImpl warehouseService;
+
+    private final WarehouseServiceImpl warehouseService;
+
 
     @Operation(summary = "For get list of warehouses")
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -140,6 +144,31 @@ public class WarehouseController {
                 res
         ));
     }
+
+
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @Operation(summary = "Get all inventory staff by warehouse ID")
+    @GetMapping("/inventory-staffs/{warehouseId}")
+    public ResponseEntity<?> getAllInventoryStaffByWarehouseId(
+            @Parameter(description = "Enter warehouse ID", required = true, example = "1")
+            @PathVariable Long warehouseId) {
+        try {
+            List<InventoryStaffDTO> inventoryStaffDTOs = warehouseService.getAllInventoryStaffByWarehouseId(warehouseId);
+            return ResponseEntity.ok(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Get all inventory staff by warehouse ID successfully",
+                    inventoryStaffDTOs
+            ));
+        } catch (Exception e) {
+            // Xử lý lỗi ở đây, ví dụ ghi log hoặc trả về thông báo lỗi cụ thể cho người dùng
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(),
+                    "Failed to get inventory staff by warehouse ID",
+                    null
+            ));
+        }
+    }
+
 
 //    @PreAuthorize("hasRole('ROLE_MANAGER')")
 //    @Operation(summary = "For update status of warehouse")

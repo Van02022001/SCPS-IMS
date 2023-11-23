@@ -1,5 +1,6 @@
 package com.example.sparepartsinventorymanagement.repository;
 
+import com.example.sparepartsinventorymanagement.entities.User;
 import com.example.sparepartsinventorymanagement.entities.Warehouse;
 import com.example.sparepartsinventorymanagement.entities.WarehouseStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +14,6 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
     boolean existsByAddress(String address);
     List<Warehouse> findByNameContaining(String keyword);
     List<Warehouse> findByStatus(WarehouseStatus status);
+
+
 }

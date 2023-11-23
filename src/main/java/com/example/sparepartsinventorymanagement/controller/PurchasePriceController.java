@@ -22,30 +22,7 @@ import java.util.List;
 public class PurchasePriceController {
     private final PurchasePriceService purchasePriceService;
 
-    @Operation(summary = "Create a new purchase price")
-    @PostMapping( produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createPurchasePrice(@RequestBody CreatePurchasePriceRequest request) {
-        try {
-            var purchasePrice = purchasePriceService.createPurchasePrice(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(purchasePrice);
-        } catch (Exception e) {
-            // Log the exception details here
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while creating the purchase price");
-        }
-    }
-    @Operation(summary = "Update an existing purchase price")
-    @PutMapping( produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updatePurchasePrice(@RequestBody UpdatePurchasePriceRequest request) {
-        try {
-            var updatedPurchasePrice = purchasePriceService.updatePurchasePrice(request);
-            return ResponseEntity.ok(updatedPurchasePrice);
-        } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            // Log the exception details here
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while updating the purchase price");
-        }
-    }
+
 
 
     @Operation(summary = "Get all purchase prices")
@@ -58,17 +35,5 @@ public class PurchasePriceController {
 
 
 
-    @Operation(summary = "Get historical prices for a specific item")
-    @GetMapping(value = "/historical/{itemId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getHistoricalPricesForItem(@PathVariable Long itemId) {
-        try {
-            List<GetListPurchasePriceDTO> historicalPrices = purchasePriceService.getHistoricalPricesForItem(itemId);
-            return ResponseEntity.ok(historicalPrices);
-        } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            // Log the exception details here
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while retrieving historical prices");
-        }
-    }
+
 }

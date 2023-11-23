@@ -22,7 +22,7 @@ public class PurchasePriceAuditController {
     private final PurchasePriceAuditService purchasePriceAuditService;
 
     @Operation(summary = "Get all purchase price audits")
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping()
     public ResponseEntity<?> getAllAudits() {
         try {
             List<PurchasePriceAuditDTO> audits = purchasePriceAuditService.getAllAudits();
@@ -34,7 +34,7 @@ public class PurchasePriceAuditController {
     }
 
     @Operation(summary = "Get a purchase price audit by ID")
-    @GetMapping(value = "/{auditId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/{auditId}")
     public ResponseEntity<?> getAuditById(@PathVariable Long auditId) {
         try {
             PurchasePriceAuditDTO audit = purchasePriceAuditService.getAuditById(auditId);
@@ -48,7 +48,7 @@ public class PurchasePriceAuditController {
     }
 
     @Operation(summary = "Search purchase price audits")
-    @PostMapping(value = "/search", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/search")
     public ResponseEntity<?> searchAudits(@RequestBody AuditSearchCriteriaForm criteria) {
         try {
             List<PurchasePriceAuditDTO> audits = purchasePriceAuditService.searchAudits(criteria);
@@ -58,4 +58,19 @@ public class PurchasePriceAuditController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during the audit search");
         }
     }
+
+    @GetMapping("/history/{itemId}")
+    public ResponseEntity<?> getItemPriceChangeHistory(@PathVariable Long itemId) {
+        try {
+            List<PurchasePriceAuditDTO> auditDTOs = purchasePriceAuditService.getItemPriceChangeHistory(itemId);
+
+            return ResponseEntity.ok(auditDTOs);
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            // Log the exception details here
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while retrieving the audit history");
+        }
+    }
 }
+

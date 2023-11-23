@@ -13,8 +13,8 @@ import java.util.Date;
 @AllArgsConstructor
 public class PurchasePriceAuditDTO {
     private Long id;
-    private Long purchasePriceId;
-    private Long changedBy;
+    private String itemName;
+    private String changedBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date changeDate;

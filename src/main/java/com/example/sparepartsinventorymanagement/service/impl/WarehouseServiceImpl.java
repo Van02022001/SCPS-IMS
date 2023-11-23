@@ -1,6 +1,7 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.WarehouseFormRequest;
+import com.example.sparepartsinventorymanagement.dto.response.InventoryStaffDTO;
 import com.example.sparepartsinventorymanagement.dto.response.WarehouseDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
@@ -9,26 +10,32 @@ import com.example.sparepartsinventorymanagement.repository.ItemRepository;
 import com.example.sparepartsinventorymanagement.repository.UserRepository;
 import com.example.sparepartsinventorymanagement.repository.WarehouseRepository;
 import com.example.sparepartsinventorymanagement.service.WarehouseService;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class WarehouseServiceImpl implements WarehouseService {
 
-    @Autowired
-    private WarehouseRepository warehouseRepository;
-    @Autowired
-    private ItemRepository itemRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private ModelMapper mapper;
+    private final WarehouseRepository warehouseRepository;
+
+    private final ItemRepository itemRepository;
+
+
+    private final UserRepository userRepository;
+
+    private final ModelMapper mapper;
+
+
 
     @Override
     public List<WarehouseDTO> getAll() {
@@ -100,6 +107,34 @@ public class WarehouseServiceImpl implements WarehouseService {
         warehouseRepository.save(warehouse);
         return mapper.map(warehouse, WarehouseDTO.class);
     }
+
+    @Override
+    public List<InventoryStaffDTO> getAllInventoryStaffByWarehouseId(Long warehouseId) {
+        try {
+            // Truy xuất danh sách người dùng (inventory staff) thuộc warehouse dựa trên warehouseId
+            List<User> inventoryStaffList = userRepository.findAllByWarehouseIdAndRole_Name(warehouseId, "INVENTORY_STAFF");
+
+            // Chuyển đổi danh sách người dùng thành danh sách InventoryStaffDTO
+            List<InventoryStaffDTO> inventoryStaffDTOs = inventoryStaffList.stream()
+                    .map(this::convertToInventoryStaffDTO)
+                    .collect(Collectors.toList());
+
+            return inventoryStaffDTOs;
+        } catch (Exception e) {
+            // Xử lý lỗi ở đây, ví dụ ghi log hoặc trả về một danh sách rỗng hoặc thông báo lỗi tùy thuộc vào yêu cầu của bạn.
+            // Ví dụ trả về danh sách rỗng:
+            return Collections.emptyList();
+        }
+    }
+    private InventoryStaffDTO convertToInventoryStaffDTO(User user) {
+        InventoryStaffDTO inventoryStaffDTO = new InventoryStaffDTO();
+        inventoryStaffDTO.setId(user.getId());
+        inventoryStaffDTO.setFirstName(user.getFirstName());
+        inventoryStaffDTO.setMiddleName(user.getMiddleName());
+        inventoryStaffDTO.setLastName(user.getLastName());
+        return inventoryStaffDTO;
+    }
+
 
 //    @Override
 //    public ResponseEntity<?> updateWarehouseStatus(Long id, WarehouseStatus status) {

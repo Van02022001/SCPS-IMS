@@ -3,37 +3,30 @@ package com.example.sparepartsinventorymanagement.service.impl;
 import com.example.sparepartsinventorymanagement.dto.request.SubCategoryFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.SubCategoryDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
-import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
 import com.example.sparepartsinventorymanagement.exception.InvalidResourceException;
 import com.example.sparepartsinventorymanagement.exception.InvalidStatusException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.*;
 import com.example.sparepartsinventorymanagement.service.SubCategoryService;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class SubCategoryServiceImpl implements SubCategoryService {
 
-    @Autowired
-    private UnitRepository unitRepository;
-    @Autowired
-    private SizeRepository sizeRepository;
-    @Autowired
-    private UnitMeasurementRepository unitMeasurementRepository;
-    @Autowired
-    private SubCategoryRepository subCategoryRepository;
-    @Autowired
-    private CategoryRepository categoryRepository;
-    @Autowired
-    private ModelMapper mapper;
-    @Autowired
-    private ItemRepository itemRepository;
+    private final UnitRepository unitRepository;
+    private final SizeRepository sizeRepository;
+    private final UnitMeasurementRepository unitMeasurementRepository;
+    private final SubCategoryRepository subCategoryRepository;
+    private final CategoryRepository categoryRepository;
+    private final ModelMapper mapper;
+    private final ItemRepository itemRepository;
     @Override
     public List<SubCategoryDTO> getAll() {
         List<SubCategory> subCategories = subCategoryRepository.findAll();
@@ -97,9 +90,7 @@ public class SubCategoryServiceImpl implements SubCategoryService {
             throw new InvalidResourceException("SubCategory must have at least one category");
         }
 
-        if(subCategoryRepository.existsByName(form.getName())){
-            throw new DuplicateResourceException("SubCategory name already exists");
-        }
+        checkNameDuplicate(form.getName().trim());
         //check unit
         Unit unit = unitRepository.findById(form.getUnit_id()).orElseThrow(
                 ()-> new NotFoundException("Unit not found")
@@ -146,9 +137,7 @@ public class SubCategoryServiceImpl implements SubCategoryService {
 
         // Check and update name
         if (!subCategory.getName().equalsIgnoreCase(form.getName())) {
-            if (subCategoryRepository.existsByName(form.getName())) {
-                throw new DuplicateResourceException("SubCategory name already exists");
-            }
+            checkNameDuplicate(form.getName().trim());
             subCategory.setName(form.getName());
             if(!subCategory.getItems().isEmpty()){
                 for (Item item: subCategory.getItems()
@@ -261,7 +250,7 @@ public class SubCategoryServiceImpl implements SubCategoryService {
     @Override
     public SubCategoryDTO updateSubCategoryStatus(Long id, SubCategoryStatus status) {
         SubCategory subCategory = subCategoryRepository.findById(id).orElseThrow(
-                ()-> new NotFoundException("Product not found")
+                ()-> new NotFoundException("Sub category not found")
         );
         if(status == SubCategoryStatus.Active){
             subCategory.setStatus(SubCategoryStatus.Active);
@@ -270,5 +259,11 @@ public class SubCategoryServiceImpl implements SubCategoryService {
         }
         subCategoryRepository.save(subCategory);
         return mapper.map(subCategory, SubCategoryDTO.class);
+    }
+    private void checkNameDuplicate(String name){
+        List<SubCategory> lists = subCategoryRepository.findAll();
+        if(lists.stream().anyMatch(subCategory -> subCategory.getName().equalsIgnoreCase(name.trim()))){
+            throw new InvalidResourceException("Sub category name was existed");
+        }
     }
 }

@@ -21,7 +21,7 @@ public class LocationTag {
     @Column(name="tag_id")
     private Long id;
 
-    @Column(name="name", nullable=false, unique=true)
+    @Column(name="name", nullable=false)
     private String name;
 
     // Các thuộc tính khác, nếu cần thiết

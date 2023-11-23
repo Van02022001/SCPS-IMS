@@ -4,27 +4,27 @@ import com.example.sparepartsinventorymanagement.dto.request.OriginFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.OriginDTO;
 import com.example.sparepartsinventorymanagement.entities.Item;
 import com.example.sparepartsinventorymanagement.entities.Origin;
-import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
+import com.example.sparepartsinventorymanagement.exception.InvalidResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.ItemRepository;
 import com.example.sparepartsinventorymanagement.repository.OriginRepository;
 import com.example.sparepartsinventorymanagement.service.OriginService;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class OriginServiceImpl implements OriginService {
 
-    @Autowired
-    private OriginRepository originRepository;
-    @Autowired
-    private ModelMapper mapper;
-    @Autowired
-    private ItemRepository itemRepository;
+    private final OriginRepository originRepository;
+
+    private final ItemRepository itemRepository;
+
+    private final ModelMapper mapper;
 
     @Override
     public List<OriginDTO> getAll() {
@@ -42,9 +42,7 @@ public class OriginServiceImpl implements OriginService {
 
     @Override
     public OriginDTO createOrigin(OriginFormRequest form) {
-        if(originRepository.existsByName(form.getName())){
-            throw new DuplicateResourceException("Name was existed");
-        }
+        checkNameDuplicate(form.getName().trim());
         Origin origin = Origin.builder()
                 .name(form.getName())
                 .build();
@@ -58,9 +56,7 @@ public class OriginServiceImpl implements OriginService {
                 ()-> new NotFoundException("Origin not found")
         );
         if (!origin.getName().equalsIgnoreCase(form.getName().trim())){
-            if (originRepository.existsByName(form.getName().trim())){
-                throw new DuplicateResourceException("Name was existed");
-            }
+            checkNameDuplicate(form.getName().trim());
             origin.setName(form.getName().trim());
             if(!origin.getItems().isEmpty()){
                 for (Item item: origin.getItems()
@@ -99,5 +95,11 @@ public class OriginServiceImpl implements OriginService {
     public List<OriginDTO> findByName(String keyword) {
         List<Origin> origins = originRepository.findByNameContaining(keyword);
         return mapper.map(origins, new TypeToken<List<OriginDTO>>(){}.getType());
+    }
+    private void checkNameDuplicate(String name){
+        List<Origin> lists = originRepository.findAll();
+        if(lists.stream().anyMatch(origin -> origin.getName().equalsIgnoreCase(name.trim()))){
+            throw new InvalidResourceException("Origin name was existed");
+        }
     }
 }

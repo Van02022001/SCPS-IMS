@@ -1,5 +1,6 @@
 package com.example.sparepartsinventorymanagement.service;
 
+import com.example.sparepartsinventorymanagement.dto.request.CreateItemLocationsFrom;
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
 import com.example.sparepartsinventorymanagement.entities.ItemStatus;
@@ -15,6 +16,6 @@ public interface ItemService {
     ItemDTO createItem(ItemFormRequest form);
     ItemDTO updateItem(Long id, ItemFormRequest form);
     ItemDTO updateItemStatus(Long id, ItemStatus status);
-
     List<ItemDTO> findBySubCategory_NameContainingIgnoreCase(String name);
+    ItemDTO createItemLocations(Long id, CreateItemLocationsFrom form);
 }

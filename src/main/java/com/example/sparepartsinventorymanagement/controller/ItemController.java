@@ -1,5 +1,6 @@
 package com.example.sparepartsinventorymanagement.controller;
 
+import com.example.sparepartsinventorymanagement.dto.request.CreateItemLocationsFrom;
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
 import com.example.sparepartsinventorymanagement.entities.ItemStatus;
@@ -173,6 +174,28 @@ public class ItemController {
                 HttpStatus.OK.toString(),
                 "Get items successfully",
                 response
+        ));
+    }
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @Operation(summary = "For update locations of item")
+    @PutMapping(value = "/item-locations/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> updateItemLocation(
+            @Parameter(description = "Enter id", required = true, example = "1")
+            @NotNull @NotEmpty @PathVariable(name = "id") Long id,
+            @Valid @RequestBody CreateItemLocationsFrom form
+    ) {
+        ItemDTO res = itemService.createItemLocations(id, form);
+        if(res != null){
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Update item locations successfully",
+                    res
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                HttpStatus.BAD_REQUEST.toString(),
+                "Update item locations failed",
+                null
         ));
     }
 }

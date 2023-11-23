@@ -50,10 +50,10 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         return new ErrorResponse(new Date(), HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
     }
     @ExceptionHandler({RuntimeException.class})
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handlerNotFoundException(Exception e, WebRequest request) {
         logger.error(e.getMessage());
-        return new ErrorResponse(new Date(), HttpStatus.NOT_FOUND.toString(), e.getMessage());
+        return new ErrorResponse(new Date(), HttpStatus.BAD_REQUEST.toString(), e.getMessage());
     }
 
 //    @ExceptionHandler(value = com.java8.tms.user.custom_exception.RoleAuthorizationAccessDeniedException.class)

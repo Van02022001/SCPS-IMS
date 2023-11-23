@@ -20,18 +20,18 @@ public class Location {
     @Column(name="location_id")
     private Long id;
 
-
-
     @Column(name = "shelf_number")
     private String shelfNumber; // số kệ
 
     @Column(name = "bin_number")
     private String binNumber; // số ngăn:
 
+    @Column(name = "item_quantity")
+    private int item_quantity;
+
     @ManyToOne
     @JoinColumn(name = "warehouse_id") // Foreign key column pointing to Warehouse
     private Warehouse warehouse;
-
 
     @ManyToMany
     @JoinTable(
@@ -44,4 +44,8 @@ public class Location {
     @ManyToOne
     @JoinColumn(name = "item_id")
     private Item item;
+    @OneToMany(mappedBy = "fromLocation", cascade = CascadeType.ALL)
+    private List<ItemMovement> fromMovements ;
+    @OneToMany(mappedBy = "toLocation", cascade = CascadeType.ALL)
+    private List<ItemMovement> toMovements;
 }

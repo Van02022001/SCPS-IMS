@@ -9,21 +9,19 @@ import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.BrandRepository;
 import com.example.sparepartsinventorymanagement.repository.ItemRepository;
 import com.example.sparepartsinventorymanagement.service.BrandService;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class BrandServiceImpl implements BrandService {
-    @Autowired
-    private BrandRepository brandRepository;
-    @Autowired
-    private ModelMapper mapper;
-    @Autowired
-    private ItemRepository itemRepository;
+    private final BrandRepository brandRepository;
+    private final ModelMapper mapper;
+    private final ItemRepository itemRepository;
     @Override
     public List<GetBrandDTO> getAll() {
         List<Brand> brands = brandRepository.findAll();
@@ -40,9 +38,7 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     public GetBrandDTO createBrand(BrandFromRequest from) {
-        if(brandRepository.existsByName(from.getName().trim())){
-            throw new DuplicateResourceException("Name was existed.");
-        }
+        checkDuplicateByName(from.getName().trim());
         Brand brand = Brand.builder()
                 .name(from.getName().trim())
                 .description(from.getDescription())
@@ -58,9 +54,7 @@ public class BrandServiceImpl implements BrandService {
                 ()-> new NotFoundException("Brand not found.")
         );
         if (!brand.getName().equalsIgnoreCase(from.getName().trim())){
-            if (brandRepository.existsByName(from.getName().trim())){
-                throw new DuplicateResourceException("Name was existed.");
-            }
+            checkDuplicateByName(from.getName().trim());
             brand.setName(from.getName().trim());
             if(!brand.getItems().isEmpty()){
                 for (Item item: brand.getItems()
@@ -98,5 +92,11 @@ public class BrandServiceImpl implements BrandService {
     public List<GetBrandDTO> getBrandByName(String name) {
         List<Brand> brands = brandRepository.findByNameContaining(name);
         return mapper.map(brands, new TypeToken<List<GetBrandDTO>>() {}.getType());
+    }
+    private void checkDuplicateByName(String name){
+        List<Brand> brands = brandRepository.findAll();
+        if(brands.stream().anyMatch(brand -> brand.getName().equalsIgnoreCase(name.trim()))){
+            throw new DuplicateResourceException("Brand name was existed");
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
+import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.entities.Period;
 import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
@@ -239,6 +240,31 @@ public class ItemServiceImpl implements ItemService {
                 .map(item -> modelMapper.map(item, ItemDTO.class))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<PurchasePriceAuditDTO> getItemPriceHistory(Long itemId) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Item not found"));
+
+        PurchasePrice purchasePrice = item.getPurchasePrice();
+        if(purchasePrice == null){
+            throw  new NotFoundException(" Purchase price not found for item");
+        }
+        List<PurchasePriceAudit> audits = purchasePriceAuditRepository.findByPurchasePriceId(purchasePrice.getId());
+
+        return audits.stream()
+                .map( audit -> {
+                    PurchasePriceAuditDTO dto = new PurchasePriceAuditDTO();
+                    dto.setId(audit.getId());
+                    dto.setItemName(audit.getPurchasePrice().getItem().getSubCategory().getName());
+                    dto.setChangeDate(audit.getChangeDate());
+                    dto.setOldPrice(audit.getOldPrice());
+                    dto.setNewPrice(audit.getNewPrice());
+                    dto.setChangedBy(audit.getChangedBy().getLastName()+" "+ audit.getChangedBy().getMiddleName()+ " "+audit.getChangedBy().getFirstName());
+                    return dto;
+                }).toList();
+    }
+
     private String createItemCode(String productName, Size size, String brandName, String originName, String supplierName){
         StringBuilder itemCode = new StringBuilder();
 

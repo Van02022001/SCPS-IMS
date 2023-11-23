@@ -2,7 +2,10 @@ package com.example.sparepartsinventorymanagement.controller;
 
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
+import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
 import com.example.sparepartsinventorymanagement.entities.ItemStatus;
+import com.example.sparepartsinventorymanagement.entities.PurchasePriceAudit;
+import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.service.impl.ItemServiceImpl;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import io.swagger.v3.oas.annotations.Operation;
@@ -174,5 +177,19 @@ public class ItemController {
                 "Get items successfully",
                 response
         ));
+    }
+    @Operation(summary = "Get purchase price history for Item")
+    @GetMapping("/purchase-price-history/{itemId}")
+    public ResponseEntity<?> getItemPurchasePriceHistory(@PathVariable Long itemId){
+        try{
+            List<PurchasePriceAuditDTO> history = itemService.getItemPriceHistory(itemId);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Get list Purchase Price History successfully",
+                    history
+            ));
+        }catch (NotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 }

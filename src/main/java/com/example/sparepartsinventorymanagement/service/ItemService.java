@@ -2,7 +2,9 @@ package com.example.sparepartsinventorymanagement.service;
 
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
+import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
 import com.example.sparepartsinventorymanagement.entities.ItemStatus;
+import com.example.sparepartsinventorymanagement.entities.PurchasePriceAudit;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -17,4 +19,6 @@ public interface ItemService {
     ItemDTO updateItemStatus(Long id, ItemStatus status);
 
     List<ItemDTO> findBySubCategory_NameContainingIgnoreCase(String name);
+
+    List<PurchasePriceAuditDTO> getItemPriceHistory(Long itemId);
 }

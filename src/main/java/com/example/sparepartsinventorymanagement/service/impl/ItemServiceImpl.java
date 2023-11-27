@@ -1,70 +1,65 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
+import com.example.sparepartsinventorymanagement.dto.request.CreateItemLocationsFrom;
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
+import com.example.sparepartsinventorymanagement.dto.request.UpdateItemLocationRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
+import com.example.sparepartsinventorymanagement.exception.InvalidResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
 import com.example.sparepartsinventorymanagement.repository.*;
 import com.example.sparepartsinventorymanagement.service.ItemService;
+
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
-    @Autowired
-    private ItemRepository itemRepository;
 
-    @Autowired
-    private SubCategoryRepository subCategoryRepository;
+    private final ItemRepository itemRepository;
 
-    @Autowired
-    private BrandRepository brandRepository;
+    private final SubCategoryRepository subCategoryRepository;
 
-    @Autowired
-    private OriginRepository originRepository;
+    private final BrandRepository brandRepository;
 
-    @Autowired
-    private SupplierRepository supplierRepository;
+    private final OriginRepository originRepository;
 
-    @Autowired
-    private WarehouseRepository warehouseRepository;
+    private final SupplierRepository supplierRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private PricingRepository pricingRepository;
+    private final LocationRepository locationRepository;
 
-    @Autowired
-    private PurchasePriceRepository purchasePriceRepository;
 
-    @Autowired
-    private LocationRepository locationRepository;
 
-    @Autowired
-    private PricingAuditRepository pricingAuditRepository;
+    private final ItemMovementRepository itemMovementRepository;
 
-    @Autowired
-    private PurchasePriceAuditRepository purchasePriceAuditRepository;
 
-    @Autowired
-    private InventoryRepository inventoryRepository;
-//    @Autowired
-//    private  PeriodRepository periodRepository;
+    private final PricingAuditRepository pricingAuditRepository;
 
-    @Autowired
-    private ModelMapper modelMapper;
+
+    private final PurchasePriceAuditRepository purchasePriceAuditRepository;
+
+
+    private final InventoryRepository inventoryRepository;
+
+
+
+    private final ModelMapper modelMapper;
+
     @Override
     public List<ItemDTO> getAll() {
         List<Item> items = itemRepository.findAll();
@@ -239,27 +234,87 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+
     public List<PurchasePriceAuditDTO> getItemPriceHistory(Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Item not found"));
 
         PurchasePrice purchasePrice = item.getPurchasePrice();
-        if(purchasePrice == null){
-            throw  new NotFoundException(" Purchase price not found for item");
+        if (purchasePrice == null) {
+            throw new NotFoundException(" Purchase price not found for item");
         }
         List<PurchasePriceAudit> audits = purchasePriceAuditRepository.findByPurchasePriceId(purchasePrice.getId());
 
         return audits.stream()
-                .map( audit -> {
+                .map(audit -> {
                     PurchasePriceAuditDTO dto = new PurchasePriceAuditDTO();
                     dto.setId(audit.getId());
                     dto.setItemName(audit.getPurchasePrice().getItem().getSubCategory().getName());
                     dto.setChangeDate(audit.getChangeDate());
                     dto.setOldPrice(audit.getOldPrice());
                     dto.setNewPrice(audit.getNewPrice());
-                    dto.setChangedBy(audit.getChangedBy().getLastName()+" "+ audit.getChangedBy().getMiddleName()+ " "+audit.getChangedBy().getFirstName());
+                    dto.setChangedBy(audit.getChangedBy().getLastName() + " " + audit.getChangedBy().getMiddleName() + " " + audit.getChangedBy().getFirstName());
                     return dto;
                 }).toList();
+    }
+    public ItemDTO createItemLocations(Long id, CreateItemLocationsFrom form) {
+        Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
+                ()-> new NotFoundException("User not found")
+        );
+        if(user.getWarehouse() == null){
+            throw new InvalidResourceException("User not is inventory staff of any warehouse");
+        }
+        Item item = itemRepository.findById(id).orElseThrow(
+                ()-> new NotFoundException("Item not found")
+        );
+
+        Date date = new Date();
+        Set<Long> toLocationIdsSet = new HashSet<>();
+        for (UpdateItemLocationRequest request: form.getLocations()
+        ) {
+            Long toLocationId = request.getToLocation_id();
+            if (!toLocationIdsSet.add(toLocationId)) {
+                throw new DuplicateResourceException("Location is duplicate");
+            }
+            //check location thuộc warehouse hiện tại k
+            Location location = locationRepository.findByIdAndWarehouse(request.getToLocation_id(), user.getWarehouse()).orElseThrow(
+                    ()-> new NotFoundException("Location not found or not belong to this warehouse")
+            );
+            //Check location co item chua
+            if(location.getItem()!=null && !Objects.equals(location.getItem().getId(), item.getId())){
+                throw new InvalidResourceException("The location already has the others item");
+            }
+            if(location.getItem() != null){
+                if(Objects.equals(location.getItem().getId(), item.getId())){
+                    location.setItem_quantity(location.getItem_quantity()+ request.getQuantity());
+                }
+            }else {
+                location.setItem_quantity(request.getQuantity());
+                location.setItem(item);
+            }
+            ItemMovement itemMovement = ItemMovement.builder()
+                    .toLocation(location)
+                    .notes("Nhập kho")
+                    .movedAt(date)
+                    .quantity(request.getQuantity())
+                    .movedBy(user)
+                    .item(item)
+                    .build();
+            location.getToMovements().add(itemMovement);
+            if(item.getLocations().stream().noneMatch(
+                    location1 -> location1.getId().equals(location.getId())
+            )){
+                item.getLocations().add(location);
+            }
+
+            itemMovementRepository.save(itemMovement);
+            locationRepository.save(location);
+        }
+
+        itemRepository.save(item);
+        return modelMapper.map(item, ItemDTO.class);
+
     }
 
     private String createItemCode(String productName, Size size, String brandName, String originName, String supplierName){

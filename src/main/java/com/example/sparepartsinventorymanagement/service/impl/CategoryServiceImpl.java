@@ -6,28 +6,26 @@ import com.example.sparepartsinventorymanagement.entities.Category;
 import com.example.sparepartsinventorymanagement.entities.CategoryStatus;
 import com.example.sparepartsinventorymanagement.entities.SubCategory;
 import com.example.sparepartsinventorymanagement.entities.SubCategoryStatus;
-import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
+import com.example.sparepartsinventorymanagement.exception.InvalidResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.CategoryRepository;
 import com.example.sparepartsinventorymanagement.repository.SubCategoryRepository;
 import com.example.sparepartsinventorymanagement.service.CategoryService;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
-    @Autowired
-    private CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
 
-    @Autowired
-    private SubCategoryRepository subCategoryRepository;
-    @Autowired
-    private ModelMapper mapper;
+    private final SubCategoryRepository subCategoryRepository;
+    private final ModelMapper mapper;
     @Override
     public List<GetCategoryDTO> getAll() {
         List<Category> res = categoryRepository.findAll();
@@ -50,9 +48,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public GetCategoryDTO createCategory(CategoryFormRequest form) {
-        if(categoryRepository.existsByName(form.getName().trim())){
-            throw new DuplicateResourceException("Name was existed");
-        }
+        checkNameDuplicate(form.getName().trim());
         Date currentDate = new Date();
         Category category = Category.builder()
                 .name(form.getName())
@@ -72,9 +68,7 @@ public class CategoryServiceImpl implements CategoryService {
                 ()-> new NotFoundException("Category not found")
         );
         if(!category.getName().equalsIgnoreCase(form.getName().trim())){
-            if(categoryRepository.existsByName(form.getName().trim())){
-                throw new DuplicateResourceException("Name was existed");
-            }
+            checkNameDuplicate(form.getName().trim());
             category.setName(form.getName());
         }
         category.setDescription(form.getDescription());
@@ -120,5 +114,12 @@ public class CategoryServiceImpl implements CategoryService {
     public List<GetCategoryDTO> getActiveCategories() {
         List<Category> categories = categoryRepository.findByStatus(CategoryStatus.Active);
         return mapper.map(categories, new TypeToken<List<GetCategoryDTO>>(){}.getType());
+    }
+
+    private void checkNameDuplicate(String name){
+        List<Category> categories = categoryRepository.findAll();
+        if(categories.stream().anyMatch(category -> category.getName().equalsIgnoreCase(name.trim()))){
+            throw new InvalidResourceException("Category name was existed");
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.sparepartsinventorymanagement.controller;
 
+import com.example.sparepartsinventorymanagement.dto.request.CreateItemLocationsFrom;
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
@@ -178,18 +179,43 @@ public class ItemController {
                 response
         ));
     }
+
     @Operation(summary = "Get purchase price history for Item")
     @GetMapping("/purchase-price-history/{itemId}")
-    public ResponseEntity<?> getItemPurchasePriceHistory(@PathVariable Long itemId){
-        try{
+    public ResponseEntity<?> getItemPurchasePriceHistory(@PathVariable Long itemId) {
+        try {
             List<PurchasePriceAuditDTO> history = itemService.getItemPriceHistory(itemId);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                     HttpStatus.OK.toString(),
                     "Get list Purchase Price History successfully",
                     history
             ));
-        }catch (NotFoundException e){
+        } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
+    }
+
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @Operation(summary = "For update locations of item")
+    @PutMapping(value = "/item-locations/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> updateItemLocation(
+            @Parameter(description = "Enter id", required = true, example = "1")
+            @NotNull @NotEmpty @PathVariable(name = "id") Long id,
+            @Valid @RequestBody CreateItemLocationsFrom form
+    ) {
+        ItemDTO res = itemService.createItemLocations(id, form);
+        if(res != null){
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Update item locations successfully",
+                    res
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                HttpStatus.BAD_REQUEST.toString(),
+                "Update item locations failed",
+                null
+        ));
+
     }
 }

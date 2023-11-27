@@ -3,24 +3,23 @@ package com.example.sparepartsinventorymanagement.service.impl;
 import com.example.sparepartsinventorymanagement.dto.request.UnitFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.UnitDTO;
 import com.example.sparepartsinventorymanagement.entities.Unit;
-import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
+import com.example.sparepartsinventorymanagement.exception.InvalidResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.UnitRepository;
 import com.example.sparepartsinventorymanagement.service.UnitService;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UnitServiceImpl implements UnitService {
 
-    @Autowired
-    private UnitRepository unitRepository;
-    @Autowired
-    private ModelMapper mapper;
+    private final UnitRepository unitRepository;
+    private final ModelMapper mapper;
 
     @Override
     public List<UnitDTO> getAll() {
@@ -47,9 +46,7 @@ public class UnitServiceImpl implements UnitService {
 
     @Override
     public UnitDTO createUnit(UnitFormRequest form) {
-        if(unitRepository.existsByName(form.getName())){
-            throw new DuplicateResourceException("Unit name already exists");
-        }
+        checkNameDuplicate(form.getName().trim());
         Unit unit = Unit.builder()
                 .name(form.getName())
                 .build();
@@ -63,13 +60,16 @@ public class UnitServiceImpl implements UnitService {
                 ()-> new NotFoundException("Unit not found")
         );
         if(!unit.getName().equalsIgnoreCase(form.getName().trim())){
-            if(unitRepository.existsByName(form.getName())){
-                throw new DuplicateResourceException("Unit name already exists");
-            }
+            checkNameDuplicate(form.getName().trim());
             unit.setName(form.getName());
         }
         unitRepository.save(unit);
         return mapper.map(unit, UnitDTO.class);
     }
-
+    private void checkNameDuplicate(String name){
+        List<Unit> list = unitRepository.findAll();
+        if(list.stream().anyMatch(unit -> unit.getName().equalsIgnoreCase(name.trim()))){
+            throw new InvalidResourceException("Unit name was existed");
+        }
+    }
 }

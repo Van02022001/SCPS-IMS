@@ -9,21 +9,21 @@ import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.SubCategoryMetaRepository;
 import com.example.sparepartsinventorymanagement.repository.SubCategoryRepository;
 import com.example.sparepartsinventorymanagement.service.SubCategoryMetaService;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
+@RequiredArgsConstructor
 public class SubCategoryMetaServiceImpl implements SubCategoryMetaService {
 
-    @Autowired
-    private SubCategoryRepository subCategoryRepository;
+    private final SubCategoryRepository subCategoryRepository;
 
-    @Autowired
-    private SubCategoryMetaRepository subCategoryMetaRepository;
+    private final SubCategoryMetaRepository subCategoryMetaRepository;
 
-    @Autowired
-    private ModelMapper mapper;
+    private final ModelMapper mapper;
     @Override
     public SubCategoryMetaDTO getSubCategoryMetaById(Long id) {
 

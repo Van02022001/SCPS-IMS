@@ -4,7 +4,7 @@ import com.example.sparepartsinventorymanagement.dto.request.WarehouseFormReques
 import com.example.sparepartsinventorymanagement.dto.response.InventoryStaffDTO;
 import com.example.sparepartsinventorymanagement.dto.response.WarehouseDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
-import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
+import com.example.sparepartsinventorymanagement.exception.InvalidResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.ItemRepository;
 import com.example.sparepartsinventorymanagement.repository.UserRepository;
@@ -13,7 +13,6 @@ import com.example.sparepartsinventorymanagement.service.WarehouseService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -26,6 +25,7 @@ import java.util.stream.Collectors;
 public class WarehouseServiceImpl implements WarehouseService {
 
 
+
     private final WarehouseRepository warehouseRepository;
 
     private final ItemRepository itemRepository;
@@ -34,6 +34,8 @@ public class WarehouseServiceImpl implements WarehouseService {
     private final UserRepository userRepository;
 
     private final ModelMapper mapper;
+
+
 
 
 
@@ -70,12 +72,7 @@ public class WarehouseServiceImpl implements WarehouseService {
     public WarehouseDTO createWarehouse(WarehouseFormRequest form) {
         //check name and address of warehouse
 
-        if(warehouseRepository.existsByName(form.getName())){
-            throw new DuplicateResourceException("Name of warehouse was existed.");
-        }
-        if(warehouseRepository.existsByAddress(form.getAddress())){
-           throw new DuplicateResourceException("Address of warehouse was existed.");
-        }
+        checkNameDuplicate(form.getName().trim(), form.getAddress().trim());
         Date cDate = new Date();
         Warehouse warehouse = Warehouse.builder()
                 .name(form.getName())
@@ -94,15 +91,17 @@ public class WarehouseServiceImpl implements WarehouseService {
         Warehouse warehouse = warehouseRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Warehouse not found")
         );
-        if(warehouseRepository.existsByName(form.getName()) && !form.getName().equalsIgnoreCase(warehouse.getName())){
-            throw new DuplicateResourceException("Name of warehouse was existed.");
+        List<Warehouse> list = warehouseRepository.findAll();
+        if(list.stream().anyMatch(warehouse1 -> warehouse.getName().equalsIgnoreCase(form.getName().trim()))){
+            throw new InvalidResourceException("Warehouse name was existed");
+        }else{
+            warehouse.setName(form.getName());
         }
-        if(warehouseRepository.existsByAddress(form.getAddress()) && !form.getAddress().equalsIgnoreCase(warehouse.getAddress())){
-            throw new DuplicateResourceException("Address of warehouse was existed.");
+        if(list.stream().anyMatch(warehouse1 -> warehouse.getAddress().equalsIgnoreCase(form.getAddress().trim()))){
+            throw new InvalidResourceException("Warehouse address was existed");
+        }else {
+            warehouse.setAddress(form.getAddress());
         }
-
-        warehouse.setName(form.getName());
-        warehouse.setAddress(form.getAddress());
         warehouse.setUpdatedAt(new Date());
         warehouseRepository.save(warehouse);
         return mapper.map(warehouse, WarehouseDTO.class);
@@ -166,4 +165,14 @@ public class WarehouseServiceImpl implements WarehouseService {
 //                HttpStatus.OK.toString(), "Update status of warehouse successfully.", res
 //        ));
 //    }
+
+    private void checkNameDuplicate(String name, String address){
+        List<Warehouse> list = warehouseRepository.findAll();
+        if(list.stream().anyMatch(warehouse -> warehouse.getName().equalsIgnoreCase(name.trim()))){
+            throw new InvalidResourceException("Warehouse name was existed");
+        }
+        if(list.stream().anyMatch(warehouse -> warehouse.getAddress().equalsIgnoreCase(address.trim()))){
+            throw new InvalidResourceException("Warehouse address was existed");
+        }
+    }
 }

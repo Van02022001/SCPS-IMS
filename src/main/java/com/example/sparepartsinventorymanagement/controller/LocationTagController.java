@@ -1,8 +1,8 @@
 package com.example.sparepartsinventorymanagement.controller;
 
-import com.example.sparepartsinventorymanagement.dto.request.OriginFormRequest;
-import com.example.sparepartsinventorymanagement.dto.response.OriginDTO;
-import com.example.sparepartsinventorymanagement.service.impl.OriginServiceImpl;
+import com.example.sparepartsinventorymanagement.dto.request.LocationTagRequest;
+import com.example.sparepartsinventorymanagement.dto.response.LocationTagDTO;
+import com.example.sparepartsinventorymanagement.service.impl.LocationTagServiceImpl;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,17 +19,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "location-tag")
 @RestController
-@RequestMapping("/api/v1/origins")
-@Tag(name = "origin")
-public class OriginController {
-    @Autowired
-    private OriginServiceImpl originService;
-
-    @Operation(summary = "For get list of origins")
+@RequiredArgsConstructor
+@RequestMapping("api/v1/location-tags")
+public class LocationTagController {
+    private final LocationTagServiceImpl locationTagService;
+    @Operation(summary = "For get list of location tags")
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAll() {
-        List<OriginDTO> res = originService.getAll();
+        List<LocationTagDTO> res = locationTagService.getAll();
         if(res.isEmpty()){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
                     HttpStatus.NOT_FOUND.toString(),
@@ -43,70 +42,49 @@ public class OriginController {
                 res
         ));
     }
-    @Operation(summary = "For origin by id")
+    @Operation(summary = "For get location tag by id")
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getOriginById(
-            @Parameter(description = "Enter origin to get", example = "1", required = true)
+    public ResponseEntity<?> getById(
+            @Parameter(description = "Enter id to get", example = "1", required = true)
             @PathVariable(name = "id") @NotBlank @NotEmpty Long id
     ) {
-        OriginDTO res = originService.getById(id);
+        LocationTagDTO res = locationTagService.getLocationTagById(id);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(),
-                "Get origin successfully",
-                res
-        ));
-    }
-    @Operation(summary = "For get list of origins by name")
-    @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getOriginByName(
-            @Parameter(description = "Enter keyword to search", required = true)
-            @NotEmpty @NotBlank String keyword
-    ) {
-        List<OriginDTO> res = originService.findByName(keyword);
-        if(res.isEmpty()){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                    HttpStatus.NOT_FOUND.toString(),
-                    "List empty",
-                    null
-            ));
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(),
-                "Get list origin successfully",
+                "Get location tag successfully",
                 res
         ));
     }
 
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @Operation(summary = "For create origin")
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @Operation(summary = "For create location tag")
     @PostMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createOrigin(
-            @Valid @RequestBody OriginFormRequest form
+    public ResponseEntity<?> createLocationTag(
+            @Valid @RequestBody LocationTagRequest form
     ) {
-        OriginDTO res = originService.createOrigin(form);
+        LocationTagDTO res = locationTagService.createLocationTag(form);
         if(res == null){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                     HttpStatus.BAD_REQUEST.toString(),
-                    "Create origin failed",
+                    "Create location tag failed",
                     null
             ));
         }
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(),
-                "Create origin successfully",
+                "Create location tag successfully",
                 res
         ));
     }
-
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @Operation(summary = "For update origin")
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @Operation(summary = "For update location tag")
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateOrigin(
-            @Parameter(description = "Enter origin id to update", example = "1", required = true)
+    public ResponseEntity<?> updateLocationTag(
+            @Parameter(description = "Enter id to update", example = "1", required = true)
             @PathVariable(name = "id") @NotBlank @NotEmpty Long id,
-            @Valid @RequestBody OriginFormRequest form
+            @Valid @RequestBody LocationTagRequest form
     ) {
-        OriginDTO res = originService.updateOrigin(id, form);
+        LocationTagDTO res = locationTagService.updateLocationTag(id, form);
         if(res == null){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                     HttpStatus.BAD_REQUEST.toString(),
@@ -116,7 +94,7 @@ public class OriginController {
         }
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(),
-                "Create origin successfully",
+                "Update location tag successfully",
                 res
         ));
     }

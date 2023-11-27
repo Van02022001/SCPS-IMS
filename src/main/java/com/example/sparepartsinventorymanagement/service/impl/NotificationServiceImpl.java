@@ -1,40 +1,46 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
+import com.example.sparepartsinventorymanagement.dto.response.NotificationDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.NotificationRepository;
 import com.example.sparepartsinventorymanagement.repository.NotificationTemplateRepository;
 import com.example.sparepartsinventorymanagement.repository.UserRepository;
 import com.example.sparepartsinventorymanagement.service.NotificationService;
+import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
-    @Autowired
-    private NotificationTemplateRepository notificationTemplateRepository;
 
-    @Autowired
-    private NotificationRepository notificationRepository;
+    private final NotificationTemplateRepository notificationTemplateRepository;
 
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
+
+
+    private final SimpMessagingTemplate messagingTemplate;
+
+    private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
 
 
 
 
     @Override
-    public void createAndSendNotification(SourceType sourceType, EventType eventType, Long sourceId, Long userId, NotificationType notificationType, String customMessage) {
+    public Notification  createAndSendNotification(SourceType sourceType, EventType eventType, Long sourceId, Long userId, NotificationType notificationType, String customMessage) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
@@ -57,6 +63,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         // Gửi thông báo qua WebSocket
         messagingTemplate.convertAndSendToUser(user.getUsername(), "/topic/notification", notification);
+        return notification;
     }
 
     @Override
@@ -68,16 +75,22 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public List<Notification> getNotificationsForUser(Long userId, Optional<Boolean> isRead, Optional<NotificationType> type) {
-        if(isRead.isPresent() && type.isPresent()){
-            return notificationRepository.findByUserIdAndSeenAndType(userId, isRead, type.get());
-        } else if(isRead.isPresent()){
-            return notificationRepository.findByUserIdAndSeen(userId, isRead.get());
-        } else if(type.isPresent()){
-            return notificationRepository.findByUserIdAndType(userId, type.get());
-        } else{
-            return notificationRepository.findByUserId(userId);
+    public List<NotificationDTO> getNotificationsForUser(Long userId, Optional<Boolean> isRead, Optional<NotificationType> type) {
+        List<Notification> notifications;
+
+        if (isRead.isPresent() && type.isPresent()) {
+            notifications = notificationRepository.findByUserIdAndSeenAndType(userId, isRead, type.get());
+        } else if (isRead.isPresent()) {
+            notifications = notificationRepository.findByUserIdAndSeen(userId, isRead.get());
+        } else if (type.isPresent()) {
+            notifications = notificationRepository.findByUserIdAndType(userId, type.get());
+        } else {
+            notifications = notificationRepository.findByUserId(userId);
         }
+
+        return notifications.stream()
+                .map(notification -> modelMapper.map(notification, NotificationDTO.class))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -102,4 +115,30 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setTrash(false);
         notificationRepository.save(notification);
     }
+
+    @Override
+    public NotificationDTO getNotificationDetails(Long notificationId) {
+
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new NotFoundException("Notification not found"));
+
+        notification.setSeen(true);
+
+        NotificationDTO dto =  modelMapper.map(notification, NotificationDTO.class);
+        dto.setUserId(notification.getUser().getId());
+
+        return dto;
+
+    }
+
+    @Override
+    public List<NotificationDTO> getAllNotifications(Long userId) {
+        List<Notification> notifications = notificationRepository.findByUserId(userId);
+
+        return notifications.stream()
+                .sorted(Comparator.comparing(Notification::getCreatedAt).reversed())
+                .map(notification -> modelMapper.map(notification, NotificationDTO.class))
+                .collect(Collectors.toList());
+    }
+
 }

@@ -4,23 +4,20 @@ import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
-import com.example.sparepartsinventorymanagement.entities.Period;
 import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
 import com.example.sparepartsinventorymanagement.repository.*;
 import com.example.sparepartsinventorymanagement.service.ItemService;
-import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.*;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -63,8 +60,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Autowired
     private InventoryRepository inventoryRepository;
-    @Autowired
-    private  PeriodRepository periodRepository;
+//    @Autowired
+//    private  PeriodRepository periodRepository;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -317,23 +314,23 @@ public class ItemServiceImpl implements ItemService {
         }
         return newCode;
     }
-    private Period getPeriod(){
-        LocalDate today = LocalDate.now();
-        LocalDateTime startOfDay = today.atStartOfDay();
-        Instant instant = startOfDay.atZone(ZoneId.systemDefault()).toInstant();
-        Date sdate = Date.from(instant);
-        LocalTime endOfDay = LocalTime.of(23, 59, 59, 999999999); // 23:59:59.999999999
-        LocalDateTime endOfToday = LocalDateTime.of(today, endOfDay);
-        Instant instantEndOfDay = endOfToday.atZone(ZoneId.systemDefault()).toInstant();
-        Date edate = Date.from(instantEndOfDay);
-        Period period = periodRepository.findByStartDateAndEndDate(sdate, edate);
-        if(period == null){
-            period = Period.builder()
-                    .startDate(sdate)
-                    .endDate(edate)
-                    .build();
-            periodRepository.save(period);
-        }
-        return period;
-    }
+//    private Period getPeriod(){
+//        LocalDate today = LocalDate.now();
+//        LocalDateTime startOfDay = today.atStartOfDay();
+//        Instant instant = startOfDay.atZone(ZoneId.systemDefault()).toInstant();
+//        Date sdate = Date.from(instant);
+//        LocalTime endOfDay = LocalTime.of(23, 59, 59, 999999999); // 23:59:59.999999999
+//        LocalDateTime endOfToday = LocalDateTime.of(today, endOfDay);
+//        Instant instantEndOfDay = endOfToday.atZone(ZoneId.systemDefault()).toInstant();
+//        Date edate = Date.from(instantEndOfDay);
+//        Period period = periodRepository.findByStartDateAndEndDate(sdate, edate);
+//        if(period == null){
+//            period = Period.builder()
+//                    .startDate(sdate)
+//                    .endDate(edate)
+//                    .build();
+//            periodRepository.save(period);
+//        }
+//        return period;
+//    }
 }

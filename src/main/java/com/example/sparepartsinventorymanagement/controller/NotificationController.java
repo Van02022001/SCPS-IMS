@@ -1,5 +1,6 @@
 package com.example.sparepartsinventorymanagement.controller;
 
+import com.example.sparepartsinventorymanagement.dto.response.NotificationDTO;
 import com.example.sparepartsinventorymanagement.entities.Notification;
 import com.example.sparepartsinventorymanagement.entities.NotificationType;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
@@ -41,14 +42,38 @@ public class NotificationController {
             ));
         }
     }
+    @Operation(summary = "Get all notifications for a user")
+    @GetMapping("/user-notifications/{userId}")
+    public ResponseEntity<?> getAllUserNotifications(@PathVariable Long userId) {
+        try {
+            List<NotificationDTO> notifications = notificationService.getAllNotifications(userId);
+            return ResponseEntity.ok(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Notifications retrieved successfully",
+                    notifications
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
+                    HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                    "An error occurred while retrieving notifications",
+                    null
+            ));
+        }
+    }
 
     @Operation(summary = "Get notifications for a user")
-    @GetMapping("/user/{userId}")
+    @GetMapping("/users/{userId}")
     public ResponseEntity<?> getNotificationsForUser(
             @PathVariable Long userId,
             @RequestParam Optional<Boolean> isRead,
             @RequestParam Optional<NotificationType> type) {
-        List<Notification> notifications = notificationService.getNotificationsForUser(userId, isRead, type);
+        List<NotificationDTO> notifications = notificationService.getNotificationsForUser(userId, isRead, type);
         return ResponseEntity.ok(new ResponseObject(
                 HttpStatus.OK.toString(),
                 "Notifications retrieved successfully",
@@ -56,6 +81,26 @@ public class NotificationController {
         ));
     }
 
+    @Operation(summary = "Get notifications detail for a user")
+    @GetMapping("/users/{notificationId}")
+    public ResponseEntity<?> getNotificationsForUser(
+            @PathVariable Long notificationId
+            ) {
+        try {
+        NotificationDTO notifications = notificationService.getNotificationDetails(notificationId);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Notifications retrieved successfully",
+                notifications
+        ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        }
+    }
     @Operation(summary = "Delete a notification")
     @DeleteMapping("/{notificationId}")
     public ResponseEntity<?> deleteNotification(@PathVariable Long notificationId) {

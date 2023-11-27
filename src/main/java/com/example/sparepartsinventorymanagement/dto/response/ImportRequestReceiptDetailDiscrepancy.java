@@ -1,18 +1,15 @@
 package com.example.sparepartsinventorymanagement.dto.response;
 
-import com.example.sparepartsinventorymanagement.entities.InventoryDiscrepancyLog;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ImportRequestReceiptDetailResponse {
+public class ImportRequestReceiptDetailDiscrepancy {
     private Long id;
     private String itemName;
     private int quantity;
@@ -20,6 +17,4 @@ public class ImportRequestReceiptDetailResponse {
     private double price;
     private double totalPrice;
     private int discrepancyQuantity;
-    private List<InventoryDiscrepancyLog> discrepancyLogs;
-
 }

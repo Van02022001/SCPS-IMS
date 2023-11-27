@@ -16,4 +16,6 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
     List<Warehouse> findByStatus(WarehouseStatus status);
 
 
+
+
 }

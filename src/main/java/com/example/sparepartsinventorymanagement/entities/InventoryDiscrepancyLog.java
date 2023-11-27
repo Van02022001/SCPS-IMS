@@ -8,28 +8,38 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
-@Entity
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
 @Setter
-@Builder
-@Table(name = "periods")
-public class Period {
+@Getter
+@Entity
+@Table(name = "inventory_discrepancy_log")
+public class InventoryDiscrepancyLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="period_id")
     private Long id;
 
-    @Column(name = "start_date", nullable = false)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
-    @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
-    private Date startDate;
+    @ManyToOne
+    @JoinColumn(name = "receipt_detail_id", nullable = false)
+    private ReceiptDetail receiptDetail;
 
-    @Column(name = "end_date")
+    @Column(name = "required_quantity")
+    private int requiredQuantity;
+
+    @Column(name = "actual_quantity")
+    private int actualQuantity;
+
+    @Column(name = "discrepancy_quantity")
+    private int discrepancyQuantity;
+
+    @Column(name = "discrepancy_value")
+    private double discrepancyValue;
+
+    @Column(name = "log_time")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
-    private Date endDate;
+    private Date logTime;
 
 
 }

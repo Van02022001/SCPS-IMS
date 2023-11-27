@@ -71,8 +71,6 @@ public class Inventory {
     @JoinColumn(name = "warehouse_id", nullable = false)
     private Warehouse warehouse;
 
-    @ManyToOne
-    @JoinColumn(name = "period_id", nullable = false)
-    private Period period; // Mối quan hệ mới với bảng Period
+
 
 }

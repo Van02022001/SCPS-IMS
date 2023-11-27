@@ -9,6 +9,7 @@ import lombok.experimental.SuperBuilder;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Getter
@@ -54,6 +55,9 @@ public class ReceiptDetail  extends Auditable<User> {
     @ManyToOne
     @JoinColumn(name = "receipt_id", nullable = false)
     private Receipt receipt;
+
+    @OneToMany(mappedBy = "receiptDetail", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<InventoryDiscrepancyLog> discrepancyLogs;
 
     public ReceiptDetail() {
         // Constructor mặc định cần thiết cho JPA

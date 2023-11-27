@@ -55,4 +55,9 @@ public class Warehouse {
     @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Inventory> inventoryList;
+
+
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Receipt> receipts = new ArrayList<>();
 }

@@ -3,6 +3,7 @@ package com.example.sparepartsinventorymanagement.controller;
 import com.example.sparepartsinventorymanagement.dto.request.ImportRequestReceiptForm;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateImportRequestReceipt;
 import com.example.sparepartsinventorymanagement.dto.response.ImportRequestReceiptResponse;
+import com.example.sparepartsinventorymanagement.dto.response.NotificationDTO;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.service.ReceiptService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
@@ -16,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Tag(name = "import-request-receipt")
 @RestController
@@ -157,11 +159,11 @@ public class ImportRequestReceiptController {
     @PutMapping(value ="/confirm/{receiptId}",  produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> confirmImportRequestReceipt(@PathVariable Long receiptId) {
         try {
-            ImportRequestReceiptResponse updatedReceipt = receiptService.confirmImportRequestReceipt(receiptId);
+            receiptService.confirmImportRequestReceipt(receiptId);
             return ResponseEntity.ok(new ResponseObject(
                     HttpStatus.OK.toString(),
                     "Import request receipt confirmed successfully",
-                    updatedReceipt
+                    null
             ));
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
@@ -173,6 +175,31 @@ public class ImportRequestReceiptController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
                     HttpStatus.INTERNAL_SERVER_ERROR.toString(),
                     "An error occurred while confirming the import request receipt",
+                    null
+            ));
+        }
+    }
+    @PutMapping("/{receiptId}/start-import")
+    @Operation(summary = "Import is Processing")
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    public ResponseEntity<?> startImportProcess(@PathVariable Long receiptId) {
+        try {
+            receiptService.startImportProcess(receiptId);
+            return ResponseEntity.ok(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Import process started successfully",
+                    null
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
+                    HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                    "An error occurred while starting the import process",
                     null
             ));
         }

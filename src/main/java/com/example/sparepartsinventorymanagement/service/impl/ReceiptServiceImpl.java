@@ -4,8 +4,10 @@ import com.example.sparepartsinventorymanagement.dto.request.ImportRequestReceip
 import com.example.sparepartsinventorymanagement.dto.request.ImportRequestReceiptForm;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateImportRequestReceipt;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateImportRequestReceiptDetail;
+
 import com.example.sparepartsinventorymanagement.dto.response.ImportRequestReceiptDetailResponse;
 import com.example.sparepartsinventorymanagement.dto.response.ImportRequestReceiptResponse;
+import com.example.sparepartsinventorymanagement.dto.response.NotificationDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
@@ -37,6 +39,8 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final PurchasePriceRepository purchasePriceRepository;
     private final EntityManager entityManager;
     private final PurchasePriceAuditRepository purchasePriceAuditRepository;
+    private final InventoryRepository inventoryRepository;
+    private final InventoryDiscrepancyLogRepository inventoryDiscrepancyLogRepository;
     @Override
     public void deleteImportRequestReceipt(Long id) {
         var receipt = receiptRepository.findById(id)
@@ -46,7 +50,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     @Override
-    public ImportRequestReceiptResponse confirmImportRequestReceipt(Long receiptId) {
+    public void confirmImportRequestReceipt(Long receiptId) {
         var receipt = receiptRepository.findById(receiptId)
                 .filter(receipt1 -> receipt1.getType() == ReceiptType.PHIEU_YEU_CAU_NHAP_KHO)
                 .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found or not of type PHIEU_YEU_CAU_NHAP_KHO"));
@@ -56,7 +60,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         var updatedReceipt = receiptRepository.save(receipt);
 
         // Gửi thông báo cho Manager
-        notificationService.createAndSendNotification(
+        Notification notification =  notificationService.createAndSendNotification(
                 SourceType.RECEIPT,
                 EventType.CONFIRMED,
                 updatedReceipt.getId(),
@@ -65,8 +69,27 @@ public class ReceiptServiceImpl implements ReceiptService {
                 "Phiếu yêu cầu nhập kho #" + updatedReceipt.getId() + " đã được xác nhận."
         );
 
-        return null;
     }
+
+    @Override
+    public void  startImportProcess(Long receiptId) {
+        Receipt receipt = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new NotFoundException("Receipt with id " + receiptId +" not found"));
+        receipt.setStatus(ReceiptStatus.IN_PROGRESS);
+        receiptRepository.save(receipt);
+
+        // Gửi thông báo cho Manager
+        Notification notification = notificationService.createAndSendNotification(
+                SourceType.RECEIPT,
+                EventType.CONFIRMED,
+                receipt.getId(),
+                receipt.getCreatedBy().getId(), // Giả sử createdBy là Manager
+                NotificationType.DANG_TIEN_HANH_NHAP_KHO,
+                "Phiếu yêu cầu nhập kho #" + receipt.getId() + " đang được tiến hành"
+        );
+
+    }
+
 
     @Override
     public List<ImportRequestReceiptResponse> getAllImportRequestReceipts() {
@@ -74,6 +97,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         return receipts.stream()
                 .map(receipt -> {
                     ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+                    response.setWarehouseId(receipt.getWarehouse().getId());
                     response.setId(receipt.getId());
                     response.setCode(receipt.getCode());
                     response.setType(receipt.getType());
@@ -116,6 +140,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .orElseThrow(() -> new NotFoundException("Receipt with ID " + id + " not found or not of type PHIEU_YEU_CAU_NHAP_KHO"));
 
         ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+        response.setWarehouseId(receipt.getWarehouse().getId());
         response.setId(receipt.getId());
         response.setCode(receipt.getCode());
         response.setType(receipt.getType());
@@ -147,10 +172,9 @@ public class ReceiptServiceImpl implements ReceiptService {
         return response;
     }
     @Override
-    @Transactional
+    //@Transactional
     public ImportRequestReceiptResponse createImportRequestReceipt(ImportRequestReceiptForm importRequestReceiptForm) {
-       // Warehouse warehouse = warehouseRepository.findById(importRequestReceiptForm.getWarehouseId())
-//                .orElseThrow(() -> new NotFoundException("Warehouse not found!"));
+
         // Check warehouse
         List<Warehouse> warehouseList = warehouseRepository.findAll();
         Warehouse warehouse = warehouseList.stream()
@@ -173,6 +197,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .status(ReceiptStatus.Pending_Approval)
                 .description(importRequestReceiptForm.getDescription())
                 .createdBy(getCurrentAuthenticatedUser())
+                .warehouse(warehouse)
                 .build();
         Receipt savedReceipt = receiptRepository.save(newReceipt);
 
@@ -265,6 +290,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         // Create response
         ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+        response.setWarehouseId(savedReceipt.getWarehouse().getId());
         response.setId(savedReceipt.getId());
         response.setCode(savedReceipt.getCode());
         response.setType(savedReceipt.getType());
@@ -302,7 +328,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         return response;
     }
     @Override
-    @Transactional
+    //@Transactional
     public ImportRequestReceiptResponse updateImportRequestReceipt(Long id, UpdateImportRequestReceipt importRequestReceiptForm) {
         // Tìm phiếu nhập kho và kiểm tra loại phiếu
         Receipt receipt = receiptRepository.findById(id)
@@ -441,10 +467,6 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
 
-
-
-
-
     private User getCurrentAuthenticatedUser() {
         // Logic to get the current authenticated user
         return userRepository.findById(((Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId())
@@ -470,6 +492,197 @@ public class ReceiptServiceImpl implements ReceiptService {
         } while (isCodeExist(code));
         return code;
     }
+    @Override
+    public ImportRequestReceiptResponse createImportReceipt(Long receiptId, Map<Long, Integer> actualQuantities) {
+        Receipt requestReceipt  = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found"));
+
+        if (requestReceipt.getStatus() != ReceiptStatus.IN_PROGRESS) {
+            throw new IllegalStateException("Receipt is not in the approved state for processing");
+        }
+
+
+        // Create a new receipt
+        Receipt actualReceipt  = Receipt.builder()
+                .code(generateAndValidateUniqueCode())
+                .type(ReceiptType.PHIEU_NHAP_KHO)
+                .status(ReceiptStatus.Completed)
+                .description("Actual Import based on Request Receipt #" + receiptId)
+                .createdBy(getCurrentAuthenticatedUser())
+                .lastModifiedBy(getCurrentAuthenticatedUser())
+                .totalPrice(requestReceipt.getTotalPrice())
+                .totalQuantity(requestReceipt.getTotalQuantity())
+                .warehouse(requestReceipt.getWarehouse())
+                .build();
+        Receipt savedReceipt = receiptRepository.save(actualReceipt );
+
+        boolean hasDiscrepancy = false;
+        List<ImportRequestReceiptDetailResponse> detailResponses = new ArrayList<>();
+        double totalActualPrice = 0;
+        int totalActualQuantity = 0;
+
+        for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
+            int requiredQuantity = requestDetail.getQuantity();
+            int actualQuantity = actualQuantities.getOrDefault(requestDetail.getItem().getId(), requiredQuantity);
+            int discrepancyQuantity = actualQuantity - requiredQuantity;
+            double actualPrice = actualQuantity * requestDetail.getPurchasePrice().getPrice();
+
+            ReceiptDetail actualDetail = ReceiptDetail.builder()
+                    .receipt(savedReceipt)
+                    .item(requestDetail.getItem())
+                    .quantity(actualQuantity)
+                    .purchasePrice(requestDetail.getPurchasePrice())
+                    .totalPrice(actualPrice)
+                    .unitName(requestDetail.getUnitName())
+                    .build();
+            receiptDetailRepository.save(actualDetail);
+
+            totalActualPrice += actualPrice;
+            totalActualQuantity += actualQuantity;
+
+            ImportRequestReceiptDetailResponse detailResponse;
+            if (discrepancyQuantity != 0) {
+                InventoryDiscrepancyLog discrepancyLog = handleDiscrepancy(actualDetail, requiredQuantity, actualQuantity, requestDetail.getPurchasePrice().getPrice());
+                detailResponse = buildImportRequestReceiptDetailResponse(actualDetail, actualQuantity, discrepancyQuantity, discrepancyLog);
+                hasDiscrepancy = true;
+            } else {
+                detailResponse = buildImportRequestReceiptDetailResponse(actualDetail, actualQuantity, 0, null);
+            }
+            detailResponses.add(detailResponse);
+            updateInventoryAverageCost(requestDetail.getItem(), actualQuantity, requestDetail.getPurchasePrice().getPrice(), actualReceipt.getWarehouse().getId());
+        }
+
+        actualReceipt.setTotalPrice(totalActualPrice);
+        actualReceipt.setTotalQuantity(totalActualQuantity);
+        receiptRepository.save(actualReceipt);
+
+
+        // Send notification
+        createAndSendNotificationForReceipt(savedReceipt, hasDiscrepancy);
+
+        // Build and return response
+        return buildImportRequestReceiptResponse(savedReceipt, detailResponses);
+    }
+
+    private void createAndSendNotificationForReceipt(Receipt receipt, boolean hasDiscrepancy) {
+        String message = hasDiscrepancy ?
+                "Phiếu nhập kho #" + receipt.getId() + " đã được xử lý với sự chênh lệch." :
+                "Phiếu nhập kho #" + receipt.getId() + " đã được xử lý thành công.";
+
+            notificationService.createAndSendNotification(
+                SourceType.RECEIPT,
+                hasDiscrepancy ? EventType.UPDATED : EventType.CONFIRMED,
+                receipt.getId(),
+                receipt.getCreatedBy().getId(),
+                hasDiscrepancy ? NotificationType.XAC_NHAN_NHAP_KHO : NotificationType.XAC_NHAN_NHAP_KHO,
+                message
+        );
+    }
+
+
+    private InventoryDiscrepancyLog handleDiscrepancy(ReceiptDetail detail, int requiredQuantity, int actualQuantity, double unitPrice) {
+        // Tạo một đối tượng mới của InventoryDiscrepancyLog
+        InventoryDiscrepancyLog discrepancyLog = new InventoryDiscrepancyLog();
+
+        // Thiết lập các thông tin cần thiết cho discrepancyLog
+        discrepancyLog.setReceiptDetail(detail);
+        discrepancyLog.setRequiredQuantity(requiredQuantity);
+        discrepancyLog.setActualQuantity(actualQuantity);
+        discrepancyLog.setDiscrepancyQuantity(actualQuantity - requiredQuantity);
+        discrepancyLog.setDiscrepancyValue((actualQuantity - requiredQuantity) * unitPrice);
+        discrepancyLog.setLogTime(new Date());
+
+        // Lưu discrepancyLog vào cơ sở dữ liệu
+        inventoryDiscrepancyLogRepository.save(discrepancyLog);
+
+        return discrepancyLog;
+    }
+
+
+
+
+    private ImportRequestReceiptDetailResponse  buildImportRequestReceiptDetailResponse(ReceiptDetail detail, int actualQuantity, int  discrepancyQuantity, InventoryDiscrepancyLog discrepancyLog) {
+        return ImportRequestReceiptDetailResponse.builder()
+                .id(detail.getId())
+                .itemName(detail.getItem().getSubCategory().getName())
+                .quantity(actualQuantity)
+                .unitName(detail.getUnitName())
+                .price(detail.getPurchasePrice().getPrice())
+                .totalPrice(detail.getPurchasePrice().getPrice() * actualQuantity)
+                .discrepancyQuantity(discrepancyQuantity)
+                .discrepancyLogs(detail.getDiscrepancyLogs())
+                .build();
+    }
+    private ImportRequestReceiptResponse buildImportRequestReceiptResponse(Receipt receipt, List<ImportRequestReceiptDetailResponse> detailResponses) {
+        return ImportRequestReceiptResponse.builder()
+                .warehouseId(receipt.getWarehouse().getId())
+                .id(receipt.getId())
+                .code(receipt.getCode())
+                .type(receipt.getType())
+                .status(receipt.getStatus())
+                .description(receipt.getDescription())
+                .createdBy(receipt.getCreatedBy().getLastName() + " " + receipt.getCreatedBy().getFirstName()) // hoặc bất kỳ định dạng nào bạn chọn
+                .lastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() + " " + receipt.getLastModifiedBy().getFirstName() : null)
+                .createdAt(receipt.getCreationDate())
+                .updatedAt(receipt.getLastModifiedDate())
+                .totalQuantity(receipt.getTotalQuantity())
+                .totalPrice(receipt.getTotalPrice())
+                .details(detailResponses)
+                .build();
+    }
+
+    private Inventory updateInventoryAverageCost(Item item, int receivedQuantity, double unitPrice, Long warehouseId) {
+
+        Warehouse warehouse = warehouseRepository.findById(warehouseId)
+                .orElseThrow(() -> new NotFoundException("Warehouse not found"));
+
+        Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, warehouse)
+                .orElseGet(() -> {
+                   Inventory inventory1 = Inventory.builder()
+                           .item(item)
+                           .warehouse(warehouse)
+                           .openingStockQuantity(0)
+                           .openingStockValue(0.0)
+                           .closingStockQuantity(0)
+                           .closingStockValue(0.0)
+                           .inboundQuantity(0)
+                           .inboundQuantity(0)
+                           .outboundQuantity(0)
+                           .outboundValue(0)
+                           .discrepancyQuantity(0)
+                           .discrepancyValue(0)
+                           .totalValue(0)
+                           .isActive(true)
+                           .build();
+                   return inventory1;
+                });
+
+
+        // Tính toán giá trị tổng cộng mới
+        double newTotalValue = inventory.getClosingStockValue() + (unitPrice * receivedQuantity);
+        int newTotalQuantity = inventory.getClosingStockQuantity() + receivedQuantity;
+
+        // Tính giá trị trung bình
+        double averageCost = newTotalQuantity != 0 ? newTotalValue / newTotalQuantity : 0;
+
+        // Cập nhật các giá trị của Inventory
+        inventory.setClosingStockValue(newTotalValue);
+        inventory.setClosingStockQuantity(newTotalQuantity);
+        inventory.setInboundQuantity(inventory.getInboundQuantity() + receivedQuantity);
+        inventory.setInboundValue(inventory.getInboundValue() + (unitPrice * receivedQuantity));
+        inventory.setTotalValue(averageCost);  // Giá trị tổng cộng sau khi cập nhật
+        inventoryRepository.save(inventory);
+
+
+        // Updating the total quantity of the item
+        int currentQuantity = item.getQuantity(); // Assuming there is a getQuantity method in Item
+        item.setQuantity(currentQuantity + receivedQuantity); // Update the item's quantity
+        item.setStatus(ItemStatus.Active);
+        itemRepository.save(item); // Save the updated item
+        return inventory;
+    }
+
+
 
 
 

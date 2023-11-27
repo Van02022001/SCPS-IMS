@@ -1,19 +1,9 @@
 package com.example.sparepartsinventorymanagement.dto.response;
 
 import com.example.sparepartsinventorymanagement.entities.Item;
-import com.example.sparepartsinventorymanagement.entities.Period;
-import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
-
-import java.util.Date;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -58,5 +48,5 @@ public class InventoryDTO {
 
     private Item item;
 
-    private Period period;
+
 }

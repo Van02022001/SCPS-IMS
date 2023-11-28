@@ -19,5 +19,5 @@ public class PricingDTOs {
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date startDate;
     private double price;
-    private Long itemId;
+    private String itemName;
 }

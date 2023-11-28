@@ -14,11 +14,11 @@ import java.util.Date;
 @AllArgsConstructor
 public class PricingAuditDTO {
     private Long id;
+    private String itemName;
+    private String changedBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date changeDate;
     private double oldPrice;
     private double newPrice;
-    private Long pricingId; // ID of the associated pricing record
-    private Long changedById; // ID of the user who made the change
 }

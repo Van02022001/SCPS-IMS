@@ -3,6 +3,7 @@ package com.example.sparepartsinventorymanagement.controller;
 import com.example.sparepartsinventorymanagement.dto.request.CreateItemLocationsFrom;
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
+import com.example.sparepartsinventorymanagement.dto.response.PricingAuditDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
 import com.example.sparepartsinventorymanagement.entities.ItemStatus;
 import com.example.sparepartsinventorymanagement.entities.PurchasePriceAudit;
@@ -184,7 +185,22 @@ public class ItemController {
     @GetMapping("/purchase-price-history/{itemId}")
     public ResponseEntity<?> getItemPurchasePriceHistory(@PathVariable Long itemId) {
         try {
-            List<PurchasePriceAuditDTO> history = itemService.getItemPriceHistory(itemId);
+            List<PurchasePriceAuditDTO> history = itemService.getPurchasePriceHistoryOfItem(itemId);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Get list Purchase Price History successfully",
+                    history
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    @Operation(summary = "Get Pricing history for Item")
+    @GetMapping("/pricing-history/{itemId}")
+    public ResponseEntity<?> getItemPricingHistory(@PathVariable Long itemId) {
+        try {
+            List<PricingAuditDTO> history = itemService.getPricingHistoryOfItem(itemId);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                     HttpStatus.OK.toString(),
                     "Get list Purchase Price History successfully",

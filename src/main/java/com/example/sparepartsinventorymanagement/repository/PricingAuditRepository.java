@@ -9,4 +9,7 @@ import java.util.List;
 @Repository
 public interface PricingAuditRepository extends JpaRepository<PricingAudit, Long> {
     List<PricingAudit> findByPricingItemId(Long itemId);
+
+    List<PricingAudit> findByPricingId(Long pricingId);
+
 }

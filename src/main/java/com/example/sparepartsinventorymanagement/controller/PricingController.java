@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -20,7 +21,7 @@ import jakarta.validation.Valid;
 public class PricingController {
     private final PricingService pricingService;
 
-
+    @PreAuthorize("hasRole('ROLE_MANAGER') ")
     @Operation(summary = "Add new pricing")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addPricing(@RequestBody @Valid CreatePricingRequest request) {
@@ -33,7 +34,7 @@ public class PricingController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while adding pricing");
         }
     }
-
+    @PreAuthorize("hasRole('ROLE_MANAGER') ")
     @Operation(summary = "Update pricing")
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updatePricing(@RequestBody  UpdatePricingRequest request) {

@@ -4,6 +4,7 @@ import com.example.sparepartsinventorymanagement.dto.request.CreateItemLocations
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateItemLocationRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
+import com.example.sparepartsinventorymanagement.dto.response.PricingAuditDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
@@ -235,7 +236,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
 
-    public List<PurchasePriceAuditDTO> getItemPriceHistory(Long itemId) {
+    public List<PurchasePriceAuditDTO> getPurchasePriceHistoryOfItem(Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Item not found"));
 
@@ -257,6 +258,31 @@ public class ItemServiceImpl implements ItemService {
                     return dto;
                 }).toList();
     }
+
+    @Override
+    public List<PricingAuditDTO> getPricingHistoryOfItem(Long itemId) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Item not found"));
+
+        Pricing pricing = item.getPricing();
+        if(pricing == null){
+            throw new NotFoundException(" Pricing not found for item");
+        }
+        List<PricingAudit> audits = pricingAuditRepository.findByPricingId(pricing.getId());
+
+        return  audits.stream()
+                .map(audit -> {
+                    PricingAuditDTO dto = new PricingAuditDTO();
+                    dto.setId(audit.getId());
+                    dto.setItemName(audit.getPricing().getItem().getSubCategory().getName());
+                    dto.setChangeDate(audit.getChangeDate());
+                    dto.setOldPrice(audit.getOldPrice());
+                    dto.setNewPrice(audit.getNewPrice());
+                    dto.setChangedBy(audit.getChangedBy().getLastName() + " " + audit.getChangedBy().getMiddleName() + " " + audit.getChangedBy().getFirstName());
+                    return dto;
+                }).toList();
+    }
+
     public ItemDTO createItemLocations(Long id, CreateItemLocationsFrom form) {
         Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findById(userPrinciple.getId()).orElseThrow(

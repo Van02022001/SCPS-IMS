@@ -3,6 +3,7 @@ package com.example.sparepartsinventorymanagement.service;
 import com.example.sparepartsinventorymanagement.dto.request.CreateItemLocationsFrom;
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
+import com.example.sparepartsinventorymanagement.dto.response.PricingAuditDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
 import com.example.sparepartsinventorymanagement.entities.ItemStatus;
 import com.example.sparepartsinventorymanagement.entities.PurchasePriceAudit;
@@ -21,7 +22,9 @@ public interface ItemService {
     List<ItemDTO> findBySubCategory_NameContainingIgnoreCase(String name);
 
 
-    List<PurchasePriceAuditDTO> getItemPriceHistory(Long itemId);
+    List<PurchasePriceAuditDTO> getPurchasePriceHistoryOfItem(Long itemId);
+
+    List<PricingAuditDTO> getPricingHistoryOfItem(Long itemId);
 
     ItemDTO createItemLocations(Long id, CreateItemLocationsFrom form);
 

@@ -15,15 +15,19 @@ public interface ReceiptService {
     ImportRequestReceiptResponse createImportRequestReceipt(ImportRequestReceiptForm importRequestReceiptForm);
 
     List<ImportRequestReceiptResponse> getAllImportRequestReceipts();
+    List<ImportRequestReceiptResponse> getAllImportReceipts();
 
 
     ImportRequestReceiptResponse getImportRequestReceiptById(Long id);
+    ImportRequestReceiptResponse getImportReceiptById(Long id);
 
 
     ImportRequestReceiptResponse updateImportRequestReceipt(Long id, UpdateImportRequestReceipt importRequestReceiptForm);
 
 
     void deleteImportRequestReceipt(Long id);
+
+    void deleteImportReceipt(Long id);
 
     void confirmImportRequestReceipt(Long receiptId);
 

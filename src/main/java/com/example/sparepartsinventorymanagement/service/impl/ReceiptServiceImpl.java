@@ -50,6 +50,14 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     @Override
+    public void deleteImportReceipt(Long id) {
+        var receipt = receiptRepository.findById(id)
+                .filter(receipt1 -> receipt1.getType() == ReceiptType.PHIEU_NHAP_KHO)
+                .orElseThrow(() -> new NotFoundException("Receipt with Id " + id + " not found or not of type PHIEU_YEU_CAU_NHAP_KHO"));
+        receiptRepository.delete(receipt);
+    }
+
+    @Override
     public void confirmImportRequestReceipt(Long receiptId) {
         var receipt = receiptRepository.findById(receiptId)
                 .filter(receipt1 -> receipt1.getType() == ReceiptType.PHIEU_YEU_CAU_NHAP_KHO)
@@ -95,6 +103,50 @@ public class ReceiptServiceImpl implements ReceiptService {
     public List<ImportRequestReceiptResponse> getAllImportRequestReceipts() {
         List<Receipt> receipts = receiptRepository.findByType(ReceiptType.PHIEU_YEU_CAU_NHAP_KHO);
         return receipts.stream()
+                .sorted(Comparator.comparing(Receipt::getCreationDate).reversed())
+                .map(receipt -> {
+                    ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+                    response.setWarehouseId(receipt.getWarehouse().getId());
+                    response.setId(receipt.getId());
+                    response.setCode(receipt.getCode());
+                    response.setType(receipt.getType());
+                    response.setStatus(receipt.getStatus());
+                    response.setDescription(receipt.getDescription());
+                    response.setTotalQuantity(receipt.getTotalQuantity());
+                    response.setTotalPrice(receipt.getTotalPrice());
+                    response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
+                    response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
+                    response.setCreatedAt(receipt.getCreationDate());
+                    response.setUpdatedAt(receipt.getLastModifiedDate());
+
+
+                    // Thêm thông tin chi tiết
+                    List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+                    List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                            .map(detail -> {
+                                ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                                detailResponse.setId(detail.getId());
+                                detailResponse.setItemName(detail.getItem().getSubCategory().getName());
+                                detailResponse.setQuantity(detail.getQuantity());
+                                detailResponse.setUnitName(detail.getUnitName());
+                                detailResponse.setPrice(detail.getPurchasePrice().getPrice());
+                                detailResponse.setTotalPrice(detail.getTotalPrice());
+
+                                return detailResponse;
+                            })
+                            .collect(Collectors.toList());
+
+                    response.setDetails(detailResponses);
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ImportRequestReceiptResponse> getAllImportReceipts() {
+        List<Receipt> receipts = receiptRepository.findByType(ReceiptType.PHIEU_NHAP_KHO);
+        return receipts.stream()
+                .sorted(Comparator.comparing(Receipt::getCreationDate).reversed())
                 .map(receipt -> {
                     ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
                     response.setWarehouseId(receipt.getWarehouse().getId());
@@ -137,6 +189,45 @@ public class ReceiptServiceImpl implements ReceiptService {
     public ImportRequestReceiptResponse getImportRequestReceiptById(Long id) {
         Receipt receipt = receiptRepository.findById(id)
                 .filter(r -> r.getType() == ReceiptType.PHIEU_YEU_CAU_NHAP_KHO)
+                .orElseThrow(() -> new NotFoundException("Receipt with ID " + id + " not found or not of type PHIEU_YEU_CAU_NHAP_KHO"));
+
+        ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+        response.setWarehouseId(receipt.getWarehouse().getId());
+        response.setId(receipt.getId());
+        response.setCode(receipt.getCode());
+        response.setType(receipt.getType());
+        response.setStatus(receipt.getStatus());
+        response.setDescription(receipt.getDescription());
+        response.setTotalQuantity(receipt.getTotalQuantity());
+        response.setTotalPrice(receipt.getTotalPrice());
+        response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
+        response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
+        response.setCreatedAt(receipt.getCreationDate());
+        response.setUpdatedAt(receipt.getLastModifiedDate());
+
+        // Thêm thông tin chi tiết phiếu
+        List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+        List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                .map(detail -> {
+                    ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                    detailResponse.setId(detail.getId());
+                    detailResponse.setItemName(detail.getItem().getSubCategory().getName());
+                    detailResponse.setQuantity(detail.getQuantity());
+                    detailResponse.setUnitName(detail.getUnitName());
+                    detailResponse.setPrice(detail.getPurchasePrice().getPrice());
+                    detailResponse.setTotalPrice(detail.getTotalPrice());
+                    return detailResponse;
+                })
+                .collect(Collectors.toList());
+        response.setDetails(detailResponses);
+
+        return response;
+    }
+    @Override
+
+    public ImportRequestReceiptResponse getImportReceiptById(Long id) {
+        Receipt receipt = receiptRepository.findById(id)
+                .filter(r -> r.getType() == ReceiptType.PHIEU_NHAP_KHO)
                 .orElseThrow(() -> new NotFoundException("Receipt with ID " + id + " not found or not of type PHIEU_YEU_CAU_NHAP_KHO"));
 
         ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();

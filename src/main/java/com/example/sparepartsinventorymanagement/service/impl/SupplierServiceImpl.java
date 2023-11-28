@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.Random;
 
 @Service
-@CacheConfig(cacheNames = "suppliersCache", cacheManager = "redisCacheManager")
+//@CacheConfig(cacheNames = "suppliersCache", cacheManager = "redisCacheManager")
 @RequiredArgsConstructor
 public class SupplierServiceImpl implements SupplierService {
 
@@ -72,7 +72,7 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
 
-    @Cacheable()
+    //@Cacheable()
     @Override
     public List<SuppliersDTO> getAllSuppliers() {
         List<Supplier> suppliers = supplierRepository.findAll();

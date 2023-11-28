@@ -1,6 +1,7 @@
 package com.example.sparepartsinventorymanagement.dto.response;
 
 import com.example.sparepartsinventorymanagement.entities.Item;
+import com.example.sparepartsinventorymanagement.entities.Warehouse;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -46,7 +47,9 @@ public class InventoryDTO {
 
     private String notes;
 
-    private Item item;
+    private String itemName;
+
+
 
 
 }

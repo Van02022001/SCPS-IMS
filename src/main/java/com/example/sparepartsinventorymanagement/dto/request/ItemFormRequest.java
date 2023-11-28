@@ -16,11 +16,11 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ItemFormRequest {
-    @Min(value = 0, message = "Minimum stock level cannot be less than 0")
+    @Min(value = 5, message = "Minimum stock level cannot be less than 5")
     @NotNull(message = "Minimum stock level is required")
     private int minStockLevel;
 
-    @Min(value = 0, message = "Maximum stock level cannot be less than 0")
+    @Min(value = 10, message = "Maximum stock level cannot be less than 10")
     @NotNull(message = "Maximum stock level is required")
     private int maxStockLevel;
 

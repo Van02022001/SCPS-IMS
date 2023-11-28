@@ -28,10 +28,30 @@ import java.util.List;
 public class LocationController {
     private final LocationServiceImpl locationService;
 
-    @Operation(summary = "For get list of location")
+    @Operation(summary = "For get list of location of this warehouse")
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAllByWarehouse() {
         List<LocationDTO> res = locationService.getLocationsByWarehouse();
+        if(res.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    "List empty",
+                    null
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Get list location successfully",
+                res
+        ));
+    }
+    @Operation(summary = "For get list of location by item id")
+    @GetMapping(value = "/locations-by-item/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getLocationsByItem(
+            @Parameter(description = "Enter id to get", example = "1", required = true)
+            @PathVariable(name = "id") @NotBlank @NotEmpty Long id
+    ) {
+        List<LocationDTO> res = locationService.getLocationsByItemId(id);
         if(res.isEmpty()){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
                     HttpStatus.NOT_FOUND.toString(),

@@ -11,5 +11,5 @@ public interface LocationService {
     LocationDTO getLocationById(Long id);
     LocationDTO creatLocation(LocationFormRequest form);
     LocationDTO updateLocation(Long id, LocationFormRequest form);
-
+    List<LocationDTO> getLocationsByItemId(Long itemId);
 }

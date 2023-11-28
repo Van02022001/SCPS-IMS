@@ -2,18 +2,12 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.ItemMovementRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemMovementDTO;
-import com.example.sparepartsinventorymanagement.entities.Item;
-import com.example.sparepartsinventorymanagement.entities.ItemMovement;
-import com.example.sparepartsinventorymanagement.entities.Location;
-import com.example.sparepartsinventorymanagement.entities.User;
+import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
 import com.example.sparepartsinventorymanagement.exception.InvalidResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
-import com.example.sparepartsinventorymanagement.repository.ItemMovementRepository;
-import com.example.sparepartsinventorymanagement.repository.ItemRepository;
-import com.example.sparepartsinventorymanagement.repository.LocationRepository;
-import com.example.sparepartsinventorymanagement.repository.UserRepository;
+import com.example.sparepartsinventorymanagement.repository.*;
 import com.example.sparepartsinventorymanagement.service.ItemMovementService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -60,6 +54,7 @@ public class ItemMovementServiceImpl implements ItemMovementService {
         if(user.getWarehouse() == null){
             throw new InvalidResourceException("User not is inventory staff of any warehouse");
         }
+
         //Check item
         Item item = itemRepository.findById(request.getItem_id()).orElseThrow(
                 ()-> new NotFoundException("Item not found")

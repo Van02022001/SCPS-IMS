@@ -213,7 +213,7 @@ public class ItemController {
     }
 
     @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
-    @Operation(summary = "For update locations of item")
+    @Operation(summary = "For update locations of item by receipt id")
     @PutMapping(value = "/item-locations/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateItemLocation(
             @Parameter(description = "Enter id", required = true, example = "1")

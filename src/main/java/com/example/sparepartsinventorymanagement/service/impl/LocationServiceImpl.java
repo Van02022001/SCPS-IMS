@@ -2,6 +2,7 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.LocationFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.LocationDTO;
+import com.example.sparepartsinventorymanagement.entities.Item;
 import com.example.sparepartsinventorymanagement.entities.Location;
 import com.example.sparepartsinventorymanagement.entities.LocationTag;
 import com.example.sparepartsinventorymanagement.entities.User;
@@ -9,6 +10,7 @@ import com.example.sparepartsinventorymanagement.exception.DuplicateResourceExce
 import com.example.sparepartsinventorymanagement.exception.InvalidResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
+import com.example.sparepartsinventorymanagement.repository.ItemRepository;
 import com.example.sparepartsinventorymanagement.repository.LocationRepository;
 import com.example.sparepartsinventorymanagement.repository.LocationTagRepository;
 import com.example.sparepartsinventorymanagement.repository.UserRepository;
@@ -29,6 +31,7 @@ public class LocationServiceImpl implements LocationService {
     private final LocationRepository locationRepository;
     private final UserRepository userRepository;
     private final LocationTagRepository locationTagRepository;
+    private final ItemRepository itemRepository;
     private final ModelMapper mapper;
     @Override
     public List<LocationDTO> getLocationsByWarehouse() {
@@ -131,6 +134,17 @@ public class LocationServiceImpl implements LocationService {
         locationRepository.save(location);
         return mapper.map(location, LocationDTO.class);
     }
+
+    @Override
+    public List<LocationDTO> getLocationsByItemId(Long itemId) {
+        Item item = itemRepository.findById(itemId).orElseThrow(
+                ()-> new NotFoundException("Item not found")
+        );
+        List<Location> locations = locationRepository.findByItem(item);
+        return mapper.map(locations, new TypeToken<List<LocationDTO>>(){}
+                .getType());
+    }
+
     private void checkDuplicate(List<Location> locations, LocationFormRequest form){
         if(!locations.isEmpty()){
             for (Location location: locations

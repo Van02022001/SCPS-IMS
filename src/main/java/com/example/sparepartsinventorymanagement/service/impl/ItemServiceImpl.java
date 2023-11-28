@@ -57,7 +57,7 @@ public class ItemServiceImpl implements ItemService {
 
     private final InventoryRepository inventoryRepository;
 
-
+    private final ReceiptDetailRepository receiptDetailRepository;
 
     private final ModelMapper modelMapper;
     private final WarehouseRepository warehouseRepository;
@@ -319,13 +319,21 @@ public class ItemServiceImpl implements ItemService {
         User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
                 ()-> new NotFoundException("User not found")
         );
+
         if(user.getWarehouse() == null){
             throw new InvalidResourceException("User not is inventory staff of any warehouse");
         }
-        Item item = itemRepository.findById(id).orElseThrow(
-                ()-> new NotFoundException("Item not found")
+        ReceiptDetail receiptDetail = receiptDetailRepository.findById(id).orElseThrow(
+                ()-> new NotFoundException("Receipt Detail not found")
         );
-
+        int totalQuantity = 0;
+        for (UpdateItemLocationRequest request: form.getLocations()
+             ) {
+            totalQuantity += request.getQuantity();
+        }
+        if(totalQuantity != receiptDetail.getQuantity()){
+            throw new InvalidResourceException("Quantity is invalid, has not same with quantity of item import");
+        }
         Date date = new Date();
         Set<Long> toLocationIdsSet = new HashSet<>();
         for (UpdateItemLocationRequest request: form.getLocations()
@@ -339,16 +347,16 @@ public class ItemServiceImpl implements ItemService {
                     ()-> new NotFoundException("Location not found or not belong to this warehouse")
             );
             //Check location co item chua
-            if(location.getItem()!=null && !Objects.equals(location.getItem().getId(), item.getId())){
+            if(location.getItem()!=null && !Objects.equals(location.getItem().getId(), receiptDetail.getItem().getId())){
                 throw new InvalidResourceException("The location already has the others item");
             }
             if(location.getItem() != null){
-                if(Objects.equals(location.getItem().getId(), item.getId())){
+                if(Objects.equals(location.getItem().getId(), receiptDetail.getItem().getId())){
                     location.setItem_quantity(location.getItem_quantity()+ request.getQuantity());
                 }
             }else {
                 location.setItem_quantity(request.getQuantity());
-                location.setItem(item);
+                location.setItem(receiptDetail.getItem());
             }
             ItemMovement itemMovement = ItemMovement.builder()
                     .toLocation(location)
@@ -356,21 +364,21 @@ public class ItemServiceImpl implements ItemService {
                     .movedAt(date)
                     .quantity(request.getQuantity())
                     .movedBy(user)
-                    .item(item)
+                    .item(receiptDetail.getItem())
                     .build();
             location.getToMovements().add(itemMovement);
-            if(item.getLocations().stream().noneMatch(
+            if(receiptDetail.getItem().getLocations().stream().noneMatch(
                     location1 -> location1.getId().equals(location.getId())
             )){
-                item.getLocations().add(location);
+                receiptDetail.getItem().getLocations().add(location);
             }
 
             itemMovementRepository.save(itemMovement);
             locationRepository.save(location);
         }
 
-        itemRepository.save(item);
-        return modelMapper.map(item, ItemDTO.class);
+        itemRepository.save(receiptDetail.getItem());
+        return modelMapper.map(receiptDetail.getItem(), ItemDTO.class);
 
     }
 

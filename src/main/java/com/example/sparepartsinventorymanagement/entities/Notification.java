@@ -21,10 +21,10 @@ public class Notification {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY) // Many notifications can belong to one user
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "source_id", nullable = false)
+    @Column(name = "source_id")
     private Long sourceId;
 
     @Enumerated(EnumType.STRING)
@@ -32,13 +32,13 @@ public class Notification {
     private SourceType sourceType;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false)
+    @Column(name = "type")
     private NotificationType type;
 
-    @Column(name = "seen", nullable = false)
+    @Column(name = "seen")
     private boolean seen;
 
-    @Column(name = "trash", nullable = false)
+    @Column(name = "trash")
     private boolean trash;
 
     @Column(name = "created_at", nullable = false)
@@ -51,7 +51,7 @@ public class Notification {
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
 
-    @Column(name = "content", columnDefinition = "TEXT")
+    @Column(name = "content")
     private String content;
 
     @Enumerated(EnumType.STRING)

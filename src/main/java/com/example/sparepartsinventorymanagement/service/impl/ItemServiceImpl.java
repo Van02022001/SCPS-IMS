@@ -60,6 +60,7 @@ public class ItemServiceImpl implements ItemService {
 
 
     private final ModelMapper modelMapper;
+    private final WarehouseRepository warehouseRepository;
 
     @Override
     public List<ItemDTO> getAll() {
@@ -230,6 +231,36 @@ public class ItemServiceImpl implements ItemService {
 
         return subCategories.stream()
                 .flatMap(subCategory -> itemRepository.findBySubCategory(subCategory).stream())
+                .map(item -> modelMapper.map(item, ItemDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ItemDTO> getAllItemByWarehouse(Long warehouseId) {
+        // Lấy thông tin người dùng hiện tại từ SecurityContext
+        Principal userPrincipal = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        // Tìm kho theo ID
+        Warehouse warehouse = warehouseRepository.findById(warehouseId)
+                .orElseThrow(() -> new NotFoundException("Warehouse not found"));
+
+        // Kiểm tra xem người dùng hiện tại có phải là nhân viên kho của Warehouse đang được truy vấn không
+        if (!currentUser.getWarehouse().getId().equals(warehouseId)) {
+            throw new InvalidResourceException("User is not an inventory staff of the requested warehouse");
+        }
+
+        // Lấy ra danh sách Inventory trong kho
+        List<Inventory> inventoryList = warehouse.getInventoryList();
+
+        // Dùng Java Stream để lấy ra tất cả các Item từ mỗi Inventory, tránh trùng lặp
+        Set<Item> items = inventoryList.stream()
+                .map(Inventory::getItem)
+                .collect(Collectors.toSet());
+
+        // Chuyển đổi Set<Item> thành List<ItemDTO>
+        return items.stream()
                 .map(item -> modelMapper.map(item, ItemDTO.class))
                 .collect(Collectors.toList());
     }

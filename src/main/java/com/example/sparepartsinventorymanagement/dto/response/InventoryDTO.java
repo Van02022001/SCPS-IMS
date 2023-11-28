@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @Data
 public class InventoryDTO {
 
-    private Long id;
-
+    private Long itemId;
+    private String itemName;
 
 
     private int openingStockQuantity; // Số lượng tồn đầu kỳ
@@ -39,15 +39,6 @@ public class InventoryDTO {
     private double totalValue; // Giá trị xuất
 
 
-
-    private int discrepancyQuantity; // Sự khác biệt về số lượng
-
-    private double discrepancyValue;  // Sự khác biệt về giá trị
-
-
-    private String notes;
-
-    private String itemName;
 
 
 

@@ -50,25 +50,31 @@ public class InventoryController {
             ));
         }
     }
-
-
     @PreAuthorize("hasRole('ROLE_MANAGER') or hasRole('ROLE_INVENTORY_STAFF')")
-    @Operation(summary = "Get inventory summary for all items")
-    @GetMapping(value="/summary/all-items", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getInventorySummaryForAllItems() {
+    @Operation(summary = "Get consolidated inventory summary by item")
+    @GetMapping(value="/summary-by-item", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getConsolidatedInventoryByItem() {
         try {
-            List<InventoryItemSummaryDTO> summaries = inventoryService.getInventorySummaryForAllItems();
+            List<InventoryDTO> inventorySummary = inventoryService.getConsolidatedInventoryByItem();
             return ResponseEntity.ok(new ResponseObject(
                     HttpStatus.OK.toString(),
-                    "Inventory summaries for all items retrieved successfully",
-                    summaries
+                    "Consolidated inventory summary retrieved successfully",
+                    inventorySummary
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    e.getMessage(),
+                    null
             ));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
                     HttpStatus.INTERNAL_SERVER_ERROR.toString(),
-                    "An error occurred while retrieving inventory summaries",
+                    "An error occurred while retrieving the consolidated inventory summary",
                     null
             ));
         }
     }
+
+
 }

@@ -21,6 +21,8 @@ public interface ItemService {
     ItemDTO updateItemStatus(Long id, ItemStatus status);
     List<ItemDTO> findBySubCategory_NameContainingIgnoreCase(String name);
 
+    List<ItemDTO> getAllItemByWarehouse(Long warehouseId);
+
 
     List<PurchasePriceAuditDTO> getPurchasePriceHistoryOfItem(Long itemId);
 

@@ -12,6 +12,6 @@ import java.util.List;
 public class CustomerRequestReceiptForm {
     private Long customerId;
     private String note;
-    private Long approvedBy;
+    private Long managerId;
     private List<CustomerRequestReceiptDetailForm> details;
 }

@@ -2,7 +2,7 @@ package com.example.sparepartsinventorymanagement.entities;
 
 public enum SourceType {
     RECEIPT,
-    ORDER,
+    SYSTEM,
     INVENTORY,
     INSPECTION
 }

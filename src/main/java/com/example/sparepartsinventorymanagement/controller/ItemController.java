@@ -7,6 +7,7 @@ import com.example.sparepartsinventorymanagement.dto.response.PricingAuditDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
 import com.example.sparepartsinventorymanagement.entities.ItemStatus;
 import com.example.sparepartsinventorymanagement.entities.PurchasePriceAudit;
+import com.example.sparepartsinventorymanagement.exception.InvalidResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.service.impl.ItemServiceImpl;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
@@ -233,5 +234,34 @@ public class ItemController {
                 null
         ));
 
+    }
+
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @Operation(summary = "Get all items by warehouse")
+    @GetMapping("/items-by-warehouse/{warehouseId}")
+    public ResponseEntity<?> getAllItemsByWarehouse(
+            @Parameter(description = "Enter warehouse ID", required = true, example = "1")
+            @PathVariable(name = "warehouseId") Long warehouseId
+    ) {
+        try {
+            List<ItemDTO> items = itemService.getAllItemByWarehouse(warehouseId);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Get list items by warehouse successfully",
+                    items
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    "Warehouse not found",
+                    null
+            ));
+        } catch (InvalidResourceException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseObject(
+                    HttpStatus.FORBIDDEN.toString(),
+                    "Access denied",
+                    null
+            ));
+        }
     }
 }

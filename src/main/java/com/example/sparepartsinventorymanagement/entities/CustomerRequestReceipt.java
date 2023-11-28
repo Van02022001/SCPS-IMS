@@ -24,6 +24,13 @@ public class CustomerRequestReceipt {
     @Column(name = "note")
     private String note;
 
+    @Column(name = "total_price")
+    private double totalPrice;
+
+
+    @Column(name = "total_quantity")
+    private int totalQuantity;
+
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
     private User createdRequestBy;

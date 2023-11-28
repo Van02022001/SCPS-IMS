@@ -11,11 +11,12 @@ import java.util.Optional;
 
 public interface InventoryService {
     ResponseEntity<?> getAll();
-    ResponseEntity<?> getInventoryById(Long id);
+
 
 
     List<InventoryDTO> getAllInventoryByWarehouse(Long warehouseId);
 
-    List<InventoryItemSummaryDTO> getInventorySummaryForAllItems();
+
+    List<InventoryDTO> getConsolidatedInventoryByItem();
 
 }

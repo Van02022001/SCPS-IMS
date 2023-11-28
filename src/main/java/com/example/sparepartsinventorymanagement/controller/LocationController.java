@@ -45,7 +45,7 @@ public class LocationController {
                 res
         ));
     }
-    @Operation(summary = "For get list of location by item id")
+    @Operation(summary = "For get list of location by item id in this warehouse")
     @GetMapping(value = "/locations-by-item/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getLocationsByItem(
             @Parameter(description = "Enter id to get", example = "1", required = true)

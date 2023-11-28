@@ -140,7 +140,14 @@ public class LocationServiceImpl implements LocationService {
         Item item = itemRepository.findById(itemId).orElseThrow(
                 ()-> new NotFoundException("Item not found")
         );
-        List<Location> locations = locationRepository.findByItem(item);
+        Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
+                ()-> new NotFoundException("User not found")
+        );
+        if(user.getWarehouse() == null){
+            throw new InvalidResourceException("User not is inventory staff of any warehouse");
+        }
+        List<Location> locations = locationRepository.findByItemAndWarehouse(item, user.getWarehouse());
         return mapper.map(locations, new TypeToken<List<LocationDTO>>(){}
                 .getType());
     }

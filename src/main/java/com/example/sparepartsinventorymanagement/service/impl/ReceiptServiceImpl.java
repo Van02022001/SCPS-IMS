@@ -591,7 +591,9 @@ public class ReceiptServiceImpl implements ReceiptService {
         if (requestReceipt.getStatus() != ReceiptStatus.IN_PROGRESS) {
             throw new IllegalStateException("Receipt is not in the approved state for processing");
         }
-
+        // can than sai
+        requestReceipt.setStatus(ReceiptStatus.Completed);
+        receiptRepository.save(requestReceipt);
 
         // Create a new receipt
         Receipt actualReceipt  = Receipt.builder()

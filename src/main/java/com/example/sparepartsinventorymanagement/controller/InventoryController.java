@@ -76,5 +76,29 @@ public class InventoryController {
         }
     }
 
-
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @Operation(summary = "Get all inventories for the warehouse managed by the current staff")
+    @GetMapping(value="/current-warehouse", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getAllInventoriesForCurrentStaff() {
+        try {
+            List<InventoryDTO> inventories = inventoryService.getAllInventoryForCurrentStaff();
+            return ResponseEntity.ok(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Inventories retrieved successfully for the current staff's warehouse",
+                    inventories
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
+                    HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                    "An error occurred while retrieving inventories",
+                    null
+            ));
+        }
+    }
 }

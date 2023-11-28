@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -67,9 +68,11 @@ public class InventoryServiceImpl implements InventoryService {
             throw new NotFoundException("Không tìm thấy tồn kho nào cho kho với ID: " + warehouseId);
         }
 
+
         return inventories.stream()
                 .map(inventory -> {
                     InventoryDTO dto =  modelMapper.map(inventory, InventoryDTO.class);
+                    dto.setItemId(inventory.getItem().getId());
                     if (inventory.getItem() != null) {
                         dto.setItemName(inventory.getItem().getSubCategory().getName()); // Giả sử có phương thức getName() trong entity Item
                     }
@@ -106,6 +109,42 @@ public class InventoryServiceImpl implements InventoryService {
 
         return new ArrayList<>(sumaryMap.values());
     }
+
+    @Override
+    public List<InventoryDTO> getAllInventoryForCurrentStaff() {
+        // Lấy thông tin người dùng hiện tại từ SecurityContext
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        // Tìm người dùng dựa trên username
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new NotFoundException("Người dùng không tồn tại"));
+
+        // Kiểm tra nếu người dùng không quản lý kho nào
+        if (currentUser.getWarehouse() == null) {
+            throw new NotFoundException("Người dùng này không quản lý kho nào");
+        }
+
+        Long warehouseId = currentUser.getWarehouse().getId();
+
+        // Lấy danh sách inventory dựa trên warehouseId
+        List<Inventory> inventories = inventoryRepository.findAllByWarehouseId(warehouseId);
+
+        if (inventories.isEmpty()) {
+            throw new NotFoundException("Không tìm thấy tồn kho nào cho kho với ID: " + warehouseId);
+        }
+
+        return inventories.stream()
+                .map(inventory ->{
+                    InventoryDTO dto = modelMapper.map(inventory, InventoryDTO.class);
+                    dto.setItemId(inventory.getItem().getId());
+                    dto.setItemName(inventory.getItem().getSubCategory().getName());
+
+                    return dto;
+                } )
+                .collect(Collectors.toList());
+    }
+
     @Scheduled(cron = "0 0 * * * *")
     public void checkAndNotifyLowStock() {
         List<Item> allItems = itemRepository.findAll();

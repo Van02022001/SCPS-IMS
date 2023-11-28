@@ -77,7 +77,6 @@ public class User {
 
 
     @OneToMany(mappedBy = "createdBy")
-
     private List<Item> createdItems;
 
     @OneToMany(mappedBy = "updatedBy")

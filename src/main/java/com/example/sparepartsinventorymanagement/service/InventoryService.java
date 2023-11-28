@@ -18,5 +18,6 @@ public interface InventoryService {
 
 
     List<InventoryDTO> getConsolidatedInventoryByItem();
+    List<InventoryDTO> getAllInventoryForCurrentStaff();
 
 }

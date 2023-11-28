@@ -26,6 +26,7 @@ public class ItemMovementServiceImpl implements ItemMovementService {
     private final ItemRepository itemRepository;
     private final LocationRepository locationRepository;
     private final UserRepository userRepository;
+    private final InventoryRepository inventoryRepository;
     private final ModelMapper mapper;
     @Override
     public List<ItemMovementDTO> getByItem(Long itemId) {
@@ -54,11 +55,16 @@ public class ItemMovementServiceImpl implements ItemMovementService {
         if(user.getWarehouse() == null){
             throw new InvalidResourceException("User not is inventory staff of any warehouse");
         }
-
         //Check item
         Item item = itemRepository.findById(request.getItem_id()).orElseThrow(
                 ()-> new NotFoundException("Item not found")
         );
+        Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, user.getWarehouse()).orElseThrow(
+                ()-> new NotFoundException("Inventory not found")
+        );
+        if(request.getQuantity() > inventory.getClosingStockQuantity()){
+            throw new InvalidResourceException("Quantity move is big");
+        }
         if(item.getLocations().isEmpty()){
             throw new InvalidResourceException("Item has not any location");
         }

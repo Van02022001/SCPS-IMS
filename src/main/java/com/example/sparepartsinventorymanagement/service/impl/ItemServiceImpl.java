@@ -266,7 +266,6 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-
     public List<PurchasePriceAuditDTO> getPurchasePriceHistoryOfItem(Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Item not found"));
@@ -326,6 +325,7 @@ public class ItemServiceImpl implements ItemService {
         ReceiptDetail receiptDetail = receiptDetailRepository.findById(id).orElseThrow(
                 ()-> new NotFoundException("Receipt Detail not found")
         );
+
         int totalQuantity = 0;
         for (UpdateItemLocationRequest request: form.getLocations()
              ) {
@@ -346,6 +346,9 @@ public class ItemServiceImpl implements ItemService {
             Location location = locationRepository.findByIdAndWarehouse(request.getToLocation_id(), user.getWarehouse()).orElseThrow(
                     ()-> new NotFoundException("Location not found or not belong to this warehouse")
             );
+            if(itemMovementRepository.existsByReceiptDetailAndToLocation(receiptDetail, location)){
+               throw new InvalidResourceException("ReceiptDetail was imported in location");
+            }
             //Check location co item chua
             if(location.getItem()!=null && !Objects.equals(location.getItem().getId(), receiptDetail.getItem().getId())){
                 throw new InvalidResourceException("The location already has the others item");
@@ -365,6 +368,7 @@ public class ItemServiceImpl implements ItemService {
                     .quantity(request.getQuantity())
                     .movedBy(user)
                     .item(receiptDetail.getItem())
+                    .receiptDetail(receiptDetail)
                     .build();
             location.getToMovements().add(itemMovement);
             if(receiptDetail.getItem().getLocations().stream().noneMatch(

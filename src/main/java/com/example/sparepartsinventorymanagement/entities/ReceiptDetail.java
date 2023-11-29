@@ -58,7 +58,8 @@ public class ReceiptDetail  extends Auditable<User> {
 
     @OneToMany(mappedBy = "receiptDetail", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InventoryDiscrepancyLog> discrepancyLogs;
-
+    @OneToMany(mappedBy = "receiptDetail", cascade = CascadeType.ALL)
+    private List<ItemMovement> itemMovements;
     public ReceiptDetail() {
         // Constructor mặc định cần thiết cho JPA
     }

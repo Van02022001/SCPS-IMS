@@ -44,6 +44,9 @@ public class ItemMovement {
     @JoinColumn(name = "to_location_id", nullable = false)
     private Location toLocation;
 
+    @ManyToOne
+    @JoinColumn(name = "receipt_detail_id")
+    private ReceiptDetail receiptDetail;
 
     @ManyToOne
     @JoinColumn(name = "moved_by", nullable = false)

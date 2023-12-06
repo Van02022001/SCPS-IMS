@@ -58,7 +58,15 @@ public class ReceiptServiceImpl implements ReceiptService {
     public void deleteImportReceipt(Long id) {
         var receipt = receiptRepository.findById(id)
                 .filter(receipt1 -> receipt1.getType() == ReceiptType.PHIEU_NHAP_KHO)
-                .orElseThrow(() -> new NotFoundException("Receipt with Id " + id + " not found or not of type PHIEU_YEU_CAU_NHAP_KHO"));
+                .orElseThrow(() -> new NotFoundException("Receipt with Id " + id + " not found or not of type PHIEU_NHAP_KHO"));
+        receiptRepository.delete(receipt);
+    }
+
+    @Override
+    public void deleteExportReceipt(Long id) {
+        var receipt = receiptRepository.findById(id)
+                .filter(receipt1 -> receipt1.getType() == ReceiptType.PHIEU_XUAT_KHO)
+                .orElseThrow(() -> new NotFoundException("Export Receipt with Id " + id + " not found or not of type PHIEU_XUAT_KHO"));
         receiptRepository.delete(receipt);
     }
 
@@ -229,7 +237,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         return response;
     }
     @Override
-
+    @Transactional
     public ImportRequestReceiptResponse getImportReceiptById(Long id) {
         Receipt receipt = receiptRepository.findById(id)
                 .filter(r -> r.getType() == ReceiptType.PHIEU_NHAP_KHO)
@@ -587,6 +595,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         return code;
     }
     @Override
+    @Transactional
     public ImportRequestReceiptResponse createImportReceipt(Long receiptId, Map<Long, Integer> actualQuantities) {
         Receipt requestReceipt  = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found"));
@@ -659,89 +668,228 @@ public class ReceiptServiceImpl implements ReceiptService {
         return buildImportRequestReceiptResponse(savedReceipt, detailResponses);
     }
 
+
+@Override
+@Transactional
+public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integer> actualQuantities) {
+    CustomerRequestReceipt customerRequestReceipt = customerRequestReceiptRepository.findById(receiptId)
+            .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found"));
+
+    if (customerRequestReceipt.getStatus() != CustomerRequestReceiptStatus.IN_PROGRESS) {
+        throw new IllegalStateException("Receipt is not in the approved state for processing");
+    }
+
+    customerRequestReceipt.setStatus(CustomerRequestReceiptStatus.Completed);
+    customerRequestReceiptRepository.save(customerRequestReceipt);
+
+    Receipt actualReceipt = Receipt.builder()
+            .code(generateAndValidateUniqueCode())
+            .customerRequestReceipt(customerRequestReceipt)
+            .type(ReceiptType.PHIEU_XUAT_KHO)
+            .status(ReceiptStatus.Completed)
+            .description("Actual Export based on Customer Request Receipt #" + receiptId)
+            .createdBy(getCurrentAuthenticatedUser())
+            .lastModifiedBy(getCurrentAuthenticatedUser())
+            .totalQuantity(customerRequestReceipt.getTotalQuantity())
+            .warehouse(customerRequestReceipt.getWarehouse())
+            .build();
+    Receipt savedExportReceipt = receiptRepository.save(actualReceipt);
+
+    List<ExportReceiptDetailResponse> detailResponses = new ArrayList<>();
+    double totalExportPrice = 0.0;
+
+    for (CustomerRequestReceiptDetail requestDetail : customerRequestReceipt.getCustomerRequestReceiptDetailList()) {
+        Item item = requestDetail.getItems();
+        int requestedQuantity = requestDetail.getQuantity();
+        int actualQuantity = actualQuantities.getOrDefault(item.getId(), requestedQuantity);
+
+        double unitPrice = item.getPricing().getPrice();
+        double totalPriceForItem = unitPrice * actualQuantity;
+
+        ReceiptDetail receiptDetail = ReceiptDetail.builder()
+                .receipt(savedExportReceipt)
+                .item(item)
+                .quantity(actualQuantity)
+                .unitName(requestDetail.getUnitName())
+                .totalPrice(totalPriceForItem)
+                .build();
+        receiptDetailRepository.save(receiptDetail);
+
+        totalExportPrice += totalPriceForItem;
+
+        ExportReceiptDetailResponse detailResponse = ExportReceiptDetailResponse.builder()
+                .id(receiptDetail.getId())
+                .itemId(item.getId())
+                .itemName(item.getSubCategory().getName())
+                .quantity(actualQuantity)
+                .unitName(receiptDetail.getUnitName())
+                .price(unitPrice)
+                .totalPrice(totalPriceForItem)
+                .build();
+        detailResponses.add(detailResponse);
+
+        //updateInventoryForOutbound(item, actualQuantity, unitPrice, customerRequestReceipt.getLastModifiedBy().getWarehouse().getId());
+    }
+
+    savedExportReceipt.setTotalPrice(totalExportPrice);
+    savedExportReceipt.setTotalQuantity(actualQuantities.values().stream().mapToInt(Integer::intValue).sum());
+    receiptRepository.save(savedExportReceipt);
+
+    return ExportReceiptResponse.builder()
+            .warehouseId(savedExportReceipt.getWarehouse().getId())
+            .id(savedExportReceipt.getId())
+            .code(savedExportReceipt.getCode())
+            .type(savedExportReceipt.getType())
+            .createdBy(savedExportReceipt.getCreatedBy().getLastName() + " " + savedExportReceipt.getCreatedBy().getMiddleName() + " " + savedExportReceipt.getCreatedBy().getFirstName())
+            .lastModifiedBy(savedExportReceipt.getLastModifiedBy() != null ? savedExportReceipt.getLastModifiedBy().getLastName() + " " + savedExportReceipt.getLastModifiedBy().getLastName() + " " + savedExportReceipt.getLastModifiedBy().getFirstName() : null)
+            .createdAt(savedExportReceipt.getCreationDate())
+            .updatedAt(savedExportReceipt.getLastModifiedDate())
+            .status(savedExportReceipt.getStatus())
+            .totalPrice(savedExportReceipt.getTotalPrice())
+            .totalQuantity(savedExportReceipt.getTotalQuantity())
+            .description(savedExportReceipt.getDescription())
+            .details(detailResponses)
+            .build();
+}
+
+
     @Override
-    public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integer> actualQuantities) {
-        CustomerRequestReceipt customerRequestReceipt = customerRequestReceiptRepository.findById(receiptId)
+    @Transactional
+    public ImportRequestReceiptResponse updateImportReceipt(Long receiptId, Map<Long, Integer> actualQuantities) {
+        Receipt existingReceipt = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found"));
 
-        if (customerRequestReceipt.getStatus() != CustomerRequestReceiptStatus.IN_PROGRESS) {
-            throw new IllegalStateException("Receipt is not in the approved state for processing");
+        if (existingReceipt.getStatus() != ReceiptStatus.IN_PROGRESS) {
+            throw new IllegalStateException("Receipt is not in a state that allows updating");
         }
-        // can than sai
-        customerRequestReceipt.setStatus(CustomerRequestReceiptStatus.Completed);
-        customerRequestReceiptRepository.save(customerRequestReceipt);
 
-        // Create a new receipt
-        Receipt actualReceipt  = Receipt.builder()
-                .code(generateAndValidateUniqueCode())
-                .type(ReceiptType.PHIEU_XUAT_KHO)
-                .status(ReceiptStatus.Completed)
-                .description("Actual Import based on Request Receipt #" + receiptId)
-                .createdBy(getCurrentAuthenticatedUser())
-                .lastModifiedBy(getCurrentAuthenticatedUser())
-                .totalQuantity(customerRequestReceipt.getTotalQuantity())
-                .warehouse(customerRequestReceipt.getLastModifiedBy().getWarehouse())
-                .build();
-        Receipt savedExportReceipt = receiptRepository.save(actualReceipt );
+        boolean hasDiscrepancy = false;
+        double totalUpdatedPrice = 0;
+        int totalUpdatedQuantity = 0;
+        List<ImportRequestReceiptDetailResponse> detailResponses = new ArrayList<>();
 
+        for (ReceiptDetail detail : existingReceipt.getDetails()) {
+            int requiredQuantity = detail.getQuantity();
+            int actualQuantity = actualQuantities.getOrDefault(detail.getItem().getId(), requiredQuantity);
+            int discrepancyQuantity = actualQuantity - requiredQuantity;
+            double actualPrice = calculateWeightedAveragePurchasePrice(detail.getItem());
+            double totalPriceForDetail = actualPrice * actualQuantity;
 
-        // Process each item in the request
-        List<ExportReceiptDetailResponse> detailResponses = new ArrayList<>();
-        double totalExportPrice = 0.0;
+            detail.setQuantity(actualQuantity);
+            detail.setUnitPrice(actualPrice);
+            detail.setTotalPrice(totalPriceForDetail);
+            receiptDetailRepository.save(detail);
 
-        for (CustomerRequestReceiptDetail requestDetail : customerRequestReceipt.getCustomerRequestReceiptDetailList()) {
-            Item item = requestDetail.getItems();
-            int requestedQuantity = requestDetail.getQuantity();
-            int actualQuantity = actualQuantities.getOrDefault(item.getId(), requestedQuantity);
+            totalUpdatedPrice += totalPriceForDetail;
+            totalUpdatedQuantity += actualQuantity;
 
-
-            // Create and save Receipt Detail
-            ReceiptDetail receiptDetail = ReceiptDetail.builder()
-                    .receipt(savedExportReceipt)
-                    .item(item)
-                    .quantity(actualQuantity)
-                    .unitName(requestDetail.getUnitName())
-                    .totalPrice(item.getPricing().getPrice() * actualQuantity)
-                    .build();
-            receiptDetailRepository.save(receiptDetail);
-
-            totalExportPrice += receiptDetail.getTotalPrice();
-
-            // Add to detail responses
-            ExportReceiptDetailResponse detailResponse = ExportReceiptDetailResponse.builder()
-                    .id(receiptDetail.getId())
-                    .itemId(item.getId())
-                    .itemName(item.getSubCategory().getName())
-                    .quantity(actualQuantity)
-                    .unitName(receiptDetail.getUnitName())
-                    .price(item.getPricing().getPrice())
-                    .totalPrice(receiptDetail.getTotalPrice())
-                    .build();
+            ImportRequestReceiptDetailResponse detailResponse;
+            if (discrepancyQuantity != 0) {
+                InventoryDiscrepancyLog discrepancyLog = handleDiscrepancy(detail, requiredQuantity, actualQuantity, detail.getUnitPrice());
+                detailResponse = buildImportRequestReceiptDetailResponse(detail, actualQuantity, discrepancyQuantity, discrepancyLog);
+                hasDiscrepancy = true;
+            } else {
+                detailResponse = buildImportRequestReceiptDetailResponse(detail, actualQuantity, 0, null);
+            }
             detailResponses.add(detailResponse);
-
-            // Update inventory for outbound
-            updateInventoryForOutbound(item, actualQuantity, item.getPricing().getPrice(), customerRequestReceipt.getLastModifiedBy().getWarehouse().getId());
+            updateInventoryInbound(detail.getItem(), actualQuantity, existingReceipt.getWarehouse().getId());
         }
 
-        // Update the export receipt with total values
-        savedExportReceipt.setTotalPrice(totalExportPrice);
-        savedExportReceipt.setTotalQuantity(actualQuantities.values().stream().mapToInt(Integer::intValue).sum());
-        receiptRepository.save(savedExportReceipt);
+        existingReceipt.setTotalPrice(totalUpdatedPrice);
+        existingReceipt.setTotalQuantity(totalUpdatedQuantity);
+        receiptRepository.save(existingReceipt);
 
-        // Build and return the response
-        return ExportReceiptResponse.builder()
-                .warehouseId(savedExportReceipt.getWarehouse().getId())
-                .id(savedExportReceipt.getId())
-                .code(savedExportReceipt.getCode())
-                .type(savedExportReceipt.getType())
-                .status(savedExportReceipt.getStatus())
-                .totalPrice(savedExportReceipt.getTotalPrice())
-                .totalQuantity(savedExportReceipt.getTotalQuantity())
-                .description(savedExportReceipt.getDescription())
-                .details(detailResponses)
-                .build();
+        // Send notification if needed
+        createAndSendNotificationForReceipt(existingReceipt, hasDiscrepancy);
 
+        // Build and return response
+        return buildImportRequestReceiptResponse(existingReceipt, detailResponses);
     }
+
+    @Override
+    public List<ExportReceiptResponse> getAllExportReceipts() {
+        List<Receipt> receipts = receiptRepository.findByType(ReceiptType.PHIEU_XUAT_KHO);
+        return receipts.stream()
+                .sorted(Comparator.comparing(Receipt::getCreationDate).reversed())
+                .map(receipt -> {
+                    ExportReceiptResponse response = new ExportReceiptResponse();
+                    response.setWarehouseId(receipt.getWarehouse().getId());
+                    response.setId(receipt.getId());
+                    response.setCode(receipt.getCode());
+                    response.setType(receipt.getType());
+                    response.setStatus(receipt.getStatus());
+                    response.setDescription(receipt.getDescription());
+                    response.setTotalQuantity(receipt.getTotalQuantity());
+                    response.setTotalPrice(receipt.getTotalPrice());
+                    response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() + " " + receipt.getCreatedBy().getMiddleName() + " " + receipt.getCreatedBy().getFirstName() : null);
+                    response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() + " " + receipt.getLastModifiedBy().getLastName() + " " + receipt.getLastModifiedBy().getFirstName() : null);
+                    response.setCreatedAt(receipt.getCreationDate());
+                    response.setUpdatedAt(receipt.getLastModifiedDate());
+
+                    // Add details
+                    List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+                    List<ExportReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                            .map(detail -> {
+                                ExportReceiptDetailResponse detailResponse = new ExportReceiptDetailResponse();
+                                detailResponse.setId(detail.getId());
+                                detailResponse.setItemName(detail.getItem().getSubCategory().getName());
+                                detailResponse.setQuantity(detail.getQuantity());
+                                detailResponse.setUnitName(detail.getUnitName());
+                                // Uncomment and adjust if you have a price field in the detail
+                                // detailResponse.setPrice(detail.getPrice());
+                                detailResponse.setTotalPrice(detail.getTotalPrice());
+
+                                return detailResponse;
+                            })
+                            .collect(Collectors.toList());
+
+                    response.setDetails(detailResponses);
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
+    @Transactional
+    public ExportReceiptResponse getExportReceiptById(Long id) {
+        Receipt receipt = receiptRepository.findById(id)
+                .filter(r -> r.getType() == ReceiptType.PHIEU_XUAT_KHO)
+                .orElseThrow(() -> new NotFoundException("Export Receipt with ID " + id + " not found or not of type PHIEU_XUAT_KHO"));
+
+        ExportReceiptResponse response = new ExportReceiptResponse();
+        response.setWarehouseId(receipt.getWarehouse().getId());
+        response.setId(receipt.getId());
+        response.setCode(receipt.getCode());
+        response.setType(receipt.getType());
+        response.setStatus(receipt.getStatus());
+        response.setDescription(receipt.getDescription());
+        response.setTotalQuantity(receipt.getTotalQuantity());
+        response.setTotalPrice(receipt.getTotalPrice());
+        response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() + " " + receipt.getCreatedBy().getMiddleName() + " " + receipt.getCreatedBy().getFirstName() : null);
+        response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() + " " + receipt.getLastModifiedBy().getLastName() + " " + receipt.getLastModifiedBy().getFirstName() : null);
+        response.setCreatedAt(receipt.getCreationDate());
+        response.setUpdatedAt(receipt.getLastModifiedDate());
+
+        // Adding receipt details
+        List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+        List<ExportReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                .map(detail -> {
+                    ExportReceiptDetailResponse detailResponse = new ExportReceiptDetailResponse();
+                    detailResponse.setId(detail.getId());
+                    detailResponse.setItemName(detail.getItem().getSubCategory().getName());
+                    detailResponse.setQuantity(detail.getQuantity());
+                    detailResponse.setUnitName(detail.getUnitName());
+                    detailResponse.setPrice(detail.getUnitPrice());
+                    detailResponse.setTotalPrice(detail.getTotalPrice());
+                    return detailResponse;
+                })
+                .collect(Collectors.toList());
+        response.setDetails(detailResponses);
+
+        return response;
+    }
+
 
     private void createAndSendNotificationForReceipt(Receipt receipt, boolean hasDiscrepancy) {
         String message = hasDiscrepancy ?

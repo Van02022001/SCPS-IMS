@@ -74,6 +74,7 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
                 .customer(customer)
                 .note(form.getNote())
                 .status(CustomerRequestReceiptStatus.Pending_Approval)
+                .warehouse(warehouse)
                 .build();
         CustomerRequestReceipt savedReceipt = customerRequestReceiptRepository.save(requestReceipt);
 
@@ -130,6 +131,7 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
                     CustomerRequestReceiptDetailDTO detailResponse = new CustomerRequestReceiptDetailDTO();
                     detailResponse.setId(detail.getId());
                     detailResponse.setItemId(detail.getItems().getId());
+                    detailResponse.setItemName(detail.getItems().getSubCategory().getName());
                     detailResponse.setQuantity(detail.getQuantity());
                     detailResponse.setUnitName(detail.getUnitName());
 

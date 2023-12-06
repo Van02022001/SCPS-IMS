@@ -49,6 +49,11 @@ public class CustomerRequestReceipt extends Auditable<User> {
     @OneToMany(mappedBy = "customerRequestReceipt")
     private Set<Receipt> receipts;
 
+    @ManyToOne
+    @JoinColumn(name = "warehouse_id", nullable = false)
+    private Warehouse warehouse;
+
+
     public CustomerRequestReceipt() {
         // Constructor mặc định cần thiết cho JPA
     }

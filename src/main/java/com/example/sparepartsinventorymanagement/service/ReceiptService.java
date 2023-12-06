@@ -35,5 +35,13 @@ public interface ReceiptService {
     void  startImportProcess(Long receiptId);
 
     ImportRequestReceiptResponse createImportReceipt(Long receiptId, Map<Long, Integer> actualQuantity);
+    ImportRequestReceiptResponse updateImportReceipt(Long receiptId, Map<Long, Integer> actualQuantities);
     ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integer> actualQuantities);
+   // ExportReceiptResponse updateExportReceipt(Long receiptId, Map<Long, Integer> actualQuantities);
+
+    List<ExportReceiptResponse> getAllExportReceipts();
+
+    ExportReceiptResponse getExportReceiptById(Long id);
+
+    void deleteExportReceipt(Long id);
 }

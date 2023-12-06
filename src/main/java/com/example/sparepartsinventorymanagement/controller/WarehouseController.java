@@ -146,7 +146,7 @@ public class WarehouseController {
     }
 
 
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_MANAGER') or hasRole('SALE_STAFF')")
     @Operation(summary = "Get all inventory staff by warehouse ID")
     @GetMapping("/inventory-staffs/{warehouseId}")
     public ResponseEntity<?> getAllInventoryStaffByWarehouseId(

@@ -1,7 +1,6 @@
 package com.example.sparepartsinventorymanagement.controller;
 
-import com.example.sparepartsinventorymanagement.dto.request.CreateItemLocationsFrom;
-import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
+import com.example.sparepartsinventorymanagement.dto.request.*;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PricingAuditDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
@@ -41,7 +40,7 @@ public class ItemController {
         List<ItemDTO> res = itemService.getAll();
         if(res.isEmpty()){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-               HttpStatus.OK.toString(),
+               HttpStatus.NOT_FOUND.toString(),
                "List is empty",
                null
             ));
@@ -73,7 +72,7 @@ public class ItemController {
        List<ItemDTO> res = itemService.getItemBySubCategory(id);
         if(res.isEmpty()){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                    HttpStatus.OK.toString(),
+                    HttpStatus.NOT_FOUND.toString(),
                     "List is empty",
                     null
             ));
@@ -91,7 +90,7 @@ public class ItemController {
         List<ItemDTO> res = itemService.getItemByActiveStatus();
         if(res.isEmpty()){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                    HttpStatus.OK.toString(),
+                    HttpStatus.NOT_FOUND.toString(),
                     "List is empty",
                     null
             ));
@@ -170,7 +169,7 @@ public class ItemController {
         List<ItemDTO> response = itemService.findBySubCategory_NameContainingIgnoreCase(name);
         if(response.isEmpty()){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                    HttpStatus.OK.toString(),
+                    HttpStatus.NOT_FOUND.toString(),
                     "List is empty",
                     null
             ));
@@ -235,7 +234,46 @@ public class ItemController {
         ));
 
     }
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @Operation(summary = "For update locations item after export")
+    @PutMapping(value = "/item-locations/warehouse-export ", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> updateItemLocation(
+            @Valid @RequestBody UpdateItemLocationAfterExportForm form
+    ) {
+        ItemDTO res = itemService.updateItemLocationAfterExport(form);
+        if(res != null){
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Update item locations successfully",
+                    res
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                HttpStatus.BAD_REQUEST.toString(),
+                "Update item locations failed",
+                null
+        ));
 
+    }
+    @Operation(summary = "For check item import/export by receipt detail")
+    @GetMapping(value = "/item-locations/examination", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> checkItemLocationAfterUpdate(
+            @Valid @RequestBody CheckItemLocationAfterUpdateForm form
+    ) {
+        boolean res = itemService.checkUpdateItemLocationAfterUpdate(form);
+        if(!res){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(),
+                    "Các sản phẩm chưa được cập nhật hết vị trí.",
+                    null
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Cập nhật vị trí các sản phẩm thành công.",
+                null
+        ));
+    }
     @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
     @Operation(summary = "Get all items by warehouse")
     @GetMapping("/items-by-warehouse/{warehouseId}")

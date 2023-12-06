@@ -2,6 +2,7 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.LocationFormRequest;
 import com.example.sparepartsinventorymanagement.dto.response.LocationDTO;
+import com.example.sparepartsinventorymanagement.dto.response.ItemLocationsDTO;
 import com.example.sparepartsinventorymanagement.entities.Item;
 import com.example.sparepartsinventorymanagement.entities.Location;
 import com.example.sparepartsinventorymanagement.entities.LocationTag;
@@ -119,7 +120,7 @@ public class LocationServiceImpl implements LocationService {
                     }
                 }
             }
-            if(location.getTags().size()!=count){
+            if(location.getTags().size()!=count || location.getTags().isEmpty()){
                 for (Long tag_id: form.getTags_id()
                 ) {
                     LocationTag locationTag = locationTagRepository.findById(tag_id).orElseThrow(
@@ -136,7 +137,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public List<LocationDTO> getLocationsByItemId(Long itemId) {
+    public ItemLocationsDTO getLocationsByItemId(Long itemId) {
         Item item = itemRepository.findById(itemId).orElseThrow(
                 ()-> new NotFoundException("Item not found")
         );
@@ -148,8 +149,9 @@ public class LocationServiceImpl implements LocationService {
             throw new InvalidResourceException("User not is inventory staff of any warehouse");
         }
         List<Location> locations = locationRepository.findByItemAndWarehouse(item, user.getWarehouse());
-        return mapper.map(locations, new TypeToken<List<LocationDTO>>(){}
+        List<LocationDTO> locationDTOS = mapper.map(locations, new TypeToken<List<LocationDTO>>(){}
                 .getType());
+        return new ItemLocationsDTO(itemId, locationDTOS);
     }
 
     private void checkDuplicate(List<Location> locations, LocationFormRequest form){

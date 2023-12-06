@@ -2,12 +2,12 @@ package com.example.sparepartsinventorymanagement.service;
 
 import com.example.sparepartsinventorymanagement.dto.request.CreateItemLocationsFrom;
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
+import com.example.sparepartsinventorymanagement.dto.request.UpdateItemLocationAfterExportForm;
+import com.example.sparepartsinventorymanagement.dto.request.CheckItemLocationAfterUpdateForm;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PricingAuditDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
 import com.example.sparepartsinventorymanagement.entities.ItemStatus;
-import com.example.sparepartsinventorymanagement.entities.PurchasePriceAudit;
-import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -29,5 +29,7 @@ public interface ItemService {
     List<PricingAuditDTO> getPricingHistoryOfItem(Long itemId);
 
     ItemDTO createItemLocations(Long id, CreateItemLocationsFrom form);
+    ItemDTO updateItemLocationAfterExport(UpdateItemLocationAfterExportForm form);
 
+    boolean checkUpdateItemLocationAfterUpdate(CheckItemLocationAfterUpdateForm form);
 }

@@ -14,4 +14,6 @@ import java.util.Optional;
 public interface ItemMovementRepository extends JpaRepository<ItemMovement, Long> {
     List<ItemMovement> findByItem(Item item);
     boolean existsByReceiptDetailAndToLocation(ReceiptDetail receiptDetail, Location location);
+    boolean existsByReceiptDetailAndFromLocation(ReceiptDetail receiptDetail, Location location);
+    boolean existsByReceiptDetail(ReceiptDetail receiptDetail);
 }

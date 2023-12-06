@@ -2,6 +2,7 @@ package com.example.sparepartsinventorymanagement.controller;
 
 import com.example.sparepartsinventorymanagement.dto.request.LocationFormRequest;
 import com.example.sparepartsinventorymanagement.dto.request.LocationTagRequest;
+import com.example.sparepartsinventorymanagement.dto.response.ItemLocationsDTO;
 import com.example.sparepartsinventorymanagement.dto.response.LocationDTO;
 import com.example.sparepartsinventorymanagement.dto.response.LocationTagDTO;
 import com.example.sparepartsinventorymanagement.service.impl.LocationServiceImpl;
@@ -51,8 +52,8 @@ public class LocationController {
             @Parameter(description = "Enter id to get", example = "1", required = true)
             @PathVariable(name = "id") @NotBlank @NotEmpty Long id
     ) {
-        List<LocationDTO> res = locationService.getLocationsByItemId(id);
-        if(res.isEmpty()){
+        ItemLocationsDTO res = locationService.getLocationsByItemId(id);
+        if(res.getLocations().isEmpty()){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
                     HttpStatus.NOT_FOUND.toString(),
                     "List empty",

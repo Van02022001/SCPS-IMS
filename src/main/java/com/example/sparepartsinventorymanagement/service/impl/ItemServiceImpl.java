@@ -1,8 +1,6 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
-import com.example.sparepartsinventorymanagement.dto.request.CreateItemLocationsFrom;
-import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
-import com.example.sparepartsinventorymanagement.dto.request.UpdateItemLocationRequest;
+import com.example.sparepartsinventorymanagement.dto.request.*;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PricingAuditDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
@@ -16,10 +14,10 @@ import com.example.sparepartsinventorymanagement.service.ItemService;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -61,6 +59,7 @@ public class ItemServiceImpl implements ItemService {
 
     private final ModelMapper modelMapper;
     private final WarehouseRepository warehouseRepository;
+    private final ReceiptRepository receiptRepository;
 
     @Override
     public List<ItemDTO> getAll() {
@@ -349,13 +348,12 @@ public class ItemServiceImpl implements ItemService {
             if(itemMovementRepository.existsByReceiptDetailAndToLocation(receiptDetail, location)){
                throw new InvalidResourceException("ReceiptDetail was imported in location");
             }
-            //Check location co item chua
-            if(location.getItem()!=null && !Objects.equals(location.getItem().getId(), receiptDetail.getItem().getId())){
-                throw new InvalidResourceException("The location already has the others item");
-            }
+
             if(location.getItem() != null){
                 if(Objects.equals(location.getItem().getId(), receiptDetail.getItem().getId())){
                     location.setItem_quantity(location.getItem_quantity()+ request.getQuantity());
+                }else{
+                    throw new InvalidResourceException("The location already has the others item");
                 }
             }else {
                 location.setItem_quantity(request.getQuantity());
@@ -385,6 +383,94 @@ public class ItemServiceImpl implements ItemService {
         return modelMapper.map(receiptDetail.getItem(), ItemDTO.class);
 
     }
+
+    @Override
+    public ItemDTO updateItemLocationAfterExport(UpdateItemLocationAfterExportForm form) {
+        Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
+                ()-> new NotFoundException("Không tìm thấy người dùng.")
+        );
+
+        if(user.getWarehouse() == null){
+            throw new AccessDeniedException("Người dùng không có quyền thao tác với kho này.");
+        }
+        ReceiptDetail receiptDetail = receiptDetailRepository.findById(form.getReceipt_detail_id()).orElseThrow(
+                ()-> new NotFoundException("Không tìm thấy nội dung phiếu xuất kho.")
+        );
+
+        int totalQuantity = 0;
+        for (UpdateItemLocationAfterExportRequest request: form.getLocations()
+        ) {
+            totalQuantity += request.getQuantity();
+        }
+        if(totalQuantity != receiptDetail.getQuantity()){
+            throw new InvalidResourceException("Số lượng sản phẩm không giống với số lượng sản phẩm xuất.");
+        }
+        Date date = new Date();
+        Set<Long> fromLocationIdsSet = new HashSet<>();
+        for (UpdateItemLocationAfterExportRequest request: form.getLocations()
+        ) {
+            Long fromLocationId = request.getFromLocation_id();
+            if (!fromLocationIdsSet.add(fromLocationId)) {
+                throw new DuplicateResourceException("Trùng vị trí.");
+            }
+            //check location thuộc warehouse hiện tại k
+            Location location = locationRepository.findByIdAndWarehouse(request.getFromLocation_id(), user.getWarehouse()).orElseThrow(
+                    ()-> new NotFoundException("Vị trí không tìm thấy hoặc không thuộc về kho này.")
+            );
+            if(itemMovementRepository.existsByReceiptDetailAndFromLocation(receiptDetail, location)){
+                throw new InvalidResourceException("Hàng đã xuất kho tại vị trí này theo nội dung phiếu xuất kho.");
+            }
+            if(location.getItem() != null){
+                if(location.getItem_quantity() <= 0){
+                    throw new InvalidResourceException("Số lượng sản phầm không đúng, nhỏ hơn hoặc bằng 0.");
+                }
+                if(Objects.equals(location.getItem().getId(), receiptDetail.getItem().getId())){
+                    location.setItem_quantity(location.getItem_quantity() - request.getQuantity());
+                }else{
+                    throw new InvalidResourceException("Vị trí đã tồn tại sản phẩm khác.");
+                }
+            }else{
+                throw new InvalidResourceException("Vị trí chưa có sản phẩm nào.");
+            }
+            ItemMovement itemMovement = ItemMovement.builder()
+                    .fromLocation(location)
+                    .notes("Xuất kho")
+                    .movedAt(date)
+                    .quantity(request.getQuantity())
+                    .movedBy(user)
+                    .item(receiptDetail.getItem())
+                    .receiptDetail(receiptDetail)
+                    .build();
+            location.getFromMovements().add(itemMovement);
+            if(receiptDetail.getItem().getLocations().stream().noneMatch(
+                    location1 -> location1.getId().equals(location.getId())
+            )){
+                receiptDetail.getItem().getLocations().add(location);
+            }
+            itemMovementRepository.save(itemMovement);
+            locationRepository.save(location);
+        }
+
+        itemRepository.save(receiptDetail.getItem());
+        return null;
+    }
+
+    @Override
+    public boolean checkUpdateItemLocationAfterUpdate(CheckItemLocationAfterUpdateForm form) {
+        Receipt receipt = receiptRepository.findById(form.getReceipt_id()).orElseThrow(
+                ()-> new NotFoundException("Không tìm thấy phiếu.")
+        );
+        int count = 0;
+        for (ReceiptDetail receiptDetail: receipt.getDetails()
+             ) {
+            if(itemMovementRepository.existsByReceiptDetail(receiptDetail)){
+                count++;
+            }
+        }
+        return receipt.getDetails().size() == count;
+    }
+
 
     private String createItemCode(String productName, Size size, String brandName, String originName, String supplierName){
         StringBuilder itemCode = new StringBuilder();
@@ -438,23 +524,4 @@ public class ItemServiceImpl implements ItemService {
         }
         return newCode;
     }
-//    private Period getPeriod(){
-//        LocalDate today = LocalDate.now();
-//        LocalDateTime startOfDay = today.atStartOfDay();
-//        Instant instant = startOfDay.atZone(ZoneId.systemDefault()).toInstant();
-//        Date sdate = Date.from(instant);
-//        LocalTime endOfDay = LocalTime.of(23, 59, 59, 999999999); // 23:59:59.999999999
-//        LocalDateTime endOfToday = LocalDateTime.of(today, endOfDay);
-//        Instant instantEndOfDay = endOfToday.atZone(ZoneId.systemDefault()).toInstant();
-//        Date edate = Date.from(instantEndOfDay);
-//        Period period = periodRepository.findByStartDateAndEndDate(sdate, edate);
-//        if(period == null){
-//            period = Period.builder()
-//                    .startDate(sdate)
-//                    .endDate(edate)
-//                    .build();
-//            periodRepository.save(period);
-//        }
-//        return period;
-//    }
 }

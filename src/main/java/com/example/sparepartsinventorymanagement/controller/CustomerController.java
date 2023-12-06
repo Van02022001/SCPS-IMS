@@ -26,7 +26,7 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
-    @PreAuthorize("hasRole('ROLE_SALE_STAFF') ")
+    @PreAuthorize("hasRole('ROLE_SALE_STAFF')  or hasRole('ROLE_MANAGER') ")
     @Operation(summary = "For creating  a new customer")
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createCustomer(@Valid @RequestBody CreateCustomerForm form) {

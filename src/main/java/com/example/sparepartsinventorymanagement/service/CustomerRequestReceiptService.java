@@ -7,4 +7,6 @@ import org.springframework.http.ResponseEntity;
 public interface CustomerRequestReceiptService {
 
     CustomerRequestReceiptDTO createCustomerRequestReceipt(CustomerRequestReceiptForm form);
+    CustomerRequestReceiptDTO getCustomerReceiptById(Long id);
+    void  startImportProcess(Long receiptId);
 }

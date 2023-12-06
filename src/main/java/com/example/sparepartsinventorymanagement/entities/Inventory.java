@@ -23,18 +23,6 @@ public class Inventory {
     private Long id;
 
 
-    @Column(name = "opening_stock_quantity", nullable = false)
-    private int openingStockQuantity; // Số lượng tồn đầu kỳ
-
-    @Column(name = "opening_stock_value", nullable = false)
-    private double openingStockValue; // Giá trị tồn đầu kỳ
-
-    @Column(name = "closing_stock_quantity")
-    private int closingStockQuantity; // Số lượng tồn cuối kỳ
-
-    @Column(name = "closing_stock_value")
-    private double closingStockValue; // Giá trị tồn cuối kỳ
-
     @Column(name = "inbound_quantity", nullable = false)
     private int inboundQuantity; // Số lượng nhập
 
@@ -51,17 +39,22 @@ public class Inventory {
     private double totalValue; // Giá trị xuất
 
 
+    @Column(name = "total_quantity")
+    private int totalQuantity;
+
+    @Column(name = "available")
+    private int available;
+
+    @Column(name = "defective")
+    private int defective;
+
     @Column(name = "discrepancy_quantity")
     private int discrepancyQuantity; // Sự khác biệt về số lượng
 
     @Column(name = "discrepancy_value")
     private double discrepancyValue;  // Sự khác biệt về giá trị
 
-    @Column(name = "notes")
-    private String notes;
 
-    @Column(name="is_active")
-    private boolean isActive;
 
     @ManyToOne
     @JoinColumn(name = "item_id", nullable = false)

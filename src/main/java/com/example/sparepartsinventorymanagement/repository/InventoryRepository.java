@@ -21,10 +21,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     List<Inventory> findAllByWarehouseId(Long warehouseId);
     @Query("SELECT " +
             "i.item.id AS itemId, " +
-            "SUM(i.openingStockQuantity) AS openingStockQuantitySum, " +
-            "SUM(i.openingStockValue) AS openingStockValueSum, " +
-            "SUM(i.closingStockQuantity) AS closingStockQuantitySum, " +
-            "SUM(i.closingStockValue) AS closingStockValueSum, " +
+
             "SUM(i.inboundQuantity) AS inboundQuantitySum, " +
             "SUM(i.inboundValue) AS inboundValueSum, " +
             "SUM(i.outboundQuantity) AS outboundQuantitySum, " +

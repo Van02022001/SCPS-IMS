@@ -41,7 +41,7 @@ public class ItemMovement {
     private Location fromLocation;
 
     @ManyToOne
-    @JoinColumn(name = "to_location_id", nullable = false)
+    @JoinColumn(name = "to_location_id")
     private Location toLocation;
 
     @ManyToOne

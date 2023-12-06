@@ -15,9 +15,7 @@ public class CustomerRequestReceiptDetailForm {
     @Min(value = 0, message = "Quantity must be non-negative")
     private int quantity;
 
-    private Long unitId;
-    @Min(value = 0, message = "Unit price must be non-negative")
-    private double price;
+
 
 
 

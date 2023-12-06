@@ -11,7 +11,8 @@ import java.util.List;
 @AllArgsConstructor
 public class CustomerRequestReceiptForm {
     private Long customerId;
+    private Long warehouseId;
+    private Long inventoryStaff;
     private String note;
-    private Long managerId;
     private List<CustomerRequestReceiptDetailForm> details;
 }

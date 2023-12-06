@@ -90,17 +90,6 @@ public class User {
     @OneToMany(mappedBy = "lastModifiedBy")
     private Set<Receipt> updatedReceipts;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "createdRequestBy")
-    private Set<CustomerRequestReceipt> createdCustomerRequestReceipts;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "approvedRequestBy")
-    private Set<CustomerRequestReceipt> approvedCustomerRequestReceipts;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "completedRequestBy")
-    private Set<CustomerRequestReceipt> completedCustomerRequestReceipts;
 
     @ManyToOne
     @JoinColumn(name = "warehouse_id")

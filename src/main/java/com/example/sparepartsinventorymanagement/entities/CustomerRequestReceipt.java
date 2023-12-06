@@ -1,47 +1,36 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.example.sparepartsinventorymanagement.audit.Auditable;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 import java.util.Set;
 
 @Entity
-@Builder
+@SuperBuilder
 @AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
 @Table(name="customer_request_recipt")
-public class CustomerRequestReceipt {
+public class CustomerRequestReceipt extends Auditable<User> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="customer_request_id")
     private Long id;
 
+    @Column(name = "code", nullable = false, unique = true)
+    private String code;
 
     @Column(name = "note")
     private String note;
-
-    @Column(name = "total_price")
-    private double totalPrice;
 
 
     @Column(name = "total_quantity")
     private int totalQuantity;
 
-    @ManyToOne
-    @JoinColumn(name = "created_by", nullable = false)
-    private User createdRequestBy;
-
-    @ManyToOne
-    @JoinColumn(name = "approved_by")
-    private User approvedRequestBy;
-
-    @ManyToOne
-    @JoinColumn(name = "completed_by")
-    private User completedRequestBy;
 
 
     @OneToMany(mappedBy = "customerRequestReceipt", cascade =CascadeType.ALL, orphanRemoval = true)
@@ -59,5 +48,9 @@ public class CustomerRequestReceipt {
 
     @OneToMany(mappedBy = "customerRequestReceipt")
     private Set<Receipt> receipts;
+
+    public CustomerRequestReceipt() {
+        // Constructor mặc định cần thiết cho JPA
+    }
 
 }

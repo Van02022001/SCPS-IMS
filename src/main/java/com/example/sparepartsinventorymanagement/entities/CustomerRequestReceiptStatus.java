@@ -8,4 +8,5 @@ public enum CustomerRequestReceiptStatus {
     Rejected, // từ chối
 
     Canceled, // Hủy bỏ
+    IN_PROGRESS
 }

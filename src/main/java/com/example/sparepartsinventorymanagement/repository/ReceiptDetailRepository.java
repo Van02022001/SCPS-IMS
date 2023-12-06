@@ -1,7 +1,9 @@
 package com.example.sparepartsinventorymanagement.repository;
 
+import com.example.sparepartsinventorymanagement.entities.Item;
 import com.example.sparepartsinventorymanagement.entities.Receipt;
 import com.example.sparepartsinventorymanagement.entities.ReceiptDetail;
+import com.example.sparepartsinventorymanagement.entities.ReceiptType;
 import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,6 +22,8 @@ public interface ReceiptDetailRepository extends JpaRepository<ReceiptDetail, Lo
 
     List<ReceiptDetail> findByItemId(Long itemId);
 
+    @Query("SELECT rd FROM ReceiptDetail rd WHERE rd.item = :item AND rd.receipt.type = :receiptType")
+    List<ReceiptDetail> findByItemAndReceiptType(@Param("item") Item item, @Param("receiptType") ReceiptType receiptType);
 
 
 }

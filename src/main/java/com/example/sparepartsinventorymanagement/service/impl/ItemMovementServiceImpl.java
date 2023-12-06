@@ -62,9 +62,7 @@ public class ItemMovementServiceImpl implements ItemMovementService {
         Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, user.getWarehouse()).orElseThrow(
                 ()-> new NotFoundException("Inventory not found")
         );
-        if(request.getQuantity() > inventory.getClosingStockQuantity()){
-            throw new InvalidResourceException("Quantity move is big");
-        }
+
         if(item.getLocations().isEmpty()){
             throw new InvalidResourceException("Item has not any location");
         }

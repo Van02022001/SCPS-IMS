@@ -93,10 +93,7 @@ public class InventoryServiceImpl implements InventoryService {
             dto.setItemId(itemId);
             dto.setItemName(inventory.getItem().getSubCategory().getName());
 
-            dto.setOpeningStockQuantity(dto.getOpeningStockQuantity() + inventory.getOpeningStockQuantity());
-            dto.setOpeningStockValue(dto.getOpeningStockValue() + inventory.getOpeningStockValue());
-            dto.setClosingStockQuantity(dto.getClosingStockQuantity() + inventory.getClosingStockQuantity());
-            dto.setClosingStockValue(dto.getClosingStockValue() + inventory.getClosingStockValue());
+
             dto.setInboundQuantity(dto.getInboundQuantity() + inventory.getInboundQuantity());
             dto.setInboundValue(dto.getInboundValue() + inventory.getInboundValue());
             dto.setOutboundQuantity(dto.getOutboundQuantity() + inventory.getOutboundQuantity());
@@ -174,7 +171,7 @@ public class InventoryServiceImpl implements InventoryService {
         return inventories.stream()
                 .collect(Collectors.groupingBy(
                         inventory -> inventory.getItem().getId(),
-                        Collectors.summingInt(Inventory::getClosingStockQuantity)
+                        Collectors.summingInt(Inventory::getTotalQuantity)
                 ));
     }
 

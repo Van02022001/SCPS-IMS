@@ -1,23 +1,23 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.example.sparepartsinventorymanagement.audit.Auditable;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Entity
-@Builder
+@SuperBuilder
 @AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
 @Table(name="customer_request_recipt_detail")
-public class CustomerRequestReceiptDetail {
+public class CustomerRequestReceiptDetail extends Auditable<User> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="customer_request_detail_id")
     private Long id;
 
-    @Column(name = "price")
-    private double price;
+
 
     @Column(name = "quantity")
     private int quantity;
@@ -25,8 +25,6 @@ public class CustomerRequestReceiptDetail {
     @Column(name = "unit_name")
     private String unitName;
 
-    @Column(name = "total_price")
-    private double totalPrice;
 
     @ManyToOne
     @JoinColumn(name = "customer_request_id", nullable = false)
@@ -37,4 +35,7 @@ public class CustomerRequestReceiptDetail {
     @JoinColumn(name = "item_id", nullable = false)
     private Item items;
 
+    public CustomerRequestReceiptDetail() {
+        // Constructor mặc định cần thiết cho JPA
+    }
 }

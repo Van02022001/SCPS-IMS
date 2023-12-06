@@ -425,8 +425,15 @@ public class ItemServiceImpl implements ItemService {
                 if(location.getItem_quantity() <= 0){
                     throw new InvalidResourceException("Số lượng sản phầm không đúng, nhỏ hơn hoặc bằng 0.");
                 }
+
                 if(Objects.equals(location.getItem().getId(), receiptDetail.getItem().getId())){
+                    if(location.getItem_quantity() < request.getQuantity()){
+                        throw new InvalidResourceException("Số lượng sản phẩm trong vị trí không đủ để xuất.");
+                    }
                     location.setItem_quantity(location.getItem_quantity() - request.getQuantity());
+                    if(location.getItem_quantity()<=0){
+                        location.setItem(null);
+                    }
                 }else{
                     throw new InvalidResourceException("Vị trí đã tồn tại sản phẩm khác.");
                 }

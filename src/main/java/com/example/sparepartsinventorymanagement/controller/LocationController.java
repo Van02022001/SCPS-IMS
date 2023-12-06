@@ -1,10 +1,8 @@
 package com.example.sparepartsinventorymanagement.controller;
 
 import com.example.sparepartsinventorymanagement.dto.request.LocationFormRequest;
-import com.example.sparepartsinventorymanagement.dto.request.LocationTagRequest;
 import com.example.sparepartsinventorymanagement.dto.response.ItemLocationsDTO;
 import com.example.sparepartsinventorymanagement.dto.response.LocationDTO;
-import com.example.sparepartsinventorymanagement.dto.response.LocationTagDTO;
 import com.example.sparepartsinventorymanagement.service.impl.LocationServiceImpl;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import io.swagger.v3.oas.annotations.Operation;

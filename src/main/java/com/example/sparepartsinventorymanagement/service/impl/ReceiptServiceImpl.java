@@ -1019,34 +1019,7 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
     }
 
 
-//    private Inventory updateInventoryForOutbound(Item item, int shippedQuantity, double averagePrice, Long warehouseId) {
-//        Warehouse warehouse = warehouseRepository.findById(warehouseId)
-//                .orElseThrow(() -> new NotFoundException("Warehouse not found"));
-//
-//        Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, warehouse)
-//                .orElseThrow(() -> new NotFoundException("Inventory not found for this item in the warehouse"));
-//        averagePrice = calculateAveragePrice(item);
-//        // Tính toán giá trị tổng cộng mới và số lượng mới sau khi xuất
-//        double newOutboundValue = averagePrice * shippedQuantity;
-//
-//        inventory.setOutboundQuantity(inventory.getOutboundQuantity() + shippedQuantity);
-//        inventory.setTotalQuantity(inventory.getTotalQuantity() - shippedQuantity);
-//        inventory.setOutboundValue(inventory.getOutboundValue() + newOutboundValue);
-//        inventory.setTotalValue(inventory.getTotalValue() - newOutboundValue);  // Tổng giá trị tồn kho sau khi xuất
-//        inventory.setAvailable(inventory.getAvailable()-shippedQuantity);
-//        inventoryRepository.save(inventory);
-//
-//        // Updating the total quantity of the item
-//        int currentQuantity = item.getQuantity();
-//        if (currentQuantity < shippedQuantity) {
-//            throw new IllegalStateException("Cannot ship more than the available item quantity");
-//        }
-//        item.setQuantity(currentQuantity - shippedQuantity); // Update the item's quantity
-//
-//        itemRepository.save(item); // Save the updated item
-//
-//        return inventory;
-//    }
+
 
     private double calculateAveragePrice(Item item) {
         // Fetch the current price from Pricing

@@ -16,6 +16,7 @@ import com.example.sparepartsinventorymanagement.service.ReceiptService;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReceiptServiceImpl implements ReceiptService {
 
     private final ReceiptRepository receiptRepository;
@@ -703,6 +705,15 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         int requestedQuantity = requestDetail.getQuantity();
         int actualQuantity = actualQuantities.getOrDefault(item.getId(), requestedQuantity);
 
+        // Kiểm tra nếu actualQuantity lớn hơn totalQuantity trong Inventory
+        Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, savedExportReceipt.getWarehouse())
+                .orElseThrow(() -> new NotFoundException("Inventory not found"));
+        if (actualQuantity > inventory.getTotalQuantity()) {
+            throw new IllegalStateException("Actual quantity is greater than total quantity in Inventory for item with ID " + item.getId());
+        }
+
+
+
         double unitPrice = item.getPricing().getPrice();
         double totalPriceForItem = unitPrice * actualQuantity;
 
@@ -729,6 +740,8 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         detailResponses.add(detailResponse);
 
         //updateInventoryForOutbound(item, actualQuantity, unitPrice, customerRequestReceipt.getLastModifiedBy().getWarehouse().getId());
+
+        updateInventoryForOutbound(item, actualQuantity, unitPrice, savedExportReceipt.getWarehouse().getId());
     }
 
     savedExportReceipt.setTotalPrice(totalExportPrice);
@@ -1006,34 +1019,34 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
     }
 
 
-    private Inventory updateInventoryForOutbound(Item item, int shippedQuantity, double averagePrice, Long warehouseId) {
-        Warehouse warehouse = warehouseRepository.findById(warehouseId)
-                .orElseThrow(() -> new NotFoundException("Warehouse not found"));
-
-        Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, warehouse)
-                .orElseThrow(() -> new NotFoundException("Inventory not found for this item in the warehouse"));
-        averagePrice = calculateAveragePrice(item);
-        // Tính toán giá trị tổng cộng mới và số lượng mới sau khi xuất
-        double newOutboundValue = averagePrice * shippedQuantity;
-
-        inventory.setOutboundQuantity(inventory.getOutboundQuantity() + shippedQuantity);
-        inventory.setTotalQuantity(inventory.getTotalQuantity() - shippedQuantity);
-        inventory.setOutboundValue(inventory.getOutboundValue() + newOutboundValue);
-        inventory.setTotalValue(inventory.getTotalValue() - newOutboundValue);  // Tổng giá trị tồn kho sau khi xuất
-        inventory.setAvailable(inventory.getAvailable()-shippedQuantity);
-        inventoryRepository.save(inventory);
-
-        // Updating the total quantity of the item
-        int currentQuantity = item.getQuantity();
-        if (currentQuantity < shippedQuantity) {
-            throw new IllegalStateException("Cannot ship more than the available item quantity");
-        }
-        item.setQuantity(currentQuantity - shippedQuantity); // Update the item's quantity
-
-        itemRepository.save(item); // Save the updated item
-
-        return inventory;
-    }
+//    private Inventory updateInventoryForOutbound(Item item, int shippedQuantity, double averagePrice, Long warehouseId) {
+//        Warehouse warehouse = warehouseRepository.findById(warehouseId)
+//                .orElseThrow(() -> new NotFoundException("Warehouse not found"));
+//
+//        Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, warehouse)
+//                .orElseThrow(() -> new NotFoundException("Inventory not found for this item in the warehouse"));
+//        averagePrice = calculateAveragePrice(item);
+//        // Tính toán giá trị tổng cộng mới và số lượng mới sau khi xuất
+//        double newOutboundValue = averagePrice * shippedQuantity;
+//
+//        inventory.setOutboundQuantity(inventory.getOutboundQuantity() + shippedQuantity);
+//        inventory.setTotalQuantity(inventory.getTotalQuantity() - shippedQuantity);
+//        inventory.setOutboundValue(inventory.getOutboundValue() + newOutboundValue);
+//        inventory.setTotalValue(inventory.getTotalValue() - newOutboundValue);  // Tổng giá trị tồn kho sau khi xuất
+//        inventory.setAvailable(inventory.getAvailable()-shippedQuantity);
+//        inventoryRepository.save(inventory);
+//
+//        // Updating the total quantity of the item
+//        int currentQuantity = item.getQuantity();
+//        if (currentQuantity < shippedQuantity) {
+//            throw new IllegalStateException("Cannot ship more than the available item quantity");
+//        }
+//        item.setQuantity(currentQuantity - shippedQuantity); // Update the item's quantity
+//
+//        itemRepository.save(item); // Save the updated item
+//
+//        return inventory;
+//    }
 
     private double calculateAveragePrice(Item item) {
         // Fetch the current price from Pricing
@@ -1100,6 +1113,42 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         // Tính và trả về giá mua trung bình có trọng số
         return totalQuantity > 0 ? totalWeightedPrice / totalQuantity : 0;
     }
+
+
+
+    private void updateInventoryForOutbound(Item item, int quantity, double unitPrice, Long warehouseId) {
+
+        Warehouse warehouse = warehouseRepository.findById(warehouseId).orElseThrow(() -> new NotFoundException("Warehouse not found"));
+        // Tìm kiếm Inventory hoặc tạo mới nếu không tồn tại
+        Optional<Inventory> optionalInventory = inventoryRepository.findByItemAndWarehouse(item, warehouse);
+        Inventory inventory;
+
+        if (optionalInventory.isPresent()) {
+            inventory = optionalInventory.get();
+        } else {
+
+            inventory = new Inventory();
+            inventory.setItem(item);
+            inventory.setWarehouse(warehouseRepository.findById(warehouseId).orElse(null));
+
+        }
+
+        // Cập nhật thông tin inventory
+        int currentOutboundQuantity = inventory.getOutboundQuantity();
+        double currentOutboundValue = inventory.getOutboundValue();
+        double currentTotalValue = inventory.getTotalValue();
+
+        // Cập nhật outboundQuantity, outboundValue và totalValue
+        inventory.setOutboundQuantity(currentOutboundQuantity + quantity);
+        inventory.setOutboundValue(currentOutboundValue + (unitPrice * quantity));
+        inventory.setAvailable(inventory.getAvailable() - quantity);
+        inventory.setTotalQuantity(inventory.getTotalQuantity() - quantity);
+        inventory.setTotalValue(currentTotalValue - (unitPrice * quantity));
+
+        // Lưu thông tin inventory vào cơ sở dữ liệu
+        inventoryRepository.save(inventory);
+    }
+
 
 
 

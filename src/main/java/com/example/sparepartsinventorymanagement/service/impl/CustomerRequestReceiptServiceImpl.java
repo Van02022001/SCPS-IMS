@@ -46,6 +46,7 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
     private final CustomerRequestReceiptDetailRepository customerRequestReceiptDetailRepository;
     private final NotificationService notificationService;
     private final WarehouseRepository warehouseRepository;
+    private final InventoryRepository inventoryRepository;
 
     @Override
     public CustomerRequestReceiptDTO createCustomerRequestReceipt(CustomerRequestReceiptForm form) {
@@ -85,10 +86,16 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
         for(CustomerRequestReceiptDetailForm detailForm : form.getDetails()){
             Item item = itemRepository.findById(detailForm.getItemId())
                     .orElseThrow(() -> new NotFoundException("Item not found"));
+
+            // Tìm kiếm thông tin tồn kho
+            Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, savedReceipt.getWarehouse())
+                    .orElseThrow(() -> new NotFoundException("Inventory not found"));
+            int requestedQuantity = detailForm.getQuantity();
+            int actualQuantity = Math.min(requestedQuantity, inventory.getTotalQuantity()); // Lấy giá trị nhỏ hơn hoặc bằng số tồn kho
             CustomerRequestReceiptDetail requestReceiptDetail = CustomerRequestReceiptDetail.builder()
                     .items(item)
                     .customerRequestReceipt(savedReceipt)
-                    .quantity(detailForm.getQuantity())
+                    .quantity(actualQuantity)
                     .unitName(item.getSubCategory().getUnit().getName())
                     .createdBy(getCurrentAuthenticatedUser())
                     .lastModifiedBy(getCurrentAuthenticatedUser())

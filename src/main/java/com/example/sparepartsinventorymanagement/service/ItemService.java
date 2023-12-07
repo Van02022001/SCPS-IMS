@@ -3,7 +3,6 @@ package com.example.sparepartsinventorymanagement.service;
 import com.example.sparepartsinventorymanagement.dto.request.CreateItemLocationsFrom;
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateItemLocationAfterExportForm;
-import com.example.sparepartsinventorymanagement.dto.request.CheckItemLocationAfterUpdateForm;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PricingAuditDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
@@ -31,5 +30,5 @@ public interface ItemService {
     ItemDTO createItemLocations(Long id, CreateItemLocationsFrom form);
     ItemDTO updateItemLocationAfterExport(UpdateItemLocationAfterExportForm form);
 
-    boolean checkUpdateItemLocationAfterUpdate(CheckItemLocationAfterUpdateForm form);
+    boolean checkUpdateItemLocationAfterUpdate(Long receiptId);
 }

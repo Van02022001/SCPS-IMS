@@ -255,11 +255,9 @@ public class ItemController {
 
     }
     @Operation(summary = "For check item import/export by receipt detail")
-    @GetMapping(value = "/item-locations/examination", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> checkItemLocationAfterUpdate(
-            @Valid @RequestBody CheckItemLocationAfterUpdateForm form
-    ) {
-        boolean res = itemService.checkUpdateItemLocationAfterUpdate(form);
+    @GetMapping(value = "/item-locations/{receiptId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> checkItemLocationAfterUpdate(@PathVariable  Long receiptId) {
+        boolean res = itemService.checkUpdateItemLocationAfterUpdate(receiptId);
         if(!res){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                     HttpStatus.BAD_REQUEST.toString(),

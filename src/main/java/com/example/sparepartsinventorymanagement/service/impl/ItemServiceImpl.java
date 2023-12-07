@@ -464,8 +464,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public boolean checkUpdateItemLocationAfterUpdate(CheckItemLocationAfterUpdateForm form) {
-        Receipt receipt = receiptRepository.findById(form.getReceipt_id()).orElseThrow(
+    public boolean checkUpdateItemLocationAfterUpdate(Long receiptId) {
+        Receipt receipt = receiptRepository.findById(receiptId).orElseThrow(
                 ()-> new NotFoundException("Không tìm thấy phiếu.")
         );
         int count = 0;

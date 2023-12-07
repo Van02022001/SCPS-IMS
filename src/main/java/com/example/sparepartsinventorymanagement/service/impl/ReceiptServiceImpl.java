@@ -278,7 +278,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         return response;
     }
     @Override
-    //@Transactional
+    @Transactional
     public ImportRequestReceiptResponse createImportRequestReceipt(ImportRequestReceiptForm importRequestReceiptForm) {
 
         // Check warehouse
@@ -309,7 +309,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         // Calculate total quantity and total price
         int totalQuantity = 0;
-        double totalPrice = 0;
+
         List<ReceiptDetail> receiptDetails = new ArrayList<>();
 
         for (ImportRequestReceiptDetailForm detailForm : importRequestReceiptForm.getDetails()) {
@@ -317,68 +317,19 @@ public class ReceiptServiceImpl implements ReceiptService {
             Item item = itemRepository.findById(detailForm.getItemId())
                     .orElseThrow(() -> new NotFoundException("Item not found"));
 
-            // Get unit information
-            Unit unit = unitRepository.findById(detailForm.getUnitId())
-                    .orElseThrow(() -> new NotFoundException("Unit not found"));
-
-            // Check if there is an existing PurchasePrice for this Item
-            PurchasePrice existingPrice = purchasePriceRepository.findByItem(item);
-
-            // Capture old price for auditing
-            double oldPrice = (existingPrice != null) ? existingPrice.getPrice() : 0.0;
-
-            if (existingPrice != null) {
-                if (existingPrice.getPrice() != detailForm.getUnitPrice()) {
-                    // Cập nhật giá và tạo bản ghi kiểm toán
-                    existingPrice.setPrice(detailForm.getUnitPrice());
-                    purchasePriceRepository.save(existingPrice);
-
-                    PurchasePriceAudit priceAudit = PurchasePriceAudit.builder()
-                            .changedBy(getCurrentAuthenticatedUser())
-                            .changeDate(new Date())
-                            .oldPrice(oldPrice)
-                            .newPrice(detailForm.getUnitPrice())
-                            .purchasePrice(existingPrice)
-                            .build();
-                    purchasePriceAuditRepository.save(priceAudit);
-                }
-            } else {
-                // Tạo mới PurchasePrice và PurchasePriceAudit
-                PurchasePrice newPrice = PurchasePrice.builder()
-                        .item(item)
-                        .price(detailForm.getUnitPrice())
-                        .effectiveDate(new Date())
-                        .build();
-                purchasePriceRepository.save(newPrice);
-
-                PurchasePriceAudit priceAudit = PurchasePriceAudit.builder()
-                        .changedBy(getCurrentAuthenticatedUser())
-                        .changeDate(new Date())
-                        .oldPrice(0.0)
-                        .newPrice(detailForm.getUnitPrice())
-                        .purchasePrice(newPrice)
-                        .build();
-                purchasePriceAuditRepository.save(priceAudit);
-            }
-
-
-
             // Create receipt detail
             ReceiptDetail receiptDetail = ReceiptDetail.builder()
                     .item(item)
                     .quantity(detailForm.getQuantity())
-                    .unitName(unit.getName())
+                    .unitName(item.getSubCategory().getUnit().getName())
                     .receipt(savedReceipt)
                     .build();
             receiptDetails.add(receiptDetail);
 
             totalQuantity += detailForm.getQuantity();
-            totalPrice += receiptDetail.getTotalPrice();
+
         }
-
         newReceipt.setTotalQuantity(totalQuantity);
-        newReceipt.setTotalPrice(totalPrice);
-
         // Save the receipt and receipt details
         receiptDetailRepository.saveAll(receiptDetails);
 
@@ -405,7 +356,6 @@ public class ReceiptServiceImpl implements ReceiptService {
         response.setCreatedAt(savedReceipt.getCreationDate());
         response.setUpdatedAt(savedReceipt.getLastModifiedDate());
         response.setTotalQuantity(totalQuantity);
-        response.setTotalPrice(totalPrice);
 
         List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
                 .map(detail -> {
@@ -418,12 +368,6 @@ public class ReceiptServiceImpl implements ReceiptService {
                     }
                     detailResponse.setQuantity(detail.getQuantity());
                     detailResponse.setUnitName(detail.getUnitName());
-//                    if (detail.getPurchasePrice() != null) {
-//                        detailResponse.setPrice(detail.getPurchasePrice().getPrice());
-//                    } else {
-//                        detailResponse.setPrice(0.0); // Hoặc xử lý khác
-//                    }
-                    detailResponse.setTotalPrice(detail.getTotalPrice());
                     return detailResponse;
                 })
                 .collect(Collectors.toList());
@@ -431,6 +375,160 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         return response;
     }
+//    @Override
+//    @Transactional
+//    public ImportRequestReceiptResponse createImportRequestReceipt(ImportRequestReceiptForm importRequestReceiptForm) {
+//
+//        // Check warehouse
+//        List<Warehouse> warehouseList = warehouseRepository.findAll();
+//        Warehouse warehouse = warehouseList.stream()
+//                .filter( warehouse1 -> warehouse1.getId().equals(importRequestReceiptForm.getWarehouseId()))
+//                .findFirst()
+//                .orElseThrow(() -> new NotFoundException("Warehouse not found!"));
+//
+//
+//        // Check inventory staff
+//        List<User> inventoryStaffList = userRepository.findAllByWarehouseAndRoleName(warehouse, "INVENTORY_STAFF");
+//        User inventoryStaff = inventoryStaffList.stream()
+//                .filter(user -> user.getId().equals(importRequestReceiptForm.getInventoryStaffId()))
+//                .findFirst()
+//                .orElseThrow(() -> new NotFoundException("Inventory Staff not found!"));
+//
+//        // Create a new receipt
+//        Receipt newReceipt = Receipt.builder()
+//                .code(generateAndValidateUniqueCode())
+//                .type(ReceiptType.PHIEU_YEU_CAU_NHAP_KHO)
+//                .status(ReceiptStatus.Pending_Approval)
+//                .description(importRequestReceiptForm.getDescription())
+//                .createdBy(getCurrentAuthenticatedUser())
+//                .warehouse(warehouse)
+//                .build();
+//        Receipt savedReceipt = receiptRepository.save(newReceipt);
+//
+//        // Calculate total quantity and total price
+//        int totalQuantity = 0;
+//        double totalPrice = 0;
+//        List<ReceiptDetail> receiptDetails = new ArrayList<>();
+//
+//        for (ImportRequestReceiptDetailForm detailForm : importRequestReceiptForm.getDetails()) {
+//            // Get product information
+//            Item item = itemRepository.findById(detailForm.getItemId())
+//                    .orElseThrow(() -> new NotFoundException("Item not found"));
+//
+//            // Get unit information
+//            Unit unit = unitRepository.findById(detailForm.getUnitId())
+//                    .orElseThrow(() -> new NotFoundException("Unit not found"));
+//
+//            // Check if there is an existing PurchasePrice for this Item
+//            PurchasePrice existingPrice = purchasePriceRepository.findByItem(item);
+//
+//            // Capture old price for auditing
+//            double oldPrice = (existingPrice != null) ? existingPrice.getPrice() : 0.0;
+//
+//            if (existingPrice != null) {
+//                if (existingPrice.getPrice() != detailForm.getUnitPrice()) {
+//                    // Cập nhật giá và tạo bản ghi kiểm toán
+//                    existingPrice.setPrice(detailForm.getUnitPrice());
+//                    purchasePriceRepository.save(existingPrice);
+//
+//                    PurchasePriceAudit priceAudit = PurchasePriceAudit.builder()
+//                            .changedBy(getCurrentAuthenticatedUser())
+//                            .changeDate(new Date())
+//                            .oldPrice(oldPrice)
+//                            .newPrice(detailForm.getUnitPrice())
+//                            .purchasePrice(existingPrice)
+//                            .build();
+//                    purchasePriceAuditRepository.save(priceAudit);
+//                }
+//            } else {
+//                // Tạo mới PurchasePrice và PurchasePriceAudit
+//                PurchasePrice newPrice = PurchasePrice.builder()
+//                        .item(item)
+//                        .price(detailForm.getUnitPrice())
+//                        .effectiveDate(new Date())
+//                        .build();
+//                purchasePriceRepository.save(newPrice);
+//
+//                PurchasePriceAudit priceAudit = PurchasePriceAudit.builder()
+//                        .changedBy(getCurrentAuthenticatedUser())
+//                        .changeDate(new Date())
+//                        .oldPrice(0.0)
+//                        .newPrice(detailForm.getUnitPrice())
+//                        .purchasePrice(newPrice)
+//                        .build();
+//                purchasePriceAuditRepository.save(priceAudit);
+//            }
+//
+//
+//
+//            // Create receipt detail
+//            ReceiptDetail receiptDetail = ReceiptDetail.builder()
+//                    .item(item)
+//                    .quantity(detailForm.getQuantity())
+//                    .unitName(unit.getName())
+//                    .receipt(savedReceipt)
+//                    .build();
+//            receiptDetails.add(receiptDetail);
+//
+//            totalQuantity += detailForm.getQuantity();
+//            totalPrice += receiptDetail.getTotalPrice();
+//        }
+//
+//        newReceipt.setTotalQuantity(totalQuantity);
+//        newReceipt.setTotalPrice(totalPrice);
+//
+//        // Save the receipt and receipt details
+//        receiptDetailRepository.saveAll(receiptDetails);
+//
+//        // Send a notification
+//        notificationService.createAndSendNotification(
+//                SourceType.RECEIPT,
+//                EventType.REQUESTED,
+//                savedReceipt.getId(),
+//                inventoryStaff.getId(),
+//                NotificationType.YEU_CAU_NHAP_KHO,
+//                "Yêu cầu nhập kho #" + savedReceipt.getId() + " đã được tạo."
+//        );
+//
+//        // Create response
+//        ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+//        response.setWarehouseId(savedReceipt.getWarehouse().getId());
+//        response.setId(savedReceipt.getId());
+//        response.setCode(savedReceipt.getCode());
+//        response.setType(savedReceipt.getType());
+//        response.setStatus(savedReceipt.getStatus());
+//        response.setDescription(savedReceipt.getDescription());
+//        response.setCreatedBy(savedReceipt.getCreatedBy().getLastName() + " " + savedReceipt.getCreatedBy().getMiddleName() + " " + savedReceipt.getCreatedBy().getFirstName());
+//        response.setLastModifiedBy(savedReceipt.getLastModifiedBy() != null ? savedReceipt.getLastModifiedBy().getLastName() + " " + savedReceipt.getLastModifiedBy().getLastName() + " " + savedReceipt.getLastModifiedBy().getFirstName() : null);
+//        response.setCreatedAt(savedReceipt.getCreationDate());
+//        response.setUpdatedAt(savedReceipt.getLastModifiedDate());
+//        response.setTotalQuantity(totalQuantity);
+//        response.setTotalPrice(totalPrice);
+//
+//        List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+//                .map(detail -> {
+//                    ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+//                    detailResponse.setId(detail.getId());
+//                    if (detail.getItem() != null && detail.getItem().getSubCategory() != null) {
+//                        detailResponse.setItemName(detail.getItem().getSubCategory().getName());
+//                    } else {
+//                        detailResponse.setItemName("N/A"); // Hoặc xử lý khác
+//                    }
+//                    detailResponse.setQuantity(detail.getQuantity());
+//                    detailResponse.setUnitName(detail.getUnitName());
+//                    if (detail.getPurchasePrice() != null) {
+//                        detailResponse.setPrice(detail.getPurchasePrice().getPrice());
+//                    } else {
+//                        detailResponse.setPrice(0.0); // Hoặc xử lý khác
+//                    }
+//                    detailResponse.setTotalPrice(detail.getTotalPrice());
+//                    return detailResponse;
+//                })
+//                .collect(Collectors.toList());
+//        response.setDetails(detailResponses);
+//
+//        return response;
+//    }
     @Override
     //@Transactional
     public ImportRequestReceiptResponse updateImportRequestReceipt(Long id, UpdateImportRequestReceipt importRequestReceiptForm) {
@@ -631,19 +729,22 @@ public class ReceiptServiceImpl implements ReceiptService {
             int requiredQuantity = requestDetail.getQuantity();
             int actualQuantity = actualQuantities.getOrDefault(requestDetail.getItem().getId(), requiredQuantity);
             int discrepancyQuantity = actualQuantity - requiredQuantity;
-            double actualPrice = calculateWeightedAveragePurchasePrice(requestDetail.getItem());
-            double totalPriceForDetail = actualPrice * actualQuantity;
+//            double actualPrice = calculateWeightedAveragePurchasePrice(requestDetail.getItem());
+//            double totalPriceForDetail = actualPrice * actualQuantity;
+            double unitPrice = requestDetail.getItem().getPurchasePrice().getPrice();
+            double totalPriceForItem = unitPrice * actualQuantity;
+
             ReceiptDetail actualDetail = ReceiptDetail.builder()
                     .receipt(savedReceipt)
                     .item(requestDetail.getItem())
                     .quantity(actualQuantity)
-                    .unitPrice(actualPrice)
-                    .totalPrice(totalPriceForDetail)
+                    .unitPrice(unitPrice)
+                    .totalPrice(totalPriceForItem)
                     .unitName(requestDetail.getUnitName())
                     .build();
             receiptDetailRepository.save(actualDetail);
 
-            totalActualPrice += totalPriceForDetail;
+            totalActualPrice += totalPriceForItem;
             totalActualQuantity += actualQuantity;
 
             ImportRequestReceiptDetailResponse detailResponse;
@@ -655,12 +756,18 @@ public class ReceiptServiceImpl implements ReceiptService {
                 detailResponse = buildImportRequestReceiptDetailResponse(actualDetail, actualQuantity, 0, null);
             }
             detailResponses.add(detailResponse);
-            updateInventoryInbound(requestDetail.getItem(), actualQuantity,  actualReceipt.getWarehouse().getId());
+
+            updateInventoryForInbound(requestDetail.getItem(),actualQuantity, unitPrice,  actualReceipt.getWarehouse().getId());
+
+
         }
 
         actualReceipt.setTotalPrice(totalActualPrice);
         actualReceipt.setTotalQuantity(totalActualQuantity);
         receiptRepository.save(actualReceipt);
+
+
+
 
 
         // Send notification
@@ -785,15 +892,16 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
             int requiredQuantity = detail.getQuantity();
             int actualQuantity = actualQuantities.getOrDefault(detail.getItem().getId(), requiredQuantity);
             int discrepancyQuantity = actualQuantity - requiredQuantity;
-            double actualPrice = calculateWeightedAveragePurchasePrice(detail.getItem());
-            double totalPriceForDetail = actualPrice * actualQuantity;
-
+//            double actualPrice = calculateWeightedAveragePurchasePrice(detail.getItem());
+//            double totalPriceForDetail = actualPrice * actualQuantity;
+            double unitPrice = detail.getItem().getPurchasePrice().getPrice();
+            double totalPriceForItem = unitPrice * actualQuantity;
             detail.setQuantity(actualQuantity);
-            detail.setUnitPrice(actualPrice);
-            detail.setTotalPrice(totalPriceForDetail);
+            detail.setUnitPrice(unitPrice);
+            detail.setTotalPrice(totalPriceForItem);
             receiptDetailRepository.save(detail);
 
-            totalUpdatedPrice += totalPriceForDetail;
+            totalUpdatedPrice += totalPriceForItem;
             totalUpdatedQuantity += actualQuantity;
 
             ImportRequestReceiptDetailResponse detailResponse;
@@ -805,7 +913,8 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                 detailResponse = buildImportRequestReceiptDetailResponse(detail, actualQuantity, 0, null);
             }
             detailResponses.add(detailResponse);
-            updateInventoryInbound(detail.getItem(), actualQuantity, existingReceipt.getWarehouse().getId());
+            updateInventoryForInbound(detail.getItem(),actualQuantity, unitPrice,  existingReceipt.getWarehouse().getId());
+
         }
 
         existingReceipt.setTotalPrice(totalUpdatedPrice);
@@ -971,122 +1080,6 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                 .build();
     }
 
-    private Inventory updateInventoryInbound(Item item, int receivedQuantity, Long warehouseId) {
-
-        Warehouse warehouse = warehouseRepository.findById(warehouseId)
-                .orElseThrow(() -> new NotFoundException("Warehouse not found"));
-
-        Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, warehouse)
-                .orElseGet(() -> {
-                   Inventory inventory1 = Inventory.builder()
-                           .item(item)
-                           .warehouse(warehouse)
-                           .inboundQuantity(0)
-                           .inboundQuantity(0)
-                           .outboundQuantity(0)
-                           .outboundValue(0)
-                           .discrepancyQuantity(0)
-                           .discrepancyValue(0)
-                           .totalQuantity(0)
-                           .totalValue(0)
-                           .build();
-                   return inventory1;
-                });
-
-
-        // Tính toán giá trị tổng cộng mới và số lượng mới
-        double averagePrice = calculateWeightedAveragePurchasePrice(item);
-
-        double newInboundValue = averagePrice * receivedQuantity;
-        double currentTotalValue = inventory.getTotalValue();
-
-
-        inventory.setInboundQuantity(inventory.getInboundQuantity() + receivedQuantity);
-        inventory.setTotalQuantity(inventory.getTotalQuantity() + receivedQuantity);
-        inventory.setInboundValue(inventory.getInboundValue() + newInboundValue);
-        inventory.setTotalValue(currentTotalValue + newInboundValue);
-        inventory.setAvailable(inventory.getAvailable()+receivedQuantity);
-
-        inventoryRepository.save(inventory);
-
-        // Updating the total quantity of the item
-        int currentQuantity = item.getQuantity(); // Assuming there is a getQuantity method in Item
-        item.setQuantity(currentQuantity + receivedQuantity); // Update the item's quantity
-        item.setStatus(ItemStatus.Active);
-        itemRepository.save(item); // Save the updated item
-
-        return inventory;
-    }
-
-
-
-
-    private double calculateAveragePrice(Item item) {
-        // Fetch the current price from Pricing
-        Pricing currentPricing = item.getPricing();
-        if (currentPricing == null) {
-            throw new IllegalStateException("Pricing information is not available for item id: " + item.getId());
-        }
-
-        double totalPrice = currentPricing.getPrice();
-        int totalPriceCount = 1; // Start with the current price as the initial purchase
-
-        // Fetch all pricing audits for this item and accumulate the total price and count
-        List<PricingAudit> pricingAudits = currentPricing.getPricingAudits();
-        for (PricingAudit audit : pricingAudits) {
-            totalPrice += audit.getNewPrice(); // Add the new price from each audit
-            totalPriceCount++; // Increment the purchase count
-        }
-
-        // Calculate and return the average price
-        return totalPrice / totalPriceCount;
-    }
-    private double calculateAveragePurchasePrice(Item item) {
-        // Lấy thông tin giá mua hiện tại từ PurchasePrice
-        PurchasePrice currentPurchasePrice = item.getPurchasePrice();
-        if (currentPurchasePrice == null) {
-            throw new IllegalStateException("PurchasePrice information is not available for item id: " + item.getId());
-        }
-
-        // Lấy tổng giá mua và số lần thay đổi giá từ PurchasePriceAudits
-        List<PurchasePriceAudit> purchasePriceAudits = currentPurchasePrice.getPurchasePriceAudits();
-        double totalPurchaseValue = currentPurchasePrice.getPrice(); // Bắt đầu với giá mua hiện tại
-        int totalPurchaseCount = 1; // Giả định có một lần mua với giá hiện tại
-
-        // Duyệt qua lịch sử thay đổi giá để cập nhật tổng giá và số lần mua
-        for (PurchasePriceAudit audit : purchasePriceAudits) {
-            totalPurchaseValue += audit.getNewPrice(); // Cộng dồn giá mua mới
-            totalPurchaseCount++; // Tăng số lần mua
-        }
-
-        // Tính và trả về giá mua trung bình cộng
-        return totalPurchaseValue / totalPurchaseCount;
-    }
-
-    private double calculateWeightedAveragePurchasePrice(Item item) {
-        // Lấy danh sách ReceiptDetails từ các Receipt có type là PHIEU_NHAP_KHO
-        List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByItemAndReceiptType(item, ReceiptType.PHIEU_YEU_CAU_NHAP_KHO);
-
-        double totalWeightedPrice = 0; // Tổng giá đã nhân với số lượng
-        int totalQuantity = 0; // Tổng số lượng mua vào
-
-        // Duyệt qua các ReceiptDetail để cập nhật tổng giá và số lượng
-        for (ReceiptDetail detail : receiptDetails) {
-            totalWeightedPrice += detail.getUnitPrice() * detail.getQuantity(); // Tính giá nhân với số lượng
-            totalQuantity += detail.getQuantity(); // Cập nhật tổng số lượng
-        }
-
-        // Thêm giá mua hiện tại vào tổng giá và số lượng
-        PurchasePrice currentPurchasePrice = item.getPurchasePrice();
-        if (currentPurchasePrice != null) {
-            totalWeightedPrice += currentPurchasePrice.getPrice() * item.getAvailable(); // Sử dụng số lượng hàng có sẵn
-            totalQuantity += item.getAvailable();
-        }
-
-        // Tính và trả về giá mua trung bình có trọng số
-        return totalQuantity > 0 ? totalWeightedPrice / totalQuantity : 0;
-    }
-
 
 
     private void updateInventoryForOutbound(Item item, int quantity, double unitPrice, Long warehouseId) {
@@ -1120,8 +1113,52 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
 
         // Lưu thông tin inventory vào cơ sở dữ liệu
         inventoryRepository.save(inventory);
+
+        int currentQuantity = item.getQuantity(); // Assuming there is a getQuantity method in Item
+        item.setQuantity(currentQuantity - quantity); // Update the item's quantity
+        itemRepository.save(item); // Save the updated item
+
     }
 
+
+    private void updateInventoryForInbound(Item item, int quantity, double unitPrice, Long warehouseId) {
+
+        Warehouse warehouse = warehouseRepository.findById(warehouseId).orElseThrow(() -> new NotFoundException("Warehouse not found"));
+        // Tìm kiếm Inventory hoặc tạo mới nếu không tồn tại
+        Optional<Inventory> optionalInventory = inventoryRepository.findByItemAndWarehouse(item, warehouse);
+        Inventory inventory;
+
+        if (optionalInventory.isPresent()) {
+            inventory = optionalInventory.get();
+        } else {
+
+            inventory = new Inventory();
+            inventory.setItem(item);
+            inventory.setWarehouse(warehouseRepository.findById(warehouseId).orElse(null));
+
+        }
+
+        // Cập nhật thông tin inventory
+        int currentInboundQuantity = inventory.getInboundQuantity();
+        double currentInboundValue = inventory.getInboundValue();
+        double currentTotalValue = inventory.getTotalValue();
+
+        // Cập nhật outboundQuantity, outboundValue và totalValue
+        inventory.setInboundQuantity(currentInboundQuantity + quantity);
+        inventory.setInboundValue(currentInboundValue + (unitPrice * quantity));
+        inventory.setAvailable(inventory.getAvailable() + quantity);
+        inventory.setTotalQuantity(inventory.getTotalQuantity() + quantity);
+        inventory.setTotalValue(currentTotalValue + (unitPrice * quantity));
+
+        // Lưu thông tin inventory vào cơ sở dữ liệu
+        inventoryRepository.save(inventory);
+
+        // Updating the total quantity of the item
+        int currentQuantity = item.getQuantity(); // Assuming there is a getQuantity method in Item
+        item.setQuantity(currentQuantity + quantity); // Update the item's quantity
+        item.setStatus(ItemStatus.Active);
+        itemRepository.save(item); // Save the updated item
+    }
 
 
 

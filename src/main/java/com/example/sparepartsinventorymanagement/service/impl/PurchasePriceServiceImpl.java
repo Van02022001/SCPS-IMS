@@ -28,7 +28,10 @@ import java.util.stream.Collectors;
 public class PurchasePriceServiceImpl implements PurchasePriceService {
 
     private final PurchasePriceRepository purchasePriceRepository;
+    private final PurchasePriceAuditRepository purchasePriceAuditRepository;
 
+
+    private final UserRepository userRepository;
 
 
     @Override
@@ -49,9 +52,52 @@ public class PurchasePriceServiceImpl implements PurchasePriceService {
         return response;
     }
 
+    @Override
+    public void createOrUpdatePurchasePrice(Item item, double unitPrice) {
+        // Check if there is an existing PurchasePrice for this Item
+        PurchasePrice existingPrice = purchasePriceRepository.findByItem(item);
+
+        // Capture old price for auditing
+        double oldPrice = (existingPrice != null) ? existingPrice.getPrice() : 0.0;
+
+        if (existingPrice != null) {
+            if (existingPrice.getPrice() != unitPrice) {
+                // Cập nhật giá và tạo bản ghi kiểm toán
+                existingPrice.setPrice(unitPrice);
+                purchasePriceRepository.save(existingPrice);
+
+                createPurchasePriceAudit(existingPrice, oldPrice, unitPrice);
+            }
+        } else {
+            // Tạo mới PurchasePrice và PurchasePriceAudit
+            PurchasePrice newPrice = PurchasePrice.builder()
+                    .item(item)
+                    .price(unitPrice)
+                    .effectiveDate(new Date())
+
+                    .build();
+            purchasePriceRepository.save(newPrice);
+
+            createPurchasePriceAudit(newPrice, 0.0, unitPrice);
+        }
+    }
+    private void createPurchasePriceAudit(PurchasePrice purchasePrice, double oldPrice, double newPrice) {
+        PurchasePriceAudit priceAudit = PurchasePriceAudit.builder()
+                .changedBy(getCurrentAuthenticatedUser())
+                .changeDate(new Date())
+                .oldPrice(oldPrice)
+                .newPrice(newPrice)
+                .purchasePrice(purchasePrice)
+                .changedBy(getCurrentAuthenticatedUser())
+                .build();
+        purchasePriceAuditRepository.save(priceAudit);
+    }
 
 
-
-
+    private User getCurrentAuthenticatedUser() {
+        // Logic to get the current authenticated user
+        return userRepository.findById(((Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+    }
 
 }

@@ -44,13 +44,6 @@ public class ReceiptDetail  extends Auditable<User> {
     @Column(name = "unit_price")
     private double unitPrice;
 
-//    @ManyToOne
-//    @JoinColumn(name = "purchase_price_id")
-//    private PurchasePrice purchasePrice;
-//
-//    @ManyToOne
-//    @JoinColumn(name = "pricing_id")
-//    private Pricing salePricice;
     @ManyToOne
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;

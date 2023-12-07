@@ -16,9 +16,7 @@ public class ImportRequestReceiptDetailForm {
     @Min(value = 0, message = "Quantity must be non-negative")
     private int quantity;
 
-    @Min(value = 0, message = "Unit price must be non-negative")
-    private double unitPrice;
 
-    private Long unitId;
+
     private String description;
 }

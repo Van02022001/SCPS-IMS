@@ -199,6 +199,50 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
 
         return response;
     }
+    @Override
+    public List<CustomerRequestReceiptDTO> getAllCustomerRequestReceipts() {
+
+
+        List<CustomerRequestReceipt> requestReceipts = customerRequestReceiptRepository.findAll();
+
+        return requestReceipts.stream()
+                .map(this::convertToCustomerRequestReceiptDTO)
+                .collect(Collectors.toList());
+    }
+
+    private CustomerRequestReceiptDTO convertToCustomerRequestReceiptDTO(CustomerRequestReceipt receipt) {
+        List<CustomerRequestReceiptDetail> receiptDetails = customerRequestReceiptDetailRepository.findByCustomerRequestReceiptId(receipt.getId());
+
+        List<CustomerRequestReceiptDetailDTO> detailDTOs = receiptDetails.stream().map(this::convertToCustomerRequestReceiptDetailDTO)
+                .collect(Collectors.toList());
+
+        User createdByUser = receipt.getCreatedBy();
+        User lastModifiedByUser = receipt.getLastModifiedBy();
+
+        return new CustomerRequestReceiptDTO(
+                receipt.getId(),
+                receipt.getCode(),
+                receipt.getCustomer().getName(),
+                receipt.getStatus(),
+                receipt.getNote(),
+                receipt.getTotalQuantity(),
+                detailDTOs,
+                createdByUser != null ? createdByUser.getLastName() + " " + createdByUser.getMiddleName() + " " + createdByUser.getFirstName() : null,
+                lastModifiedByUser != null ? lastModifiedByUser.getLastName() + " " + lastModifiedByUser.getLastName() + " " + lastModifiedByUser.getFirstName() : null,
+                receipt.getCreationDate(),
+                receipt.getLastModifiedDate()
+        );
+    }
+
+    private CustomerRequestReceiptDetailDTO convertToCustomerRequestReceiptDetailDTO(CustomerRequestReceiptDetail detail) {
+        return new CustomerRequestReceiptDetailDTO(
+                detail.getId(),
+                detail.getItems().getId(),
+                detail.getItems().getSubCategory().getName(),
+                detail.getQuantity(),
+                detail.getUnitName()
+        );
+    }
 
     private User getCurrentAuthenticatedUser() {
         // Logic to get the current authenticated user

@@ -2,6 +2,7 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.CreateCustomerForm;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateCustomerForm;
+import com.example.sparepartsinventorymanagement.dto.response.CustomerDTO;
 import com.example.sparepartsinventorymanagement.entities.Customer;
 import com.example.sparepartsinventorymanagement.entities.CustomerType;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
@@ -9,6 +10,7 @@ import com.example.sparepartsinventorymanagement.repository.CustomerRepository;
 import com.example.sparepartsinventorymanagement.service.CustomerService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -70,81 +73,57 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<?> getAllCustomers() {
+    public List<CustomerDTO> getAllCustomerDTOs() {
         List<Customer> customers = customerRepository.findAll();
-
-        if(!customers.isEmpty()){
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                    HttpStatus.OK.toString(), "Get list Customer successfully!", customers
-            ));
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-               HttpStatus.NOT_FOUND.toString(), "List customers is empty!", null
-        ));
+        return customers.stream().map(this::convertToCustomerDTO).collect(Collectors.toList());
     }
-
+    private CustomerDTO convertToCustomerDTO(Customer customer) {
+        CustomerDTO dto = new CustomerDTO();
+        dto.setCustomerId(customer.getId());
+        dto.setAddress(customer.getAddress());
+        dto.setCode(customer.getCode());
+        dto.setCreatedAt(customer.getCreatedAt());
+        dto.setDescription(customer.getDescription());
+        dto.setEmail(customer.getEmail());
+        dto.setName(customer.getName());
+        dto.setPhone(customer.getPhone());
+        dto.setStatus(customer.isStatus());
+        dto.setTaxCode(customer.getTaxCode());
+        dto.setCustomerType(customer.getType().toString());
+        dto.setUpdatedAt(customer.getUpdatedAt());
+        return dto;
+    }
     @Override
-    public ResponseEntity<?> getCustomerById(Long id) {
-        Optional<Customer> customers = customerRepository.findById(id);
-        if(!customers.isPresent()){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                    HttpStatus.NOT_FOUND.toString(), "Customer is not found!", customers
-            ));
-        }
+    public CustomerDTO  getCustomerById(Long id) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Customer not found with id: " + id));
 
-        return  ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Get customer successfully!", customers
-        ));
+        return convertToCustomerDTO(customer);
     }
-
     @Override
-    public ResponseEntity<?> updateCustomer(Long id, UpdateCustomerForm form) {
-        Optional<Customer> customers = customerRepository.findById(id);
-        if(!customers.isPresent()){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-                    HttpStatus.NOT_FOUND.toString(), "Customer is not found!", null
-            ));
-        }
-        if(form.getType() == null){
-            CustomerType[] types = CustomerType.values();
-            return ResponseEntity.badRequest().body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Please select a customer type!", types
-            ));
-        }
-        if (customerRepository.existsByEmail(form.getEmail())) {
-            return ResponseEntity.badRequest().body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Email already in use!", null));
-        }
+    @Transactional
+    public CustomerDTO updateCustomer(Long id, UpdateCustomerForm form) {
+        // Fetch the existing customer
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Customer not found with id: " + id));
 
-        if (customerRepository.existsByPhone(form.getPhone())) {
-            return ResponseEntity.badRequest().body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Phone number already in use!", null));
-        }
+        // Update the customer's fields
+        customer.setName(form.getName());
+        customer.setPhone(form.getPhone());
+        customer.setEmail(form.getEmail());
+        customer.setTaxCode(form.getTaxCode());
+        customer.setAddress(form.getAddress());
+        customer.setType(form.getType());
+        customer.setDescription(form.getDescription());
+        customer.setUpdatedAt(new Date()); // Assuming you want to set the update time
 
-        if (customerRepository.existsByTaxCode(form.getTaxCode())) {
-            return ResponseEntity.badRequest().body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Tax code already in use!", null));
-        }
+        // Save the updated customer
+        Customer updatedCustomer = customerRepository.save(customer);
 
-        Customer existingCustomer = customers.get();
-        existingCustomer.setName(form.getName());
-        existingCustomer.setPhone(form.getPhone());
-        existingCustomer.setEmail(form.getEmail());
-        existingCustomer.setTaxCode(form.getTaxCode());
-        existingCustomer.setAddress(form.getAddress());
-        existingCustomer.setType(form.getType());
-        existingCustomer.setDescription(form.getDescription());
-        existingCustomer.getCreatedAt();
-        existingCustomer.setUpdatedAt(new Date());
-        customerRepository.save(existingCustomer);
-
-        customerRepository.save(existingCustomer);
-
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-                HttpStatus.OK.toString(), "Updated customer successfully!", existingCustomer
-        ));
-
+        // Convert the updated entity to DTO and return it
+        return convertToCustomerDTO(updatedCustomer);
     }
+
 
     @Override
     public ResponseEntity<?> updateCustomerStatus(Long id) {

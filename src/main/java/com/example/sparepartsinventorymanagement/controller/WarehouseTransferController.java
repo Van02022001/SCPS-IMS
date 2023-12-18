@@ -2,9 +2,11 @@ package com.example.sparepartsinventorymanagement.controller;
 
 import com.example.sparepartsinventorymanagement.dto.request.TransferRequest;
 import com.example.sparepartsinventorymanagement.dto.request.TransferUpdateRequest;
+import com.example.sparepartsinventorymanagement.dto.response.TransferResult;
 import com.example.sparepartsinventorymanagement.dto.response.WarehouseTransferDTO;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.service.WarehouseTransferService;
+import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -24,25 +26,53 @@ public class WarehouseTransferController {
     @Operation(summary = "Transfer multiple items")
     @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
     @PostMapping("/transfer")
-    public ResponseEntity<String> transferItems(@RequestBody List<TransferRequest> transferRequests) {
+    public ResponseEntity<?> transferItems(@RequestBody TransferRequest transferRequests) {
         try {
-            warehouseTransferService.transferMultipleItems(transferRequests);
-            return ResponseEntity.ok("Items transferred successfully");
+            TransferResult result = warehouseTransferService.transferMultipleItems(transferRequests);
+            return ResponseEntity.ok(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Items transferred successfully",
+                    result
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    e.getMessage(),
+                    null
+            ));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error during item transfer: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
+                    HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                    "Error during item transfer: " + e.getMessage(),
+                    null
+            ));
         }
     }
-    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')") // Adjust the role as necessary
-    @Operation(summary = "Update transfers")
-    @PostMapping("/transfers/update")
-    public ResponseEntity<String> updateTransfer(@RequestBody List<TransferUpdateRequest> updateRequest) {
-        try {
-            warehouseTransferService.updateTransfer(updateRequest);
-            return ResponseEntity.ok("Transfer updated successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error during transfer update: " + e.getMessage());
-        }
-    }
+//    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')") // Adjust the role as necessary
+//    @Operation(summary = "Update transfers")
+//    @PostMapping("/transfers/update")
+//    public ResponseEntity<?> updateTransfer(@RequestBody TransferRequest updateRequest) {
+//        try {
+//            TransferResult result = warehouseTransferService.updateTransfer(updateRequest);
+//            return ResponseEntity.ok(new ResponseObject(
+//                    HttpStatus.OK.toString(),
+//                    "Chuyển kho đã được cập nhật thành công",
+//                    result
+//            ));
+//        } catch (NotFoundException e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+//                    HttpStatus.NOT_FOUND.toString(),
+//                    e.getMessage(),
+//                    null
+//            ));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
+//                    HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+//                    "Lỗi trong quá trình cập nhật chuyển kho: " + e.getMessage(),
+//                    null
+//            ));
+//        }
+//    }
 
     @Operation(summary = "Get all warehouse transfers")
     @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')") // Adjust the role as necessary

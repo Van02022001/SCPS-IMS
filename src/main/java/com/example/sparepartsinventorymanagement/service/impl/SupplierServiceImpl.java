@@ -102,24 +102,12 @@ public class SupplierServiceImpl implements SupplierService {
                     HttpStatus.NOT_FOUND.toString(), "Supplier is not found!", null
             ));
         }
-        if (supplierRepository.existsByEmail(form.getEmail())) {
-            return ResponseEntity.badRequest().body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Email already in use!", null));
-        }
 
-        if (supplierRepository.existsByPhone(form.getPhone())) {
-            return ResponseEntity.badRequest().body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Phone number already in use!", null));
-        }
-
-        if (supplierRepository.existsByTaxCode(form.getTaxCode())) {
-            return ResponseEntity.badRequest().body(new ResponseObject(
-                    HttpStatus.BAD_REQUEST.toString(), "Tax code already in use!", null));
-        }
         Supplier existingSupplier = supplierOpt.get();
 
         // Ensure we don't overwrite the existing Supplier's ID with a new one.
         Supplier updatedSupplier = Supplier.builder()
+                .code(existingSupplier.getCode())
                 .id(existingSupplier.getId()) // Ensure the ID remains the same
                 .name(form.getName() != null ? form.getName() : existingSupplier.getName())
                 .phone(form.getPhone() != null ? form.getPhone() : existingSupplier.getPhone())

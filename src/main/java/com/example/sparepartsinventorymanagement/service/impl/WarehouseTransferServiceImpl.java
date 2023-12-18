@@ -1,7 +1,9 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
+import com.example.sparepartsinventorymanagement.dto.request.ItemTransferDetail;
 import com.example.sparepartsinventorymanagement.dto.request.TransferRequest;
 import com.example.sparepartsinventorymanagement.dto.request.TransferUpdateRequest;
+import com.example.sparepartsinventorymanagement.dto.response.TransferResult;
 import com.example.sparepartsinventorymanagement.dto.response.WarehouseTransferDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
@@ -35,23 +37,26 @@ private final UserRepository userRepository;
     private final WarehouseTransferRepository warehouseTransferRepository;
     @Transactional
     @Override
-    public void transferMultipleItems(List<TransferRequest> transferRequests) {
-        for (TransferRequest request : transferRequests) {
-            // Perform the single item transfer
-            transferItem(request.getItemId(), request.getSourceWarehouseId(),
-                    request.getDestinationWarehouseId(), request.getQuantity());
+    public TransferResult transferMultipleItems(TransferRequest request) {
+        Warehouse destinationWarehouse = warehouseRepository.findById(request.getDestinationWarehouseId())
+                .orElseThrow(() -> new NotFoundException("Destination warehouse not found"));
+
+        User currentUser = getCurrentAuthenticatedUser();
+        Warehouse sourceWarehouse = currentUser.getWarehouse(); // Giả sử mỗi InventoryStaff quản lý một kho
+
+        for (ItemTransferDetail detail : request.getItems()) {
+            transferItem(detail.getItemId(), sourceWarehouse.getId(),
+                    destinationWarehouse.getId(), detail.getQuantity());
         }
+        return new TransferResult(
+                sourceWarehouse.getId(),
+                destinationWarehouse.getId(),
+                request.getItems()
+        );
     }
 
-    @Override
-    @Transactional
-    public void updateTransfer(List<TransferUpdateRequest> updateRequest) {
-        for (TransferUpdateRequest request : updateRequest) {
-            // Gọi phương thức cập nhật cho mỗi yêu cầu
-            singleUpdateTransfer(request);
-        }
 
-    }
+
 
     @Override
     public List<WarehouseTransferDTO> getAllWarehouseTransfers() {
@@ -68,25 +73,7 @@ private final UserRepository userRepository;
         return convertToDTO(transfer);
     }
 
-    private void singleUpdateTransfer(TransferUpdateRequest updateRequest) {
-        WarehouseTransfer transfer = warehouseTransferRepository.findById(updateRequest.getTransferId())
-                .orElseThrow(() -> new RuntimeException("Bản ghi chuyển kho không được tìm thấy"));
 
-        // Hoàn nguyên chuyển kho gốc
-        reverseTransfer(transfer);
-
-        // Áp dụng các chi tiết chuyển kho mới nếu có
-        if (updateRequest.getNewSourceWarehouseId() != null && updateRequest.getNewDestinationWarehouseId() != null) {
-            transferItem(transfer.getItem().getId(), updateRequest.getNewSourceWarehouseId(),
-                    updateRequest.getNewDestinationWarehouseId(), updateRequest.getNewQuantity());
-        }
-
-        WarehouseTransfer warehouseTransfer = new WarehouseTransfer();
-        warehouseTransfer.setLastModifiedBy(getCurrentAuthenticatedUser());
-        warehouseTransfer.setLastModifiedDate(new Date());
-
-        warehouseTransferRepository.save(warehouseTransfer);
-    }
     private void reverseTransfer(WarehouseTransfer transfer) {
         // Reverse the transfer from the destination back to the source
         Inventory sourceInventory = inventoryRepository.findByItemAndWarehouse(transfer.getItem(), transfer.getSourceWarehouse())
@@ -111,10 +98,9 @@ private final UserRepository userRepository;
         destinationInventory.setTotalValue(destinationInventory.getTotalValue() - totalValueTransferred);
         inventoryRepository.save(destinationInventory);
 
-        // Optionally, mark the original transfer as reversed if you want to keep a record
-        // transfer.setReversed(true);
-        // warehouseTransferRepository.save(transfer);
+
     }
+
     private void transferItem(Long itemId, Long sourceWarehouseId, Long destinationWarehouseId, int quantity) {
         // Validate the existence of item and warehouses
         Item item = itemRepository.findById(itemId)
@@ -123,7 +109,6 @@ private final UserRepository userRepository;
                 .orElseThrow(() -> new RuntimeException("Source warehouse not found"));
         Warehouse destinationWarehouse = warehouseRepository.findById(destinationWarehouseId)
                 .orElseThrow(() -> new RuntimeException("Destination warehouse not found"));
-
         // Assuming you have a method to get the current price of an item
         double unitValue = getCurrentUnitValue(item);
 
@@ -131,22 +116,52 @@ private final UserRepository userRepository;
         double totalValueTransferred = unitValue * quantity;
 
 
+        // Check if the item exists in the destination warehouse
+        Inventory destinationInventory = inventoryRepository.findByItemAndWarehouse(item, destinationWarehouse)
+                .orElse(null);
+
+        // If the item doesn't exist in the destination warehouse, create a new entry
+        if (destinationInventory == null) {
+            destinationInventory = new Inventory();
+            destinationInventory.setItem(item);
+            destinationInventory.setWarehouse(destinationWarehouse);
+            destinationInventory.setAvailable(quantity);
+            destinationInventory.setInboundQuantity(quantity);
+            destinationInventory.setInboundValue(totalValueTransferred);
+            destinationInventory.setOutboundQuantity(0);
+            destinationInventory.setTotalQuantity(quantity);
+            destinationInventory.setTotalValue(getCurrentUnitValue(item) * quantity);
+        } else {
+            // Update the existing entry
+            destinationInventory.setAvailable(destinationInventory.getAvailable() + quantity);
+            destinationInventory.setInboundQuantity(destinationInventory.getInboundQuantity() + quantity);
+            destinationInventory.setInboundValue(destinationInventory.getInboundValue() + totalValueTransferred);
+            destinationInventory.setTotalQuantity(destinationInventory.getTotalQuantity() + quantity);
+            destinationInventory.setTotalValue(destinationInventory.getTotalValue() + getCurrentUnitValue(item) * quantity);
+        }
+
+        // Save the destination inventory
+        inventoryRepository.save(destinationInventory);
+
+
+
         // Fetch inventories and update
         Inventory sourceInventory = inventoryRepository.findByItemAndWarehouse(item, sourceWarehouse)
                 .orElseThrow(() -> new RuntimeException("Item inventory not found in source warehouse"));
         sourceInventory.setAvailable(sourceInventory.getAvailable() - quantity);
         sourceInventory.setOutboundQuantity(sourceInventory.getOutboundQuantity() + quantity);
+        sourceInventory.setOutboundValue(sourceInventory.getOutboundValue() + totalValueTransferred);
         sourceInventory.setTotalQuantity(sourceInventory.getTotalQuantity() - quantity );
         sourceInventory.setTotalValue(sourceInventory.getTotalValue() - totalValueTransferred);
         inventoryRepository.save(sourceInventory);
 
-        Inventory destinationInventory = inventoryRepository.findByItemAndWarehouse(item, destinationWarehouse)
-                .orElseThrow(() -> new RuntimeException("Item inventory not found in destination warehouse"));
-        destinationInventory.setAvailable(destinationInventory.getAvailable() + quantity);
-        destinationInventory.setInboundQuantity(destinationInventory.getInboundQuantity() + quantity);
-        destinationInventory.setTotalQuantity(destinationInventory.getTotalQuantity()+quantity);
-        destinationInventory.setTotalValue(destinationInventory.getTotalValue() + totalValueTransferred);
-        inventoryRepository.save(destinationInventory);
+//        Inventory destinationInventory = inventoryRepository.findByItemAndWarehouse(item, destinationWarehouse)
+//                .orElseThrow(() -> new RuntimeException("Item inventory not found in destination warehouse"));
+//        destinationInventory.setAvailable(destinationInventory.getAvailable() + quantity);
+//        destinationInventory.setInboundQuantity(destinationInventory.getInboundQuantity() + quantity);
+//        destinationInventory.setTotalQuantity(destinationInventory.getTotalQuantity()+quantity);
+//        destinationInventory.setTotalValue(destinationInventory.getTotalValue() + totalValueTransferred);
+//        inventoryRepository.save(destinationInventory);
 
         // Record the transfer
         WarehouseTransfer transfer = new WarehouseTransfer();
@@ -161,6 +176,8 @@ private final UserRepository userRepository;
         transfer.setLastModifiedDate(new Date());
         warehouseTransferRepository.save(transfer);
     }
+
+
 
 
     private double getCurrentUnitValue(Item item) {

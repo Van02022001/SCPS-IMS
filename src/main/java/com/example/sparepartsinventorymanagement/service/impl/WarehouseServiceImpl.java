@@ -6,6 +6,7 @@ import com.example.sparepartsinventorymanagement.dto.response.WarehouseDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.InvalidResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
+import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
 import com.example.sparepartsinventorymanagement.repository.ItemRepository;
 import com.example.sparepartsinventorymanagement.repository.UserRepository;
 import com.example.sparepartsinventorymanagement.repository.WarehouseRepository;
@@ -13,11 +14,14 @@ import com.example.sparepartsinventorymanagement.service.WarehouseService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -125,6 +129,22 @@ public class WarehouseServiceImpl implements WarehouseService {
             return Collections.emptyList();
         }
     }
+
+    @Override
+    public List<WarehouseDTO> getWarehousesExceptCurrentWarehouse() {
+        Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
+                ()-> new NotFoundException("Không tìm thấy người dùng.")
+        );
+
+        if(user.getWarehouse() == null){
+            throw new AccessDeniedException("Người dùng không có quyền thao tác với kho này.");
+        }
+        List<Warehouse> warehouses = warehouseRepository.findAll();
+        warehouses.removeIf(warehouse -> Objects.equals(warehouse.getId(), user.getWarehouse().getId()));
+        return mapper.map(warehouses, new TypeToken<List<WarehouseDTO>>(){}.getType());
+    }
+
     private InventoryStaffDTO convertToInventoryStaffDTO(User user) {
         InventoryStaffDTO inventoryStaffDTO = new InventoryStaffDTO();
         inventoryStaffDTO.setId(user.getId());

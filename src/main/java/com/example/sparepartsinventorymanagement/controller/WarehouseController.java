@@ -167,7 +167,24 @@ public class WarehouseController {
             ));
         }
     }
-
+    @Operation(summary = "For get warehouses except current warehouse")
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @GetMapping(value = "/other-warehouses", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getWarehousesExceptCurrentWarehouse() {
+        List<WarehouseDTO> res = warehouseService.getWarehousesExceptCurrentWarehouse();
+        if(res.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Danh sách rỗng",
+                    null
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Lấy danh sách kho trừ kho hiện tại thành công.",
+                res
+        ));
+    }
 
 //    @PreAuthorize("hasRole('ROLE_MANAGER')")
 //    @Operation(summary = "For update status of warehouse")

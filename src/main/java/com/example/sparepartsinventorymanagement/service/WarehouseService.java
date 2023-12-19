@@ -16,4 +16,5 @@ public interface WarehouseService {
    // ResponseEntity<?> updateWarehouseStatus(Long id, WarehouseStatus status);
 
     List<InventoryStaffDTO> getAllInventoryStaffByWarehouseId(Long warehouseId);
+    List<WarehouseDTO> getWarehousesExceptCurrentWarehouse();
 }

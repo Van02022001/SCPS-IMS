@@ -21,6 +21,7 @@ public class SubCategoryFormRequest {
     private String name;
 
     @Schema(description = "Product description", example = "Mô tả về product")
+    @Size(min = 1, max = 200)
     @NotBlank(message = "Description not null")
     @NotEmpty(message = "Required field")
     @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")

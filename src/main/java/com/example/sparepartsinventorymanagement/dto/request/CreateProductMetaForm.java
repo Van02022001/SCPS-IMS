@@ -14,13 +14,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CreateProductMetaForm {
     @Schema(description = "Key of product meta", example = "Mô tả sơ lược")
-    @Size(min = 1, max = 100)
+    @Size(min = 1, max = 60)
     @NotBlank(message = "key not null")
     @NotEmpty(message = "Required field.")
     @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")
     private String key;
 
     @Schema(description = "Product description", example = "Là sản phầm được làm từ ...")
+    @Size(min = 1, max = 200)
     @NotBlank(message = "Description not null")
     @NotEmpty(message = "Required field")
     @Pattern(regexp = "^[\\p{Lu}].*", message = "The first letter must be uppercase.")

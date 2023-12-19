@@ -213,7 +213,7 @@ public class ItemController {
     @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
     @Operation(summary = "For update locations of item by receipt id")
     @PutMapping(value = "/item-locations/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateItemLocation(
+    public ResponseEntity<?> updateItemLocationAfterImport(
             @Parameter(description = "Enter id", required = true, example = "1")
             @NotNull @NotEmpty @PathVariable(name = "id") Long id,
             @Valid @RequestBody CreateItemLocationsFrom form
@@ -235,8 +235,8 @@ public class ItemController {
     }
     @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
     @Operation(summary = "For update locations item after export")
-    @PutMapping(value = "/item-locations/warehouse-export ", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateItemLocation(
+    @PutMapping(value = "/item-locations/warehouse-export", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> updateItemLocationAfterExport(
             @Valid @RequestBody UpdateItemLocationAfterExportForm form
     ) {
         ItemDTO res = itemService.updateItemLocationAfterExport(form);
@@ -298,5 +298,23 @@ public class ItemController {
                     null
             ));
         }
+    }
+    @Operation(summary = "For get list of item in this warehouse")
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @GetMapping(value = "/items-by-warehouse", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getItemsByThisWarehouse() {
+        List<ItemDTO> res = itemService.getItemsByThisWarehouse();
+        if(res.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    "Danh sách trống.",
+                    null
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Lấy danh sách sản phẩm của kho thành công.",
+                res
+        ));
     }
 }

@@ -119,4 +119,25 @@ public class LocationController {
                 res
         ));
     }
+    @Operation(summary = "For get list of location of this warehouse is not have item or have same item by item id")
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @GetMapping(value = "/locations-by-empty-item/{itemId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getLocationsIsEmptyOrContainsItem(
+            @Parameter(description = "Enter id to get", example = "1", required = true)
+            @PathVariable(name = "itemId") @NotBlank @NotEmpty Long itemId
+    ) {
+        List<LocationDTO> res = locationService.getLocationsIsEmptyOrContainsItem(itemId);
+        if(res.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    "List empty",
+                    null
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Get list location successfully",
+                res
+        ));
+    }
 }

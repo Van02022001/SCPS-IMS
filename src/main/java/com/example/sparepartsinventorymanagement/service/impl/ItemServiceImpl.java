@@ -143,7 +143,6 @@ public class ItemServiceImpl implements ItemService {
                 .origin(origin)
                 .supplier(supplier)
                 .updatedBy(user)
-
                 .build();
 
         itemRepository.save(item);
@@ -188,6 +187,13 @@ public class ItemServiceImpl implements ItemService {
                 String newCode = checkCode(code);
                 item.setCode(newCode);
             }
+        }
+        //Update min max stock level
+        if(item.getMinStockLevel() != form.getMinStockLevel()){
+            item.setMinStockLevel(form.getMinStockLevel());
+        }
+        if(item.getMaxStockLevel() != form.getMaxStockLevel()){
+            item.setMaxStockLevel(form.getMaxStockLevel());
         }
 
         Date date = new Date();
@@ -460,7 +466,7 @@ public class ItemServiceImpl implements ItemService {
         }
 
         itemRepository.save(receiptDetail.getItem());
-        return null;
+        return modelMapper.map(receiptDetail.getItem(), ItemDTO.class);
     }
 
     @Override
@@ -476,6 +482,25 @@ public class ItemServiceImpl implements ItemService {
             }
         }
         return receipt.getDetails().size() == count;
+    }
+
+    @Override
+    public List<ItemDTO> getItemsByThisWarehouse() {
+        Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
+                ()-> new NotFoundException("Không tìm thấy người dùng.")
+        );
+
+        if(user.getWarehouse() == null){
+            throw new AccessDeniedException("Người dùng không có quyền thao tác với kho này.");
+        }
+        List<Location> locations = locationRepository.findByWarehouse(user.getWarehouse());
+        Set<Item> items = new HashSet<>();
+        for (Location location: locations
+             ) {
+            items.add(location.getItem());
+        }
+        return modelMapper.map(items, new TypeToken<List<ItemDTO>>(){}.getType());
     }
 
 

@@ -31,4 +31,5 @@ public interface ItemService {
     ItemDTO updateItemLocationAfterExport(UpdateItemLocationAfterExportForm form);
 
     boolean checkUpdateItemLocationAfterUpdate(Long receiptId);
+    List<ItemDTO> getItemsByThisWarehouse();
 }

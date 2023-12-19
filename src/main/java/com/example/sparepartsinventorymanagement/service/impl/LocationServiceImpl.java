@@ -36,13 +36,7 @@ public class LocationServiceImpl implements LocationService {
     private final ModelMapper mapper;
     @Override
     public List<LocationDTO> getLocationsByWarehouse() {
-        Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
-                ()-> new NotFoundException("User not found")
-        );
-        if(user.getWarehouse() == null){
-            throw new InvalidResourceException("User not is inventory staff of any warehouse");
-        }
+        User user = checkStaff();
         List<Location> locations = locationRepository.findByWarehouse(user.getWarehouse());
         return mapper.map(locations, new TypeToken<List<LocationDTO>>(){}
                 .getType());
@@ -58,13 +52,7 @@ public class LocationServiceImpl implements LocationService {
 
     @Override
     public LocationDTO creatLocation(LocationFormRequest form) {
-        Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
-                ()-> new NotFoundException("User not found")
-        );
-        if(user.getWarehouse() == null){
-            throw new InvalidResourceException("User not is inventory staff of any warehouse");
-        }
+        User user = checkStaff();
         List<Location> locations = locationRepository.findByWarehouse(user.getWarehouse());
         checkDuplicate(locations, form);
         Location location = Location.builder()
@@ -89,10 +77,7 @@ public class LocationServiceImpl implements LocationService {
 
     @Override
     public LocationDTO updateLocation(Long id, LocationFormRequest form) {
-        Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
-                ()-> new NotFoundException("User not found")
-        );
+        User user = checkStaff();
         if(user.getWarehouse() == null){
             throw new InvalidResourceException("User not is inventory staff of any warehouse");
         }
@@ -141,6 +126,22 @@ public class LocationServiceImpl implements LocationService {
         Item item = itemRepository.findById(itemId).orElseThrow(
                 ()-> new NotFoundException("Item not found")
         );
+        User user = checkStaff();
+        List<Location> locations = locationRepository.findByItemAndWarehouse(item, user.getWarehouse());
+        List<LocationDTO> locationDTOS = mapper.map(locations, new TypeToken<List<LocationDTO>>(){}
+                .getType());
+        return new ItemLocationsDTO(itemId, locationDTOS);
+    }
+
+    @Override
+    public List<LocationDTO> getLocationsIsEmptyOrContainsItem(Long itemId) {
+        User user = checkStaff();
+        List<Location> locations = locationRepository.findByWarehouse(user.getWarehouse());
+        locations.removeIf(location -> location.getItem() != null && !Objects.equals(location.getItem().getId(), itemId));
+        return mapper.map(locations, new TypeToken<List<LocationDTO>>(){}
+                .getType());
+    }
+    private User checkStaff(){
         Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
                 ()-> new NotFoundException("User not found")
@@ -148,12 +149,8 @@ public class LocationServiceImpl implements LocationService {
         if(user.getWarehouse() == null){
             throw new InvalidResourceException("User not is inventory staff of any warehouse");
         }
-        List<Location> locations = locationRepository.findByItemAndWarehouse(item, user.getWarehouse());
-        List<LocationDTO> locationDTOS = mapper.map(locations, new TypeToken<List<LocationDTO>>(){}
-                .getType());
-        return new ItemLocationsDTO(itemId, locationDTOS);
+        return user;
     }
-
     private void checkDuplicate(List<Location> locations, LocationFormRequest form){
         if(!locations.isEmpty()){
             for (Location location: locations

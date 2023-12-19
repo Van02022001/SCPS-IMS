@@ -498,7 +498,9 @@ public class ItemServiceImpl implements ItemService {
         Set<Item> items = new HashSet<>();
         for (Location location: locations
              ) {
-            items.add(location.getItem());
+            if(location.getItem() != null){
+                items.add(location.getItem());
+            }
         }
         return modelMapper.map(items, new TypeToken<List<ItemDTO>>(){}.getType());
     }

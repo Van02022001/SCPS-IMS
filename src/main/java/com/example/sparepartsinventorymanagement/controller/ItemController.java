@@ -299,6 +299,35 @@ public class ItemController {
             ));
         }
     }
+
+    @PreAuthorize("hasRole('ROLE_SALE_STAFF') ")
+    @Operation(summary = "Get all items by warehouse")
+    @GetMapping("/items-by-warehouse/sale-staff/{warehouseId}")
+    public ResponseEntity<?> getAllItemsByWarehouseForSaleStaff(
+            @Parameter(description = "Enter warehouse ID", required = true, example = "1")
+            @PathVariable(name = "warehouseId") Long warehouseId
+    ) {
+        try {
+            List<ItemDTO> items = itemService.getAllItemByWarehouseForSaleStaff(warehouseId);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Get list items by warehouse successfully",
+                    items
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    "Warehouse not found",
+                    null
+            ));
+        } catch (InvalidResourceException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseObject(
+                    HttpStatus.FORBIDDEN.toString(),
+                    "Access denied",
+                    null
+            ));
+        }
+    }
     @Operation(summary = "For get list of item in this warehouse")
     @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
     @GetMapping(value = "/items-by-warehouse", produces = MediaType.APPLICATION_JSON_VALUE)

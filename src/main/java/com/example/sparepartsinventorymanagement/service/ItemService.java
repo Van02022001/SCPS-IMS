@@ -32,4 +32,6 @@ public interface ItemService {
 
     boolean checkUpdateItemLocationAfterUpdate(Long receiptId);
     List<ItemDTO> getItemsByThisWarehouse();
+
+    List<ItemDTO> getAllItemByWarehouseForSaleStaff(Long warehouseId);
 }

@@ -34,4 +34,6 @@ public interface ItemService {
     List<ItemDTO> getItemsByThisWarehouse();
 
     List<ItemDTO> getAllItemByWarehouseForSaleStaff(Long warehouseId);
+
+    String getNameItemByItemId(Long itemId);
 }

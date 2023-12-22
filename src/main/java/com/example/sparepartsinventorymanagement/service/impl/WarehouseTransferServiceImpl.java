@@ -109,6 +109,17 @@ private final UserRepository userRepository;
                 .orElseThrow(() -> new RuntimeException("Source warehouse not found"));
         Warehouse destinationWarehouse = warehouseRepository.findById(destinationWarehouseId)
                 .orElseThrow(() -> new RuntimeException("Destination warehouse not found"));
+
+        // Fetch the source inventory
+        Inventory sourceInventory = inventoryRepository.findByItemAndWarehouse(item, sourceWarehouse)
+                .orElseThrow(() -> new RuntimeException("Item inventory not found in source warehouse"));
+
+        // Check if the requested transfer quantity is available in the source inventory
+        if (quantity > sourceInventory.getAvailable()) {
+            throw new RuntimeException("Insufficient inventory available for transfer");
+        }
+
+
         // Assuming you have a method to get the current price of an item
         double unitValue = getCurrentUnitValue(item);
 
@@ -145,9 +156,7 @@ private final UserRepository userRepository;
 
 
 
-        // Fetch inventories and update
-        Inventory sourceInventory = inventoryRepository.findByItemAndWarehouse(item, sourceWarehouse)
-                .orElseThrow(() -> new RuntimeException("Item inventory not found in source warehouse"));
+        // update sourceInventory
         sourceInventory.setAvailable(sourceInventory.getAvailable() - quantity);
         sourceInventory.setOutboundQuantity(sourceInventory.getOutboundQuantity() + quantity);
         sourceInventory.setOutboundValue(sourceInventory.getOutboundValue() + totalValueTransferred);

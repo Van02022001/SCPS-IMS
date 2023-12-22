@@ -346,4 +346,27 @@ public class ItemController {
                 res
         ));
     }
+
+    @Operation(summary = "Get item name by item ID")
+    @GetMapping(value = "/name/{itemId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getItemNameById(
+            @Parameter(description = "Enter the item ID", required = true, example = "1")
+            @PathVariable(name = "itemId") @NotNull Long itemId
+    ) {
+        try {
+            String itemName = itemService.getNameItemByItemId(itemId);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Item name retrieved successfully",
+                    itemName
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        }
+    }
+
 }

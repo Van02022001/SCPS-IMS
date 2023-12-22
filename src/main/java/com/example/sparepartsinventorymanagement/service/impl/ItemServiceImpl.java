@@ -516,11 +516,6 @@ public class ItemServiceImpl implements ItemService {
         Warehouse warehouse = warehouseRepository.findById(warehouseId)
                 .orElseThrow(() -> new NotFoundException("Warehouse not found"));
 
-        // Kiểm tra xem người dùng hiện tại có phải là nhân viên kho của Warehouse đang được truy vấn không
-//        if (!currentUser.getWarehouse().getId().equals(warehouseId)) {
-//            throw new InvalidResourceException("User is not an inventory staff of the requested warehouse");
-//        }
-
         // Lấy ra danh sách Inventory trong kho
         List<Inventory> inventoryList = warehouse.getInventoryList();
 
@@ -533,6 +528,25 @@ public class ItemServiceImpl implements ItemService {
         return items.stream()
                 .map(item -> modelMapper.map(item, ItemDTO.class))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public String getNameItemByItemId(Long itemId) {
+        // Tìm Item dựa trên itemId
+        Item item = itemRepository.findById(itemId).orElseThrow(
+                () -> new NotFoundException("Item not found")
+        );
+
+        // Lấy SubCategory liên kết với Item
+        SubCategory subCategory = item.getSubCategory();
+
+        // Kiểm tra xem SubCategory có null không
+        if (subCategory == null) {
+            throw new NotFoundException("SubCategory not found for the item");
+        }
+
+        // Trả về tên của SubCategory, là tên của Item
+        return subCategory.getName();
     }
 
 

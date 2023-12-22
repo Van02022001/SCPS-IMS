@@ -133,4 +133,31 @@ public class ImportReceiptController {
             ));
         }
     }
+
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @Operation(summary = "Get all import receipts")
+    @GetMapping("/warehouse")
+    public ResponseEntity<?> getAllImportReceiptsByWarehouse() {
+        try {
+            List<ImportRequestReceiptResponse> receipts = receiptService.getAllImportReceiptsByWareHouse();
+            return ResponseEntity.ok(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Import receipts retrieved successfully",
+                    receipts
+            ));
+        }
+        catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
+                    HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                    "An error occurred while retrieving the import receipts",
+                    null
+            ));
+        }
+    }
 }

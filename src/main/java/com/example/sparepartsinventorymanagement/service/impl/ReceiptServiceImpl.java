@@ -18,6 +18,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -73,10 +74,21 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     @Override
+    @Transactional
     public void confirmImportRequestReceipt(Long receiptId) {
+
+        // Lấy thông tin người dùng hiện tại
+        User currentUser = getCurrentAuthenticatedUser();
+
         var receipt = receiptRepository.findById(receiptId)
                 .filter(receipt1 -> receipt1.getType() == ReceiptType.PHIEU_YEU_CAU_NHAP_KHO)
                 .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found or not of type PHIEU_YEU_CAU_NHAP_KHO"));
+
+        // So sánh id của người dùng hiện tại với inventoryStaffId liên quan đến phiếu nhập kho
+        if (currentUser == null || !currentUser.getId().equals(receipt.getReceivedBy().getId())) {
+            throw new AccessDeniedException("You do not have permission to confirm this import request receipt.");
+        }
+
 
         // Cập nhật trạng thái
         receipt.setStatus(ReceiptStatus.Approved);
@@ -95,9 +107,21 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     @Override
+    @Transactional
     public void  startImportProcess(Long receiptId) {
+
+        // Lấy thông tin người dùng hiện tại
+        User currentUser = getCurrentAuthenticatedUser();
+
         Receipt receipt = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new NotFoundException("Receipt with id " + receiptId +" not found"));
+
+
+        // So sánh id của người dùng hiện tại với inventoryStaffId liên quan đến phiếu nhập kho
+        if (currentUser == null || !currentUser.getId().equals(receipt.getReceivedBy().getId())) {
+            throw new AccessDeniedException("You do not have permission to confirm this import request receipt.");
+        }
+
         receipt.setStatus(ReceiptStatus.IN_PROGRESS);
         receiptRepository.save(receipt);
 
@@ -129,6 +153,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                     response.setDescription(receipt.getDescription());
                     response.setTotalQuantity(receipt.getTotalQuantity());
                     response.setTotalPrice(receipt.getTotalPrice());
+                    response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
                     response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
                     response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
                     response.setCreatedAt(receipt.getCreationDate());
@@ -178,6 +203,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                     response.setDescription(receipt.getDescription());
                     response.setTotalQuantity(receipt.getTotalQuantity());
                     response.setTotalPrice(receipt.getTotalPrice());
+                    response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
                     response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
                     response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
                     response.setCreatedAt(receipt.getCreationDate());
@@ -228,6 +254,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                     response.setDescription(receipt.getDescription());
                     response.setTotalQuantity(receipt.getTotalQuantity());
                     response.setTotalPrice(receipt.getTotalPrice());
+                    response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
                     response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
                     response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
                     response.setCreatedAt(receipt.getCreationDate());
@@ -271,6 +298,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                     response.setDescription(receipt.getDescription());
                     response.setTotalQuantity(receipt.getTotalQuantity());
                     response.setTotalPrice(receipt.getTotalPrice());
+                    response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
                     response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
                     response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
                     response.setCreatedAt(receipt.getCreationDate());
@@ -314,6 +342,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         response.setDescription(receipt.getDescription());
         response.setTotalQuantity(receipt.getTotalQuantity());
         response.setTotalPrice(receipt.getTotalPrice());
+        response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
         response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
         response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
         response.setCreatedAt(receipt.getCreationDate());
@@ -353,6 +382,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         response.setDescription(receipt.getDescription());
         response.setTotalQuantity(receipt.getTotalQuantity());
         response.setTotalPrice(receipt.getTotalPrice());
+        response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
         response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
         response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
         response.setCreatedAt(receipt.getCreationDate());
@@ -402,6 +432,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .status(ReceiptStatus.Pending_Approval)
                 .description(importRequestReceiptForm.getDescription())
                 .createdBy(getCurrentAuthenticatedUser())
+                .receivedBy(inventoryStaff)
                 .warehouse(warehouse)
                 .build();
         Receipt savedReceipt = receiptRepository.save(newReceipt);
@@ -450,6 +481,8 @@ public class ReceiptServiceImpl implements ReceiptService {
         response.setType(savedReceipt.getType());
         response.setStatus(savedReceipt.getStatus());
         response.setDescription(savedReceipt.getDescription());
+        response.setReceivedBy(savedReceipt.getReceivedBy().getLastName() + " " + savedReceipt.getReceivedBy().getMiddleName() + " " + savedReceipt.getReceivedBy().getFirstName());
+
         response.setCreatedBy(savedReceipt.getCreatedBy().getLastName() + " " + savedReceipt.getCreatedBy().getMiddleName() + " " + savedReceipt.getCreatedBy().getFirstName());
         response.setLastModifiedBy(savedReceipt.getLastModifiedBy() != null ? savedReceipt.getLastModifiedBy().getLastName() + " " + savedReceipt.getLastModifiedBy().getLastName() + " " + savedReceipt.getLastModifiedBy().getFirstName() : null);
         response.setCreatedAt(savedReceipt.getCreationDate());
@@ -734,6 +767,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         response.setType(receipt.getType());
         response.setStatus(receipt.getStatus());
         response.setDescription(receipt.getDescription());
+        response.setReceivedBy(receipt.getReceivedBy().getLastName() + " " + receipt.getReceivedBy().getMiddleName() + " " + receipt.getReceivedBy().getFirstName());
         response.setCreatedBy(receipt.getCreatedBy().getLastName() + " " + receipt.getCreatedBy().getMiddleName() + " " + receipt.getCreatedBy().getFirstName());
         response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() + " " + receipt.getLastModifiedBy().getLastName() + " " + receipt.getLastModifiedBy().getFirstName() : null);
         response.setCreatedAt(receipt.getCreationDate());

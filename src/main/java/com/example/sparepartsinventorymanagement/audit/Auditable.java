@@ -34,6 +34,9 @@ public abstract class Auditable<U>  {
     @ManyToOne(fetch = FetchType.LAZY)
     private U lastModifiedBy;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private U receivedBy;
+
     @CreatedDate
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)

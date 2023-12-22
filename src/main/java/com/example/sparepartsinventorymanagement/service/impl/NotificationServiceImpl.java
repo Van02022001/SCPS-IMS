@@ -8,6 +8,7 @@ import com.example.sparepartsinventorymanagement.repository.NotificationTemplate
 import com.example.sparepartsinventorymanagement.repository.UserRepository;
 import com.example.sparepartsinventorymanagement.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationServiceImpl implements NotificationService {
 
 
@@ -41,6 +43,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public Notification  createAndSendNotification(SourceType sourceType, EventType eventType, Long sourceId, Long userId, NotificationType notificationType, String customMessage) {
+        try {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
@@ -64,6 +67,10 @@ public class NotificationServiceImpl implements NotificationService {
         // Gửi thông báo qua WebSocket
         messagingTemplate.convertAndSendToUser(user.getUsername(), "/topic/notification", notification);
         return notification;
+        } catch (Exception e) {
+            log.error("Error creating and sending notification: " + e.getMessage(), e);
+            throw e; // Or handle this gracefully
+        }
     }
 
     @Override

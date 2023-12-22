@@ -82,6 +82,32 @@ public class ExportReceiptController {
             ));
         }
     }
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF') ")
+    @Operation(summary = "Get all export receipts by warehouse")
+    @GetMapping("/warehouse")
+    public ResponseEntity<?> getAllExportReceiptsByWarehouse() {
+        try {
+            List<ExportReceiptResponse> exportReceiptResponses = receiptService.getAllExportReceiptsByWareHouse();
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "All export receipts retrieved successfully",
+                    exportReceiptResponses
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        } catch (Exception e) {
+            // Log the exception details here
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
+                    HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                    "An error occurred while retrieving export receipts",
+                    null
+            ));
+        }
+    }
 
     @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF') or hasRole('ROLE_MANAGER')")
     @Operation(summary = "Get an export receipt by ID")

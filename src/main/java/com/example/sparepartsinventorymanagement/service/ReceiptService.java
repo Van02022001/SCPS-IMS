@@ -16,6 +16,9 @@ public interface ReceiptService {
     ImportRequestReceiptResponse createImportRequestReceipt(ImportRequestReceiptForm importRequestReceiptForm);
 
     List<ImportRequestReceiptResponse> getAllImportRequestReceipts();
+
+    List<ImportRequestReceiptResponse> getAllImportRequestReceiptsByWareHouse();
+    List<ImportRequestReceiptResponse> getAllImportReceiptsByWareHouse();
     List<ImportRequestReceiptResponse> getAllImportReceipts();
 
 
@@ -40,6 +43,8 @@ public interface ReceiptService {
    // ExportReceiptResponse updateExportReceipt(Long receiptId, Map<Long, Integer> actualQuantities);
 
     List<ExportReceiptResponse> getAllExportReceipts();
+
+    List<ExportReceiptResponse> getAllExportReceiptsByWareHouse();
 
     ExportReceiptResponse getExportReceiptById(Long id);
 

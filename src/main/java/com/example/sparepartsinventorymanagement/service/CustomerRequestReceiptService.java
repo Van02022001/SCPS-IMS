@@ -13,4 +13,6 @@ public interface CustomerRequestReceiptService {
     void  startImportProcess(Long receiptId);
 
     List<CustomerRequestReceiptDTO> getAllCustomerRequestReceipts();
+
+    List<CustomerRequestReceiptDTO> getAllCustomerRequestReceiptsByWarehouse();
 }

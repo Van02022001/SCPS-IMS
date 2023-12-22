@@ -210,6 +210,22 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<CustomerRequestReceiptDTO> getAllCustomerRequestReceiptsByWarehouse() {
+        // Get the current authenticated user
+        User currentUser = getCurrentAuthenticatedUser();
+
+        // Use the warehouse ID from the current user to fetch customer request receipts
+        Long warehouseId = currentUser.getWarehouse().getId();
+        List<CustomerRequestReceipt> requestReceipts = customerRequestReceiptRepository.findByWarehouseId(warehouseId);
+
+        // Convert each CustomerRequestReceipt into a CustomerRequestReceiptDTO and return the list
+        return requestReceipts.stream()
+                .map(this::convertToCustomerRequestReceiptDTO)
+                .collect(Collectors.toList());
+
+    }
+
     private CustomerRequestReceiptDTO convertToCustomerRequestReceiptDTO(CustomerRequestReceipt receipt) {
         List<CustomerRequestReceiptDetail> receiptDetails = customerRequestReceiptDetailRepository.findByCustomerRequestReceiptId(receipt.getId());
 

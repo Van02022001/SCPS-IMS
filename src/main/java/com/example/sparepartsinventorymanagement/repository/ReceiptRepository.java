@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface ReceiptRepository extends JpaRepository<Receipt, Long>{
     List<Receipt> findByType(ReceiptType type);
+
+    List<Receipt> findByTypeAndWarehouseId(ReceiptType type, Long warehouseId);
 }

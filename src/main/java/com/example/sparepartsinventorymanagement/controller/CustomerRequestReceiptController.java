@@ -126,4 +126,26 @@ public class CustomerRequestReceiptController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @Operation(summary = "Get all customer request receipts by warehousee")
+    @GetMapping("/warehouse")
+    public ResponseEntity<?> getAllCustomerRequestReceiptsByWarehouse() {
+        try {
+            List<CustomerRequestReceiptDTO> receipts = customerRequestReceiptService.getAllCustomerRequestReceiptsByWarehouse();
+            if (receipts.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                        HttpStatus.NOT_FOUND.toString(), "No customer request receipts found", null
+                ));
+            }
+            return ResponseEntity.ok(new ResponseObject(
+                    HttpStatus.OK.toString(), "Customer request receipts retrieved successfully", receipts
+            ));
+        } catch (Exception e) {
+            // Log the exception details here
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
+                    HttpStatus.INTERNAL_SERVER_ERROR.toString(), "An error occurred while retrieving customer request receipts", null
+            ));
+        }
+    }
+
 }

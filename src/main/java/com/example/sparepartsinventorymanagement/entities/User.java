@@ -74,8 +74,6 @@ public class User {
     private Role role;
 
 
-
-
     @OneToMany(mappedBy = "createdBy")
     private List<Item> createdItems;
 

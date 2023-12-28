@@ -1,7 +1,10 @@
 package com.example.sparepartsinventorymanagement.service;
 
+import com.example.sparepartsinventorymanagement.dto.request.CheckInventoryReceiptForm;
 import com.example.sparepartsinventorymanagement.dto.request.ImportRequestReceiptForm;
+import com.example.sparepartsinventorymanagement.dto.request.InventoryCheckDetail;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateImportRequestReceipt;
+import com.example.sparepartsinventorymanagement.dto.response.CheckInventoryReceiptResponse;
 import com.example.sparepartsinventorymanagement.dto.response.ExportReceiptResponse;
 import com.example.sparepartsinventorymanagement.dto.response.ImportRequestReceiptResponse;
 import com.example.sparepartsinventorymanagement.dto.response.NotificationDTO;
@@ -46,6 +49,9 @@ public interface ReceiptService {
 
     List<ExportReceiptResponse> getAllExportReceiptsByWareHouse();
 
+
+    CheckInventoryReceiptResponse createCheckInventoryReceipt(CheckInventoryReceiptForm checkInventoryReceiptForm);
+    List<CheckInventoryReceiptResponse>  getAllCheckInventoryReceipts();
     ExportReceiptResponse getExportReceiptById(Long id);
 
     void deleteExportReceipt(Long id);

@@ -132,7 +132,7 @@ public class ItemServiceImpl implements ItemService {
                 .minStockLevel(form.getMinStockLevel())
                 .maxStockLevel(form.getMaxStockLevel())
                 .quantity(0)
-                .sold(0)
+
                 .available(0)
                 .status(ItemStatus.Inactive)
                 .createdAt(currentDate)

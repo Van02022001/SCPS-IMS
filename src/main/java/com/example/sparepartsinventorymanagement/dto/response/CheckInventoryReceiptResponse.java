@@ -1,43 +1,38 @@
 package com.example.sparepartsinventorymanagement.dto.response;
 
+import com.example.sparepartsinventorymanagement.entities.ReceiptStatus;
+import com.example.sparepartsinventorymanagement.entities.ReceiptType;
 import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SuppliersDTO {
+@Builder
+public class CheckInventoryReceiptResponse {
 
-
+    private Long warehouseId;
     private Long id;
-
     private String code;
-
-    private String name;
-
-    private String phone;
-
-    private String email;
-
-    private String taxCode;
-
-    private String address;
-    private boolean status;
-
-//    @Column(name = "created_at", nullable = false)
+    private ReceiptType type;
+    private ReceiptStatus status;
+    private String description;
+    private String createdBy; // ID của người tạo
+    private String lastModifiedBy; // ID của người chỉnh sửa cuối cùng
+    private String receivedBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date createdAt;
-
-//    @Column(name = "updated_at")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
+    private List<InventoryCheckDetailResponse> details;
 }

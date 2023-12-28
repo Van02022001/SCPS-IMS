@@ -8,5 +8,7 @@ public enum EventType {
     APPROVED,
     REJECTED, // Từ chối
     REQUESTED, // Yêu cầu
-    CONFIRMED
+    CONFIRMED,
+    DISCREPANCY,
+    NO_DISCREPANCY
 }

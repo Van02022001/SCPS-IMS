@@ -31,8 +31,6 @@ public class Item {
     @Column(name = "quantity", nullable = false)
     private int quantity;
 
-    @Column(name = "sold", nullable = false)
-    private int sold;
 
     @Column(name = "available", nullable = false)
     private int available;

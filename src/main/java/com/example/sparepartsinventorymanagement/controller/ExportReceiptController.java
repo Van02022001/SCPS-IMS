@@ -1,5 +1,7 @@
 package com.example.sparepartsinventorymanagement.controller;
 
+import com.example.sparepartsinventorymanagement.dto.request.InventoryCheckDetail;
+import com.example.sparepartsinventorymanagement.dto.response.CheckInventoryReceiptResponse;
 import com.example.sparepartsinventorymanagement.dto.response.ExportReceiptResponse;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.service.ReceiptService;

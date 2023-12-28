@@ -14,15 +14,12 @@ import java.util.Date;
 @Setter
 @Getter
 @Entity
-@Table(name = "inventory_discrepancy_log")
-public class InventoryDiscrepancyLog {
+@Table(name = "inventory_discrepancy_logs")
+public class InventoryDiscrepancyLogs {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "receipt_detail_id", nullable = false)
-    private ReceiptDetail receiptDetail;
 
     @Column(name = "required_quantity")
     private int requiredQuantity;
@@ -47,4 +44,7 @@ public class InventoryDiscrepancyLog {
     private Date logTime;
 
 
+    @ManyToOne
+    @JoinColumn(name = "inventory_id", nullable = false)
+    private Inventory inventory;
 }

@@ -32,6 +32,9 @@ public class Inventory {
     @Column(name = "outbound_quantity")
     private int outboundQuantity; // Số lượng xuất
 
+    @Column(name = "average_unit_value")
+    private int averageUnitValue;
+
     @Column(name = "outbound_value")
     private double outboundValue; // Giá trị xuất
 
@@ -63,6 +66,9 @@ public class Inventory {
     @ManyToOne
     @JoinColumn(name = "warehouse_id", nullable = false)
     private Warehouse warehouse;
+
+    @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<InventoryDiscrepancyLogs> discrepancyLogs;
 
 
 

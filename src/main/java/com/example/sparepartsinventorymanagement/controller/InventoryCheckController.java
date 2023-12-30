@@ -12,10 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -54,6 +51,61 @@ public class InventoryCheckController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
                     HttpStatus.INTERNAL_SERVER_ERROR.toString(),
                     "An error occurred while creating the inventory check receipt",
+                    null
+            ));
+        }
+    }
+
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF') or hasRole('ROLE_MANAGER') ")
+    @Operation(summary = "Get all inventory check receipts")
+    @GetMapping("/receipts")
+    public ResponseEntity<?> getAllInventoryCheckReceipts() {
+        try {
+            List<CheckInventoryReceiptResponse> checkInventoryReceiptResponses = receiptService.getAllCheckInventoryReceipts();
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "All inventory check receipts retrieved successfully",
+                    checkInventoryReceiptResponses
+            ));
+        }
+        catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        }catch (Exception e) {
+            // Log the exception details here
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
+                    HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                    "An error occurred while retrieving inventory check receipts",
+                    null
+            ));
+        }
+    }
+
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF') or hasRole('ROLE_MANAGER')")
+    @Operation(summary = "Get an inventory check receipt by ID")
+    @GetMapping("/receipts/{receiptId}")
+    public ResponseEntity<?> getInventoryCheckReceiptById(@PathVariable Long receiptId) {
+        try {
+            CheckInventoryReceiptResponse checkInventoryReceiptResponse = receiptService.getCheckInventoryReceiptById(receiptId);
+            return ResponseEntity.ok(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Inventory check receipt retrieved successfully",
+                    checkInventoryReceiptResponse
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        } catch (Exception e) {
+            // Log the exception details here
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
+                    HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                    "An error occurred while retrieving the inventory check receipt",
                     null
             ));
         }

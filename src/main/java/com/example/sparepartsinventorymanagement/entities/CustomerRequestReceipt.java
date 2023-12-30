@@ -1,6 +1,8 @@
 package com.example.sparepartsinventorymanagement.entities;
 
 import com.example.sparepartsinventorymanagement.audit.Auditable;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -13,6 +15,8 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+
 @Table(name="customer_request_recipt")
 public class CustomerRequestReceipt extends Auditable<User> {
 

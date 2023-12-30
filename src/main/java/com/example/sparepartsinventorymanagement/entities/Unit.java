@@ -1,6 +1,8 @@
 package com.example.sparepartsinventorymanagement.entities;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,6 +14,8 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+
 @Table(name = "units")
 public class Unit {
     @Id

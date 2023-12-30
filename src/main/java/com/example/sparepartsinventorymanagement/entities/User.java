@@ -1,10 +1,7 @@
 package com.example.sparepartsinventorymanagement.entities;
 
 import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -20,6 +17,8 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+
 @Table(name = "users")
 public class User {
     @Id
@@ -74,10 +73,10 @@ public class User {
     private Role role;
 
 
-    @OneToMany(mappedBy = "createdBy")
+    @OneToMany(mappedBy = "createdBy", fetch = FetchType.EAGER)
     private List<Item> createdItems;
 
-    @OneToMany(mappedBy = "updatedBy")
+    @OneToMany(mappedBy = "updatedBy", fetch = FetchType.EAGER)
     private List<Item> updatedItems;
 
     @OneToMany(mappedBy = "createdBy")

@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,4 +18,5 @@ public class InventoryCheckDetailResponse {
     private int discrepancyQuantity;
     private double discrepancyValue;
     private String note;
+    private List<LocationQuantityResponse> locations;
 }

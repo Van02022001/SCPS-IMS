@@ -11,7 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 public class CheckInventoryReceiptForm {
 
-    private Long managerId;
     private String description;
     private List<InventoryCheckDetail> details;
 }

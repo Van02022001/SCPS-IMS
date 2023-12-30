@@ -16,6 +16,7 @@ import com.example.sparepartsinventorymanagement.service.InventoryService;
 import com.example.sparepartsinventorymanagement.service.NotificationService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.persistence.Cacheable;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -141,31 +143,46 @@ public class InventoryServiceImpl implements InventoryService {
                 } )
                 .collect(Collectors.toList());
     }
-
-    @Scheduled(cron = "0 0 * * * *")
+    private Map<Long, Boolean> lowStockNotificationSentMap = new ConcurrentHashMap<>();
+    @Scheduled(fixedRate = 600000)
     public void checkAndNotifyLowStock() {
         List<Item> allItems = itemRepository.findAll();
         Map<Long, Integer> totalQuantities = getTotalQuantitiesByItem();
-        allItems.forEach(item -> {
+
+        for (Item item : allItems) {
             int totalQuantity = totalQuantities.getOrDefault(item.getId(), 0);
-            if (totalQuantity < item.getMinStockLevel()) {
+            Boolean notificationSent = lowStockNotificationSentMap.getOrDefault(item.getId(), false);
+
+            if (!notificationSent && totalQuantity < item.getMinStockLevel()) {
                 sendLowStockNotification(item);
+                lowStockNotificationSentMap.put(item.getId(), true);
+            } else if (notificationSent && totalQuantity >= item.getMinStockLevel()) {
+                // If the stock level is restored, reset the notification flag
+                lowStockNotificationSentMap.put(item.getId(), false);
             }
-        });
+        }
     }
-    @Scheduled(cron = "0 0 * * * *")
+    private Map<Long, Boolean> notificationSentMap = new ConcurrentHashMap<>();
+    @Scheduled(fixedRate = 600000)
     public void checkAndNotifyHighStock(){
         List<Item> allItems = itemRepository.findAll();
         Map<Long, Integer> totalQuantities = getTotalQuantitiesByItem();
-        allItems.forEach(item -> {
+
+        for (Item item : allItems) {
             int totalQuantity = totalQuantities.getOrDefault(item.getId(), 0);
-            if(totalQuantity > item.getMaxStockLevel()){
+            Boolean notificationSent = notificationSentMap.getOrDefault(item.getId(), false);
+
+            if (!notificationSent && totalQuantity > item.getMaxStockLevel()) {
                 sendHighStockNotification(item);
+                notificationSentMap.put(item.getId(), true);
+            } else if (notificationSent && totalQuantity <= item.getMaxStockLevel()) {
+                // If the stock level goes back to normal, reset the notification flag
+                notificationSentMap.put(item.getId(), false);
             }
-        });
+        }
 
     }
-
+    //@Cacheable("totalQuantities")
     private Map<Long, Integer> getTotalQuantitiesByItem() {
         List<Inventory> inventories = inventoryRepository.findAll();
         return inventories.stream()
@@ -189,8 +206,6 @@ public class InventoryServiceImpl implements InventoryService {
                     NotificationType.CANH_BAO_HET_HANG,
                     message
             );
-        } else {
-            throw new NotFoundException("manager not found");
         }
     }
 

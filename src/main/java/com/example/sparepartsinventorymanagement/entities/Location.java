@@ -48,8 +48,8 @@ public class Location {
     @ManyToOne
     @JoinColumn(name = "item_id")
     private Item item;
-    @OneToMany(mappedBy = "fromLocation", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "fromLocation", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<ItemMovement> fromMovements ;
-    @OneToMany(mappedBy = "toLocation", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "toLocation", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<ItemMovement> toMovements;
 }

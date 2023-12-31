@@ -69,7 +69,7 @@ public class Customer {
     private Date updatedAt;
 
 
-    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "customer")
     private List<CustomerRequestReceipt> customerRequestReceiptList;
 
 }

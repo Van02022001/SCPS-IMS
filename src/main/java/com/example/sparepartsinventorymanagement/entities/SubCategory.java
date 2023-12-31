@@ -48,7 +48,7 @@ public class SubCategory {
     @Column(name="status", nullable = false)
     private SubCategoryStatus status;
 
-    @ManyToMany(mappedBy = "subCategories")
+    @ManyToMany(mappedBy = "subCategories", fetch = FetchType.EAGER)
     private Set<Category> categories;
 
     @OneToOne

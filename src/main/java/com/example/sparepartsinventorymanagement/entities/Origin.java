@@ -26,7 +26,7 @@ public class Origin {
     @Column(name = "name", length = 50)
     private String name;
 
-    @OneToMany(mappedBy = "origin", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "origin")
     @JsonIgnore
     private List<Item> items;
 

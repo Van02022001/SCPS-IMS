@@ -26,7 +26,7 @@ public class UnitMeasurement {
     @Column(name = "name", nullable = false)
     private String name; // Ví dụ: "m", "cm", "mm"
 
-    @OneToMany(mappedBy = "unitMeasurement")
+    @OneToMany(mappedBy = "unitMeasurement", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Size> sizes;
 

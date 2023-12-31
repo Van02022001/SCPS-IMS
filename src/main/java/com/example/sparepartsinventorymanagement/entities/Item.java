@@ -79,7 +79,7 @@ public class Item {
 
 
 
-    @OneToMany(mappedBy = "item")
+    @OneToMany(mappedBy = "item", fetch = FetchType.EAGER)
     @JsonIgnore
     private List<Inventory> inventoryList;
 

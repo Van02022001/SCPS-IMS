@@ -32,7 +32,7 @@ public class Brand {
     @Column(name = "description", columnDefinition = "TINYTEXT")
     private String description;
 
-    @OneToMany(mappedBy = "brand")
+    @OneToMany(mappedBy = "brand", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Item> items;
 }

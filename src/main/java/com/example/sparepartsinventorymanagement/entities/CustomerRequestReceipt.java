@@ -50,7 +50,7 @@ public class CustomerRequestReceipt extends Auditable<User> {
     private CustomerRequestReceiptStatus status;
 
 
-    @OneToMany(mappedBy = "customerRequestReceipt")
+    @OneToMany(mappedBy = "customerRequestReceipt", fetch = FetchType.EAGER)
     private Set<Receipt> receipts;
 
     @ManyToOne

@@ -46,7 +46,7 @@ public class Category {
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date updatedAt;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "category_subcategory", // tên bảng liên kết
             joinColumns = @JoinColumn(name = "category_id"), // khóa ngoại cho Category

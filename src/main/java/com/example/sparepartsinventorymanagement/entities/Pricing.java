@@ -39,6 +39,6 @@ public class Pricing {
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
-    @OneToMany(mappedBy = "pricing", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "pricing", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PricingAudit> pricingAudits; // This will hold the audit history for the pricing
 }

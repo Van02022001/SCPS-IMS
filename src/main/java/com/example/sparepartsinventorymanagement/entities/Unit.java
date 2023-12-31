@@ -26,7 +26,7 @@ public class Unit {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @OneToMany(mappedBy = "unit")
+    @OneToMany(mappedBy = "unit",  fetch = FetchType.LAZY)
     @JsonIgnore
     private List<SubCategory> subCategories;
 

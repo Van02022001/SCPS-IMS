@@ -37,7 +37,7 @@ public class Location {
     @JoinColumn(name = "warehouse_id") // Foreign key column pointing to Warehouse
     private Warehouse warehouse;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "location_location_tag", // tên bảng liên kết
             joinColumns = @JoinColumn(name = "location_id"), // khóa ngoại cho Location
@@ -48,8 +48,8 @@ public class Location {
     @ManyToOne
     @JoinColumn(name = "item_id")
     private Item item;
-    @OneToMany(mappedBy = "fromLocation", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "fromLocation", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ItemMovement> fromMovements ;
-    @OneToMany(mappedBy = "toLocation", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "toLocation", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ItemMovement> toMovements;
 }

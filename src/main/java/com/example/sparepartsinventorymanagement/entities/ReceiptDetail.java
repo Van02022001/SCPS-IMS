@@ -55,7 +55,7 @@ public class ReceiptDetail  extends Auditable<User> {
     @JoinColumn(name = "receipt_id", nullable = false)
     private Receipt receipt;
 
-    @OneToMany(mappedBy = "receiptDetail", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "receiptDetail", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<InventoryDiscrepancyLog> discrepancyLogs;
     @OneToMany(mappedBy = "receiptDetail", cascade = CascadeType.ALL)
     private List<ItemMovement> itemMovements;

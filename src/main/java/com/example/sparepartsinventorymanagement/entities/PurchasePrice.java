@@ -38,7 +38,7 @@ public class PurchasePrice {
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
-    @OneToMany(mappedBy = "purchasePrice", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "purchasePrice", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<PurchasePriceAudit> purchasePriceAudits;
 
 

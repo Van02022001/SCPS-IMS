@@ -92,10 +92,10 @@ public class Item {
     private Origin origin;
 
 
-    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<ItemMovement> movements;
 
-    @OneToMany(mappedBy = "items", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "items", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<CustomerRequestReceiptDetail> customerRequestReceiptDetailList;
 
 
@@ -105,7 +105,7 @@ public class Item {
     @OneToOne(mappedBy = "item")
     private PurchasePrice purchasePrice;
 
-    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Location> locations;
 
     // Getters and setters (omitted for brevity)

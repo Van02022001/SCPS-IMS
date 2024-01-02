@@ -562,6 +562,7 @@ public class ItemServiceImpl implements ItemService {
         }
         if(receipt.getDetails().size() == count){
             receipt.setStatus(ReceiptStatus.Completed);
+            receiptRepository.save(receipt);
             return true;
         }else {
             return false;

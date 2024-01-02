@@ -1032,9 +1032,14 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                 Location location = locationRepository.findById(locationQuantityDetail.getLocationId())
                         .orElseThrow(() -> new NotFoundException("Location not found with ID: " + locationQuantityDetail.getLocationId()));
 
-                totalLocationQuantity += locationQuantityDetail.getQuantity();
-                location.setItem_quantity(locationQuantityDetail.getQuantity());
-                locationRepository.save(location);
+                if (locationQuantityDetail.getQuantity() == 0) {
+                    // Xóa location nếu số lượng là 0
+                    locationRepository.delete(location);
+                } else {
+                    totalLocationQuantity += locationQuantityDetail.getQuantity();
+                    location.setItem_quantity(locationQuantityDetail.getQuantity());
+                    locationRepository.save(location);
+                }
             }
 
             if (totalLocationQuantity != detail.getActualQuantity()) {
@@ -1430,23 +1435,7 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
 
 
 
-//    private ReceiptDiscrepancyLog handleDiscrepancy(ReceiptDetail detail, int requiredQuantity, int actualQuantity, double unitPrice) {
-//        // Tạo một đối tượng mới của InventoryDiscrepancyLog
-//        ReceiptDiscrepancyLog discrepancyLog = new ReceiptDiscrepancyLog();
-//
-//        // Thiết lập các thông tin cần thiết cho discrepancyLog
-//        discrepancyLog.setReceiptDetail(detail);
-//        discrepancyLog.setRequiredQuantity(requiredQuantity);
-//        discrepancyLog.setActualQuantity(actualQuantity);
-//        discrepancyLog.setDiscrepancyQuantity(actualQuantity - requiredQuantity);
-//        discrepancyLog.setDiscrepancyValue((actualQuantity - requiredQuantity) * unitPrice);
-//        discrepancyLog.setLogTime(new Date());
-//
-//        // Lưu discrepancyLog vào cơ sở dữ liệu
-//
-//
-//        return inventoryDiscrepancyLogRepository.save(discrepancyLog);
-//    }
+
 
 
 
@@ -1465,18 +1454,7 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                 .build();
     }
 
-//    private ImportRequestReceiptDetailResponse  buildImportRequestReceiptDetailResponse(ReceiptDetail detail, int actualQuantity, int  discrepancyQuantity, ReceiptDiscrepancyLog discrepancyLog) {
-//        return ImportRequestReceiptDetailResponse.builder()
-//                .id(detail.getId())
-//                .itemName(detail.getItem().getSubCategory().getName())
-//                .quantity(actualQuantity)
-//                .unitName(detail.getUnitName())
-//                .price(detail.getUnitPrice())
-//                .totalPrice(detail.getUnitPrice() * actualQuantity)
-//                .discrepancyQuantity(discrepancyQuantity)
-//                .discrepancyLogs(discrepancyLog != null ? Arrays.asList(discrepancyLog) : null)
-//                .build();
-//    }
+
 
     private ImportRequestReceiptResponse buildImportRequestReceiptResponse(Receipt receipt, List<ImportRequestReceiptDetailResponse> detailResponses) {
         return ImportRequestReceiptResponse.builder()

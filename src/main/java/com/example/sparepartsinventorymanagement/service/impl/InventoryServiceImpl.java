@@ -1,13 +1,8 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
-import com.example.sparepartsinventorymanagement.dto.request.UpdateInventoryForm;
 import com.example.sparepartsinventorymanagement.dto.response.InventoryDTO;
-import com.example.sparepartsinventorymanagement.dto.response.InventoryItemSummaryDTO;
-import com.example.sparepartsinventorymanagement.dto.response.NotificationDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
-import com.example.sparepartsinventorymanagement.exception.InvalidResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
-import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
 import com.example.sparepartsinventorymanagement.repository.InventoryRepository;
 import com.example.sparepartsinventorymanagement.repository.ItemRepository;
 import com.example.sparepartsinventorymanagement.repository.UserRepository;
@@ -15,19 +10,14 @@ import com.example.sparepartsinventorymanagement.repository.WarehouseRepository;
 import com.example.sparepartsinventorymanagement.service.InventoryService;
 import com.example.sparepartsinventorymanagement.service.NotificationService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
-import io.swagger.v3.oas.annotations.Operation;
-import jakarta.persistence.Cacheable;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

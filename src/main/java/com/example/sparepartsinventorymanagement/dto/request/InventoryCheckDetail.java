@@ -1,6 +1,10 @@
 package com.example.sparepartsinventorymanagement.dto.request;
 
 import com.example.sparepartsinventorymanagement.entities.Item;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,9 +16,13 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InventoryCheckDetail {
+    @NotNull(message = "Item ID cannot be null")
     private Long itemId;
+    @Min(value = 0, message = "Actual quantity must be non-negative")
     private int actualQuantity;
+    @Size(max = 1000, message = "Note length must be less than or equal to 1000 characters")
     private String note;
+    @Valid
     private List<LocationQuantityDetail > locationQuantities;
 
 }

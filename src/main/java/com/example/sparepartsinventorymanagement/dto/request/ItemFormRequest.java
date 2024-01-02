@@ -1,15 +1,15 @@
 package com.example.sparepartsinventorymanagement.dto.request;
 
 import com.example.sparepartsinventorymanagement.entities.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.*;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -36,4 +36,15 @@ public class ItemFormRequest {
     @NotNull(message = "Origin ID is required")
     private Long origin_id;
 
+    @NotNull(message = "Start date cannot be null")
+    @FutureOrPresent(message = "Start date must be in the present or future")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+    private Date startDate;
+
+    @DecimalMin(value = "0.01", message = "Price must be greater than zero")
+    private double price;
+
+    @DecimalMin(value = "0.01", message = "Purchase price must be greater than zero")
+    private double purchasePrice;
 }

@@ -15,6 +15,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -70,6 +71,21 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .filter(receipt1 -> receipt1.getType() == ReceiptType.PHIEU_XUAT_KHO)
                 .orElseThrow(() -> new NotFoundException("Export Receipt with Id " + id + " not found or not of type PHIEU_XUAT_KHO"));
         receiptRepository.delete(receipt);
+    }
+
+    @Override
+    public List<ReceiptDetailDTO> getItemsNullLocation(Long id) {
+        Receipt receipt = receiptRepository.findById(id).orElseThrow(
+                ()-> new NotFoundException("Receipt not found")
+        );
+        List<ReceiptDetail> detailResponses = new ArrayList<>();
+
+        for (ReceiptDetail requestDetail : receipt.getDetails()) {
+            if(requestDetail.getItemMovements().isEmpty()){
+               detailResponses.add(requestDetail);
+            }
+        }
+        return modelMapper.map(detailResponses, new TypeToken<List<ReceiptDetailDTO>>(){}.getType());
     }
 
     @Override

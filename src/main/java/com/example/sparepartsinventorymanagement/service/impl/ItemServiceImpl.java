@@ -12,6 +12,8 @@ import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
 import com.example.sparepartsinventorymanagement.repository.*;
 import com.example.sparepartsinventorymanagement.service.ItemService;
 
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 
@@ -60,7 +62,8 @@ public class ItemServiceImpl implements ItemService {
     private final ModelMapper modelMapper;
     private final WarehouseRepository warehouseRepository;
     private final ReceiptRepository receiptRepository;
-
+    private final PricingRepository pricingRepository;
+    private final PurchasePriceRepository purchasePriceRepository;
     @Override
     public List<ItemDTO> getAll() {
         List<Item> items = itemRepository.findAll();
@@ -92,6 +95,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public ItemDTO createItem(ItemFormRequest form) {
 
         //Check brand
@@ -144,6 +148,45 @@ public class ItemServiceImpl implements ItemService {
                 .supplier(supplier)
                 .updatedBy(user)
                 .build();
+        // Map the request to a Pricing entity
+        Pricing pricing = new Pricing();
+        pricing.setStartDate(form.getStartDate());
+        pricing.setPrice(form.getPrice());
+
+        // Set the item to the pricing
+        pricing.setItem(item);
+
+        // Save the Pricing entity
+        Pricing savedPricing = pricingRepository.save(pricing);
+
+        // Create and save the PricingAudit
+        PricingAudit pricingAudit = new PricingAudit();
+        pricingAudit.setChangeDate(currentDate); // Set the current date as the change date
+        pricingAudit.setOldPrice(item.getPricing() != null ? item.getPricing().getPrice() : 0.0); // Old price from the item's current pricing
+        pricingAudit.setNewPrice(pricing.getPrice());
+        pricingAudit.setPricing(savedPricing);
+        pricingAudit.setChangedBy(user);
+        pricingAuditRepository.save(pricingAudit);
+
+        // Update the Item's Pricing
+        item.setPricing(savedPricing);
+
+        PurchasePrice newPrice = PurchasePrice.builder()
+                .item(item)
+                .price(form.getPurchasePrice())
+                .effectiveDate(new Date())
+                .build();
+        purchasePriceRepository.save(newPrice);
+        PurchasePriceAudit priceAudit = PurchasePriceAudit.builder()
+                .changedBy(user)
+                .changeDate(currentDate)
+                .oldPrice(0.0)
+                .newPrice(newPrice.getPrice())
+                .purchasePrice(newPrice)
+                .build();
+        purchasePriceAuditRepository.save(priceAudit);
+        item.setPurchasePrice(newPrice);
+
 
         itemRepository.save(item);
         return modelMapper.map(item, ItemDTO.class);
@@ -204,6 +247,42 @@ public class ItemServiceImpl implements ItemService {
         item.setSupplier(supplier);
         item.setUpdatedBy(user);
         item.setUpdatedAt(date);
+        //update pricing
+        if(item.getPricing() != null && item.getPricing().getPrice() != form.getPrice()){
+            // Capture old price for auditing
+            double oldPrice = item.getPricing().getPrice();
+
+            // Update pricing
+            item.getPricing().setPrice(form.getPrice());
+            item.getPricing().setStartDate(form.getStartDate());
+            pricingRepository.save(item.getPricing());
+
+            // Audit the price change
+            var auditRecord = new PricingAudit();
+            auditRecord.setPricing(item.getPricing());
+            auditRecord.setOldPrice(oldPrice);
+            auditRecord.setNewPrice(form.getPrice());
+            auditRecord.setChangeDate(date); // Assuming current date as change date
+            auditRecord.setChangedBy(user);
+            pricingAuditRepository.save(auditRecord);
+        }
+        //update purchase price
+        if(item.getPurchasePrice() != null && item.getPurchasePrice().getPrice() != form.getPurchasePrice()){
+
+            // Capture old price for auditing
+            double oldPrice = item.getPurchasePrice().getPrice();
+            item.getPurchasePrice().setPrice(form.getPurchasePrice());
+            purchasePriceRepository.save(item.getPurchasePrice());
+
+            PurchasePriceAudit priceAudit = PurchasePriceAudit.builder()
+                    .changedBy(user)
+                    .changeDate(date)
+                    .oldPrice(oldPrice)
+                    .newPrice(form.getPurchasePrice())
+                    .purchasePrice(item.getPurchasePrice())
+                    .build();
+            purchasePriceAuditRepository.save(priceAudit);
+        }
 
         itemRepository.save(item);
 
@@ -481,7 +560,12 @@ public class ItemServiceImpl implements ItemService {
                 count++;
             }
         }
-        return receipt.getDetails().size() == count;
+        if(receipt.getDetails().size() == count){
+            receipt.setStatus(ReceiptStatus.Completed);
+            return true;
+        }else {
+            return false;
+        }
     }
 
     @Override

@@ -4,11 +4,9 @@ import com.example.sparepartsinventorymanagement.dto.request.CheckInventoryRecei
 import com.example.sparepartsinventorymanagement.dto.request.ImportRequestReceiptForm;
 import com.example.sparepartsinventorymanagement.dto.request.InventoryCheckDetail;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateImportRequestReceipt;
-import com.example.sparepartsinventorymanagement.dto.response.CheckInventoryReceiptResponse;
-import com.example.sparepartsinventorymanagement.dto.response.ExportReceiptResponse;
-import com.example.sparepartsinventorymanagement.dto.response.ImportRequestReceiptResponse;
-import com.example.sparepartsinventorymanagement.dto.response.NotificationDTO;
+import com.example.sparepartsinventorymanagement.dto.response.*;
 import com.example.sparepartsinventorymanagement.entities.Notification;
+import com.example.sparepartsinventorymanagement.entities.ReceiptDetail;
 
 import java.util.List;
 import java.util.Map;
@@ -58,4 +56,5 @@ public interface ReceiptService {
     ExportReceiptResponse getExportReceiptById(Long id);
 
     void deleteExportReceipt(Long id);
+    List<ReceiptDetailDTO> getItemsNullLocation(Long id);
 }

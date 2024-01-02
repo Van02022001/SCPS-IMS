@@ -4,10 +4,13 @@ import com.example.sparepartsinventorymanagement.dto.request.*;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PricingAuditDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
+import com.example.sparepartsinventorymanagement.dto.response.ReceiptDetailDTO;
 import com.example.sparepartsinventorymanagement.entities.ItemStatus;
+import com.example.sparepartsinventorymanagement.entities.ReceiptDetail;
 import com.example.sparepartsinventorymanagement.exception.InvalidResourceException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.service.impl.ItemServiceImpl;
+import com.example.sparepartsinventorymanagement.service.impl.ReceiptServiceImpl;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,6 +35,8 @@ import java.util.List;
 public class ItemController {
     @Autowired
     private ItemServiceImpl itemService;
+    @Autowired
+    private ReceiptServiceImpl receiptService;
 
     @Operation(summary = "For get list of items")
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -368,5 +373,25 @@ public class ItemController {
             ));
         }
     }
-
+    @Operation(summary = "For get list of receipt detail need update item location")
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @GetMapping(value = "/item-locations/receitp-detail/{receiptId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getItemsNullLocation(
+            @Parameter(description = "Enter the receipt ID", required = true, example = "1")
+            @PathVariable(name = "receiptId") @NotNull Long receiptId
+    ) {
+        List<ReceiptDetailDTO> res = receiptService.getItemsNullLocation(receiptId);
+        if(res.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    "Danh sách trống.",
+                    null
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(),
+                "Lấy danh sách nội dung phiếu chưa cập nhật vị trí thành công.",
+                res
+        ));
+    }
 }

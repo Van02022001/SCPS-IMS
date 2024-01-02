@@ -24,7 +24,7 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Many notifications can belong to one user
+    @ManyToOne(fetch = FetchType.EAGER) // Many notifications can belong to one user
     @JoinColumn(name = "user_id")
     private User user;
 

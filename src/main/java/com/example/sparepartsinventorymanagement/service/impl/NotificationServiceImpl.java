@@ -7,6 +7,7 @@ import com.example.sparepartsinventorymanagement.repository.NotificationReposito
 import com.example.sparepartsinventorymanagement.repository.NotificationTemplateRepository;
 import com.example.sparepartsinventorymanagement.repository.UserRepository;
 import com.example.sparepartsinventorymanagement.service.NotificationService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -42,6 +43,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 
     @Override
+    @Transactional
     public Notification  createAndSendNotification(SourceType sourceType, EventType eventType, Long sourceId, Long userId, NotificationType notificationType, String customMessage) {
         try {
         User user = userRepository.findById(userId)

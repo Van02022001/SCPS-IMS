@@ -1,16 +1,12 @@
 package com.example.sparepartsinventorymanagement.entities;
 
 import com.example.sparepartsinventorymanagement.audit.Auditable;
-import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -56,7 +52,7 @@ public class ReceiptDetail  extends Auditable<User> {
     private Receipt receipt;
 
     @OneToMany(mappedBy = "receiptDetail", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<InventoryDiscrepancyLog> discrepancyLogs;
+    private List<ReceiptDiscrepancyLog> discrepancyLogs;
     @OneToMany(mappedBy = "receiptDetail", cascade = CascadeType.ALL)
     private List<ItemMovement> itemMovements;
     public ReceiptDetail() {

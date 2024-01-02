@@ -6,6 +6,7 @@ import com.example.sparepartsinventorymanagement.dto.response.InventoryDTO;
 import com.example.sparepartsinventorymanagement.dto.response.InventoryItemSummaryDTO;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.service.InventoryService;
+import com.example.sparepartsinventorymanagement.service.ReceiptService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,6 +25,7 @@ import java.util.List;
 @RequestMapping("api/v1/inventories")
 public class InventoryController {
     private final InventoryService inventoryService;
+    private final ReceiptService receiptService;
     @PreAuthorize("hasRole('ROLE_MANAGER') or hasRole('ROLE_INVENTORY_STAFF')")
     @Operation(summary = "Get all inventories for a specific warehouse")
     @GetMapping(value="/warehouse/{warehouseId}", produces = MediaType.APPLICATION_JSON_VALUE)

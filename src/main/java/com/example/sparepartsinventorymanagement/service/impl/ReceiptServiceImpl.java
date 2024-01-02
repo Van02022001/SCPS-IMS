@@ -88,7 +88,10 @@ public class ReceiptServiceImpl implements ReceiptService {
             throw new AccessDeniedException("You do not have permission to confirm this import request receipt.");
         }
 
-
+        // Kiểm tra xem phiếu đã được xác nhận chưa
+        if (receipt.getStatus() == ReceiptStatus.Approved) {
+            throw new IllegalStateException("This import request receipt has already been confirmed.");
+        }
         // Cập nhật trạng thái
         receipt.setStatus(ReceiptStatus.Approved);
         var updatedReceipt = receiptRepository.save(receipt);
@@ -120,7 +123,10 @@ public class ReceiptServiceImpl implements ReceiptService {
         if (currentUser == null || !currentUser.getId().equals(receipt.getReceivedBy().getId())) {
             throw new AccessDeniedException("You do not have permission to confirm this import request receipt.");
         }
-
+        // Kiểm tra xem phiếu đã được xác nhận chưa
+        if (receipt.getStatus() == ReceiptStatus.IN_PROGRESS) {
+            throw new IllegalStateException("This import request receipt has already been in progress.");
+        }
         receipt.setStatus(ReceiptStatus.IN_PROGRESS);
         receiptRepository.save(receipt);
 
@@ -673,91 +679,74 @@ public class ReceiptServiceImpl implements ReceiptService {
         } while (isCodeExist(code));
         return code;
     }
-    @Override
-    @Transactional
-    public ImportRequestReceiptResponse createImportReceipt(Long receiptId, Map<Long, Integer> actualQuantities) {
-        Receipt requestReceipt  = receiptRepository.findById(receiptId)
-                .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found"));
-
-        if (requestReceipt.getStatus() != ReceiptStatus.IN_PROGRESS) {
-            throw new IllegalStateException("Receipt is not in the approved state for processing");
-        }
-        // can than sai
-        requestReceipt.setStatus(ReceiptStatus.Completed);
-        receiptRepository.save(requestReceipt);
-
-        // Create a new receipt
-        Receipt actualReceipt  = Receipt.builder()
-                .code(generateAndValidateUniqueCode())
-                .type(ReceiptType.PHIEU_NHAP_KHO)
-                .status(ReceiptStatus.Completed)
-                .description("Actual Import based on Request Receipt #" + receiptId)
-                .createdBy(getCurrentAuthenticatedUser())
-                .lastModifiedBy(getCurrentAuthenticatedUser())
-                .totalQuantity(requestReceipt.getTotalQuantity())
-                .warehouse(requestReceipt.getWarehouse())
-                .build();
-        Receipt savedReceipt = receiptRepository.save(actualReceipt );
-
-        boolean hasDiscrepancy = false;
-        List<ImportRequestReceiptDetailResponse> detailResponses = new ArrayList<>();
-        double totalActualPrice = 0;
-        int totalActualQuantity = 0;
-
-        for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
-            int requiredQuantity = requestDetail.getQuantity();
-            int actualQuantity = actualQuantities.getOrDefault(requestDetail.getItem().getId(), requiredQuantity);
-            int discrepancyQuantity = actualQuantity - requiredQuantity;
-//            double actualPrice = calculateWeightedAveragePurchasePrice(requestDetail.getItem());
-//            double totalPriceForDetail = actualPrice * actualQuantity;
-            double unitPrice = requestDetail.getItem().getPurchasePrice().getPrice();
-            double totalPriceForItem = unitPrice * actualQuantity;
-
-            ReceiptDetail actualDetail = ReceiptDetail.builder()
-                    .receipt(savedReceipt)
-                    .item(requestDetail.getItem())
-                    .quantity(actualQuantity)
-                    .unitPrice(unitPrice)
-                    .totalPrice(totalPriceForItem)
-                    .unitName(requestDetail.getUnitName())
-                    .build();
-            receiptDetailRepository.save(actualDetail);
-
-            totalActualPrice += totalPriceForItem;
-            totalActualQuantity += actualQuantity;
-
-            ImportRequestReceiptDetailResponse detailResponse;
-            if (discrepancyQuantity != 0) {
-                InventoryDiscrepancyLog discrepancyLog = handleDiscrepancy(actualDetail, requiredQuantity, actualQuantity, requestDetail.getUnitPrice());
-                detailResponse = buildImportRequestReceiptDetailResponse(actualDetail, actualQuantity, discrepancyQuantity, discrepancyLog);
-                hasDiscrepancy = true;
-            } else {
-                detailResponse = buildImportRequestReceiptDetailResponse(actualDetail, actualQuantity, 0, null);
-            }
-            detailResponses.add(detailResponse);
-
-            updateInventoryForInbound(requestDetail.getItem(),actualQuantity, unitPrice,  actualReceipt.getWarehouse().getId());
-
-
-        }
-
-        actualReceipt.setTotalPrice(totalActualPrice);
-        actualReceipt.setTotalQuantity(totalActualQuantity);
-        receiptRepository.save(actualReceipt);
-
-
-
-
-
-        // Send notification
-        createAndSendNotificationForReceipt(savedReceipt, hasDiscrepancy);
-
-        // Build and return response
-        return buildImportRequestReceiptResponse(savedReceipt, detailResponses);
-    }
-
 
 @Override
+@Transactional
+public ImportRequestReceiptResponse createImportReceipt(Long receiptId, Map<Long, Integer> actualQuantities) {
+    Receipt requestReceipt = receiptRepository.findById(receiptId)
+            .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found"));
+
+    requestReceipt.setStatus(ReceiptStatus.Completed);
+    receiptRepository.save(requestReceipt);
+
+    Receipt actualReceipt = Receipt.builder()
+            .code(generateAndValidateUniqueCode())
+            .type(ReceiptType.PHIEU_NHAP_KHO)
+            .status(ReceiptStatus.NOT_COMPLETED)
+            .description("Actual Import based on Request Receipt #" + receiptId)
+            .createdBy(getCurrentAuthenticatedUser())
+            .lastModifiedBy(getCurrentAuthenticatedUser())
+            .warehouse(requestReceipt.getWarehouse())
+            .build();
+    actualReceipt = receiptRepository.save(actualReceipt);
+
+    boolean hasDiscrepancy = false;
+    List<ImportRequestReceiptDetailResponse> detailResponses = new ArrayList<>();
+
+    for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
+        int requiredQuantity = requestDetail.getQuantity();
+        int actualQuantity = actualQuantities.getOrDefault(requestDetail.getId(), requiredQuantity);
+        int discrepancyQuantity = actualQuantity - requiredQuantity;
+        double unitPrice = requestDetail.getItem().getPurchasePrice().getPrice();
+        double totalPriceForItem = unitPrice * actualQuantity;
+
+        ReceiptDetail actualDetail = ReceiptDetail.builder()
+                .receipt(actualReceipt)
+                .item(requestDetail.getItem())
+                .quantity(actualQuantity)
+                .unitPrice(unitPrice)
+                .totalPrice(totalPriceForItem)
+                .unitName(requestDetail.getUnitName())
+                .build();
+        actualDetail = receiptDetailRepository.save(actualDetail);
+        ImportRequestReceiptDetailResponse detailResponse = buildImportRequestReceiptDetailResponse(actualDetail, actualQuantity, discrepancyQuantity, null);
+        if (discrepancyQuantity != 0) {
+            ReceiptDiscrepancyLogResponse discrepancyLog = handleDiscrepancy(actualDetail, requiredQuantity, actualQuantity, unitPrice);
+            detailResponse = buildImportRequestReceiptDetailResponse(actualDetail, actualQuantity, discrepancyQuantity, discrepancyLog);
+            hasDiscrepancy = true;
+        }else {
+            detailResponse = buildImportRequestReceiptDetailResponse(actualDetail, actualQuantity, 0, null);
+        }
+
+        detailResponses.add(detailResponse);
+
+        updateInventoryForInbound(requestDetail.getItem(), actualQuantity, unitPrice, actualReceipt.getWarehouse().getId());
+    }
+
+    actualReceipt.setTotalQuantity(detailResponses.stream().mapToInt(ImportRequestReceiptDetailResponse::getQuantity).sum());
+    actualReceipt.setTotalPrice(detailResponses.stream().mapToDouble(ImportRequestReceiptDetailResponse::getTotalPrice).sum());
+    receiptRepository.save(actualReceipt);
+
+    if (hasDiscrepancy) {
+        createAndSendNotificationForReceipt(actualReceipt, true);
+    }
+
+    return buildImportRequestReceiptResponse(actualReceipt, detailResponses);
+}
+
+
+
+    @Override
 @Transactional
 public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integer> actualQuantities) {
     CustomerRequestReceipt customerRequestReceipt = customerRequestReceiptRepository.findById(receiptId)
@@ -774,7 +763,7 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
             .code(generateAndValidateUniqueCode())
             .customerRequestReceipt(customerRequestReceipt)
             .type(ReceiptType.PHIEU_XUAT_KHO)
-            .status(ReceiptStatus.Completed)
+            .status(ReceiptStatus.NOT_COMPLETED)
             .description("Actual Export based on Customer Request Receipt #" + receiptId)
             .createdBy(getCurrentAuthenticatedUser())
             .lastModifiedBy(getCurrentAuthenticatedUser())
@@ -871,8 +860,6 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
             int requiredQuantity = detail.getQuantity();
             int actualQuantity = actualQuantities.getOrDefault(detail.getItem().getId(), requiredQuantity);
             int discrepancyQuantity = actualQuantity - requiredQuantity;
-//            double actualPrice = calculateWeightedAveragePurchasePrice(detail.getItem());
-//            double totalPriceForDetail = actualPrice * actualQuantity;
             double unitPrice = detail.getItem().getPurchasePrice().getPrice();
             double totalPriceForItem = unitPrice * actualQuantity;
             detail.setQuantity(actualQuantity);
@@ -885,7 +872,7 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
 
             ImportRequestReceiptDetailResponse detailResponse;
             if (discrepancyQuantity != 0) {
-                InventoryDiscrepancyLog discrepancyLog = handleDiscrepancy(detail, requiredQuantity, actualQuantity, detail.getUnitPrice());
+                ReceiptDiscrepancyLogResponse discrepancyLog = handleDiscrepancy(detail, requiredQuantity, actualQuantity, detail.getUnitPrice());
                 detailResponse = buildImportRequestReceiptDetailResponse(detail, actualQuantity, discrepancyQuantity, discrepancyLog);
                 hasDiscrepancy = true;
             } else {
@@ -999,11 +986,12 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                 .collect(Collectors.toList());
 
     }
+
+
     @Override
     @Transactional
     public CheckInventoryReceiptResponse createCheckInventoryReceipt(CheckInventoryReceiptForm checkInventoryReceiptForm) {
         User currentUser = getCurrentAuthenticatedUser();
-
         Warehouse warehouse = currentUser.getWarehouse();
 
         Receipt checkInventoryReceipt = Receipt.builder()
@@ -1012,98 +1000,79 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                 .status(ReceiptStatus.Pending_Approval)
                 .description(checkInventoryReceiptForm.getDescription())
                 .createdBy(currentUser)
-
                 .warehouse(warehouse)
                 .build();
 
         checkInventoryReceipt = receiptRepository.save(checkInventoryReceipt);
 
-        List<Item> items = findItemsByWarehouse(warehouse);
-        List<InventoryCheckDetail> checkDetails = checkInventoryReceiptForm.getDetails();
         boolean hasDiscrepancy = false;
 
-        // Ensure that there are as many check details as there are items
-        if (checkDetails.size() != items.size()) {
-            throw new IllegalArgumentException("The number of check details does not match the number of items in the warehouse.");
-        }
+        for (InventoryCheckDetail detail : checkInventoryReceiptForm.getDetails()) {
+            Item item = itemRepository.findById(detail.getItemId())
+                    .orElseThrow(() -> new NotFoundException("Item not found with ID: " + detail.getItemId()));
 
-        for (int i = 0; i < items.size(); i++) {
-            Item item = items.get(i);
-            InventoryCheckDetail detail = checkDetails.get(i);
+            int totalLocationQuantity = 0;
+            for (LocationQuantityDetail locationQuantityDetail : detail.getLocationQuantities()) {
+                Location location = locationRepository.findById(locationQuantityDetail.getLocationId())
+                        .orElseThrow(() -> new NotFoundException("Location not found with ID: " + locationQuantityDetail.getLocationId()));
 
-            List<Integer> locationQuantities = detail.getLocationQuantities(); // Danh sách số lượng thực tế tại các location
-
-            // Tính tổng số lượng thực tế tại các location
-            int totalLocationQuantity = locationQuantities.stream()
-                    .mapToInt(Integer::intValue)
-                    .sum();
+                totalLocationQuantity += locationQuantityDetail.getQuantity();
+                location.setItem_quantity(locationQuantityDetail.getQuantity());
+                locationRepository.save(location);
+            }
 
             if (totalLocationQuantity != detail.getActualQuantity()) {
                 throw new IllegalArgumentException("The total quantity at locations does not match the actual quantity for item with ID: " + item.getId());
             }
 
-            // Lấy danh sách các location của item
-            List<Location> itemLocations = item.getLocations();
-
-            // Kiểm tra số lượng location và số lượng nhập liệu phải trùng nhau
-            if (itemLocations.size() != locationQuantities.size()) {
-                throw new IllegalArgumentException("The number of locations for item with ID: " + item.getId() + " does not match the number of location quantities entered.");
-            }
-
-            // Cập nhật số lượng thực tế tại các location
-            for (int j = 0; j < itemLocations.size(); j++) {
-                Location location = itemLocations.get(j);
-                int locationQuantity = locationQuantities.get(j);
-
-                // Cập nhật số lượng thực tế tại location
-                location.setItem_quantity(locationQuantity);
-                locationRepository.save(location);
-            }
-
+            // Logic to handle inventory discrepancy
             Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, warehouse)
                     .orElseThrow(() -> new NotFoundException("Inventory not found for item with ID: " + item.getId()));
 
-            int actualQuantity = detail.getActualQuantity();
-            int discrepancyQuantity = actualQuantity - inventory.getAvailable();
-            double discrepancyValue = discrepancyQuantity * inventory.getAverageUnitValue();
-
-            if (discrepancyQuantity != 0) {
-                hasDiscrepancy = true;
-                InventoryDiscrepancyLogs log = InventoryDiscrepancyLogs.builder()
-                        .inventory(inventory)
-                        .requiredQuantity(inventory.getTotalQuantity())
-                        .actualQuantity(actualQuantity)
-                        .discrepancyQuantity(discrepancyQuantity)
-                        .discrepancyValue(discrepancyValue)
-                        .logTime(new Date())
-                        .note(detail.getNote())
-                        .build();
-
-                inventoryDiscrepancyLogsRepository.save(log);
-            }
-            if(discrepancyQuantity > 0){
-
-                inventory.setAvailable(inventory.getAvailable()- discrepancyQuantity);
-                inventory.setDefective(inventory.getDefective()+ discrepancyQuantity);
-                inventory.setTotalValue(inventory.getTotalValue() - discrepancyValue);
-                inventoryRepository.save(inventory);
-            } else{
-
-                inventory.setAvailable(inventory.getAvailable()+ discrepancyQuantity);
-                inventory.setDefective(inventory.getDefective()- discrepancyQuantity);
-                inventory.setTotalValue(inventory.getTotalValue() + discrepancyValue);
-                inventoryRepository.save(inventory);
-            }
-
-
+            handleInventoryDiscrepancy(detail, inventory, hasDiscrepancy);
         }
 
-        // Send notification to the manager if there are any discrepancies
         if (hasDiscrepancy) {
-            createAndSendNotificationForInventoryCheck( checkInventoryReceipt, hasDiscrepancy);
+            createAndSendNotificationForInventoryCheck(checkInventoryReceipt, hasDiscrepancy);
         }
 
-        return buildCheckInventoryReceiptResponse(checkInventoryReceipt, checkDetails);
+        return buildCheckInventoryReceiptResponse(checkInventoryReceipt, checkInventoryReceiptForm.getDetails());
+    }
+
+    private void handleInventoryDiscrepancy(InventoryCheckDetail detail, Inventory inventory, boolean hasDiscrepancy) {
+        int actualQuantity = detail.getActualQuantity();
+        int discrepancyQuantity = actualQuantity - inventory.getAvailable();
+        double discrepancyValue = discrepancyQuantity * inventory.getAverageUnitValue();
+
+        if (discrepancyQuantity != 0) {
+            hasDiscrepancy = true;
+            InventoryDiscrepancyLogs log = InventoryDiscrepancyLogs.builder()
+                    .inventory(inventory)
+                    .requiredQuantity(inventory.getTotalQuantity())
+                    .actualQuantity(actualQuantity)
+                    .discrepancyQuantity(discrepancyQuantity)
+                    .discrepancyValue(discrepancyValue)
+                    .logTime(new Date())
+                    .note(detail.getNote())
+                    .build();
+
+            inventoryDiscrepancyLogsRepository.save(log);
+        }
+
+        updateInventoryQuantity(inventory, discrepancyQuantity, discrepancyValue);
+    }
+
+    private void updateInventoryQuantity(Inventory inventory, int discrepancyQuantity, double discrepancyValue) {
+        if (discrepancyQuantity > 0) {
+            inventory.setAvailable(inventory.getAvailable() - discrepancyQuantity);
+            inventory.setDefective(inventory.getDefective() + discrepancyQuantity);
+            inventory.setTotalValue(inventory.getTotalValue() - discrepancyValue);
+        } else {
+            inventory.setAvailable(inventory.getAvailable() + discrepancyQuantity);
+            inventory.setDefective(inventory.getDefective() - discrepancyQuantity);
+            inventory.setTotalValue(inventory.getTotalValue() + discrepancyValue);
+        }
+        inventoryRepository.save(inventory);
     }
 
 
@@ -1218,6 +1187,39 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
             );
 
         return checkInventoryReceiptResponse;
+    }
+
+    @Override
+    public void confirmCheckingInventoryReceipt(Long receiptId) {
+        // Lấy thông tin người dùng hiện tại
+        User currentUser = getCurrentAuthenticatedUser();
+
+        var receipt = receiptRepository.findById(receiptId)
+                .filter(receipt1 -> receipt1.getType() == ReceiptType.PHIEU_KIEM_KHO)
+                .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found or not of type PHIEU_KIEM_KHO"));
+
+        // So sánh id của người dùng hiện tại với manager liên quan đến phiếu nhập kho
+        if (currentUser == null || !currentUser.getRole().getName().equals("MANAGER")) {
+            throw new AccessDeniedException("You do not have permission to confirm this Checking Inventory  receipt.");
+        }
+
+        // Kiểm tra xem phiếu đã được xác nhận chưa
+        if (receipt.getStatus() == ReceiptStatus.Completed) {
+            throw new IllegalStateException("This Checking Inventory  receipt has already been confirmed.");
+        }
+        // Cập nhật trạng thái
+        receipt.setStatus(ReceiptStatus.Completed);
+        var updatedReceipt = receiptRepository.save(receipt);
+
+        // Gửi thông báo cho inventory_staff
+        Notification notification =  notificationService.createAndSendNotification(
+                SourceType.RECEIPT,
+                EventType.CONFIRMED,
+                updatedReceipt.getId(),
+                updatedReceipt.getCreatedBy().getId(), // Giả sử createdBy là Manager
+                NotificationType.XAC_NHAN_KIEM_KHO,
+                "Phiếu kiểm kho #" + updatedReceipt.getId() + " đã được manager xác nhận."
+        );
     }
 
 
@@ -1385,32 +1387,56 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
 
     }
 
+    private ReceiptDiscrepancyLogResponse convertToReceiptDiscrepancyLogResponse(ReceiptDiscrepancyLog log) {
+        return new ReceiptDiscrepancyLogResponse(
+                log.getId(),
+                log.getRequiredQuantity(),
+                log.getActualQuantity(),
+                log.getDiscrepancyQuantity(),
+                log.getDiscrepancyValue(),
 
+                log.getLogTime()
+        );
+    }
 
-
-
-    private InventoryDiscrepancyLog handleDiscrepancy(ReceiptDetail detail, int requiredQuantity, int actualQuantity, double unitPrice) {
-        // Tạo một đối tượng mới của InventoryDiscrepancyLog
-        InventoryDiscrepancyLog discrepancyLog = new InventoryDiscrepancyLog();
-
-        // Thiết lập các thông tin cần thiết cho discrepancyLog
+    private ReceiptDiscrepancyLogResponse handleDiscrepancy(ReceiptDetail detail, int requiredQuantity, int actualQuantity, double unitPrice) {
+        ReceiptDiscrepancyLog discrepancyLog = new ReceiptDiscrepancyLog();
         discrepancyLog.setReceiptDetail(detail);
         discrepancyLog.setRequiredQuantity(requiredQuantity);
         discrepancyLog.setActualQuantity(actualQuantity);
         discrepancyLog.setDiscrepancyQuantity(actualQuantity - requiredQuantity);
         discrepancyLog.setDiscrepancyValue((actualQuantity - requiredQuantity) * unitPrice);
         discrepancyLog.setLogTime(new Date());
+        ReceiptDiscrepancyLog savedLog = inventoryDiscrepancyLogRepository.save(discrepancyLog);
 
-        // Lưu discrepancyLog vào cơ sở dữ liệu
-        inventoryDiscrepancyLogRepository.save(discrepancyLog);
-
-        return discrepancyLog;
+        return convertToReceiptDiscrepancyLogResponse(savedLog);
     }
 
 
 
+//    private ReceiptDiscrepancyLog handleDiscrepancy(ReceiptDetail detail, int requiredQuantity, int actualQuantity, double unitPrice) {
+//        // Tạo một đối tượng mới của InventoryDiscrepancyLog
+//        ReceiptDiscrepancyLog discrepancyLog = new ReceiptDiscrepancyLog();
+//
+//        // Thiết lập các thông tin cần thiết cho discrepancyLog
+//        discrepancyLog.setReceiptDetail(detail);
+//        discrepancyLog.setRequiredQuantity(requiredQuantity);
+//        discrepancyLog.setActualQuantity(actualQuantity);
+//        discrepancyLog.setDiscrepancyQuantity(actualQuantity - requiredQuantity);
+//        discrepancyLog.setDiscrepancyValue((actualQuantity - requiredQuantity) * unitPrice);
+//        discrepancyLog.setLogTime(new Date());
+//
+//        // Lưu discrepancyLog vào cơ sở dữ liệu
+//
+//
+//        return inventoryDiscrepancyLogRepository.save(discrepancyLog);
+//    }
 
-    private ImportRequestReceiptDetailResponse  buildImportRequestReceiptDetailResponse(ReceiptDetail detail, int actualQuantity, int  discrepancyQuantity, InventoryDiscrepancyLog discrepancyLog) {
+
+
+    private ImportRequestReceiptDetailResponse buildImportRequestReceiptDetailResponse(
+            ReceiptDetail detail, int actualQuantity, int discrepancyQuantity, ReceiptDiscrepancyLogResponse discrepancyLogResponse) {
+
         return ImportRequestReceiptDetailResponse.builder()
                 .id(detail.getId())
                 .itemName(detail.getItem().getSubCategory().getName())
@@ -1419,9 +1445,23 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                 .price(detail.getUnitPrice())
                 .totalPrice(detail.getUnitPrice() * actualQuantity)
                 .discrepancyQuantity(discrepancyQuantity)
-                .discrepancyLogs(detail.getDiscrepancyLogs())
+                .discrepancyLogs(discrepancyLogResponse != null ? Arrays.asList(discrepancyLogResponse) : null)
                 .build();
     }
+
+//    private ImportRequestReceiptDetailResponse  buildImportRequestReceiptDetailResponse(ReceiptDetail detail, int actualQuantity, int  discrepancyQuantity, ReceiptDiscrepancyLog discrepancyLog) {
+//        return ImportRequestReceiptDetailResponse.builder()
+//                .id(detail.getId())
+//                .itemName(detail.getItem().getSubCategory().getName())
+//                .quantity(actualQuantity)
+//                .unitName(detail.getUnitName())
+//                .price(detail.getUnitPrice())
+//                .totalPrice(detail.getUnitPrice() * actualQuantity)
+//                .discrepancyQuantity(discrepancyQuantity)
+//                .discrepancyLogs(discrepancyLog != null ? Arrays.asList(discrepancyLog) : null)
+//                .build();
+//    }
+
     private ImportRequestReceiptResponse buildImportRequestReceiptResponse(Receipt receipt, List<ImportRequestReceiptDetailResponse> detailResponses) {
         return ImportRequestReceiptResponse.builder()
                 .warehouseId(receipt.getWarehouse().getId())
@@ -1439,6 +1479,8 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                 .details(detailResponses)
                 .build();
     }
+
+
 
 
 

@@ -9,7 +9,8 @@ public enum ReceiptStatus {
 
     Canceled, // Hủy bỏ
 
-    IN_PROGRESS
+    IN_PROGRESS,
 
+    NOT_COMPLETED
 
 }

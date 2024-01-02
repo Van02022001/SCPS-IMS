@@ -1,6 +1,6 @@
 package com.example.sparepartsinventorymanagement.dto.response;
 
-import com.example.sparepartsinventorymanagement.entities.InventoryDiscrepancyLog;
+import com.example.sparepartsinventorymanagement.entities.ReceiptDiscrepancyLog;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,5 +21,5 @@ public class ReceiptDetailResponse {
     private double price;
     private double totalPrice;
     private int discrepancyQuantity;
-    private List<InventoryDiscrepancyLog> discrepancyLogs;
+    private List<ReceiptDiscrepancyLog> discrepancyLogs;
 }

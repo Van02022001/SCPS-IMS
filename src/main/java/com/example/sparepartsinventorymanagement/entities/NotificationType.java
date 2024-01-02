@@ -13,6 +13,8 @@ public enum NotificationType {
     CANH_BAO_THUA_HANG,
 
     DISCREPANCY_FOUND,
-    NO_DISCREPANCY_FOUND
+    NO_DISCREPANCY_FOUND,
+
+    XAC_NHAN_KIEM_KHO
 
 }

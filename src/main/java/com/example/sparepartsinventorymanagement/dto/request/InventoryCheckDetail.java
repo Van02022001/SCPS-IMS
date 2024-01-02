@@ -12,9 +12,9 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InventoryCheckDetail {
-
+    private Long itemId;
     private int actualQuantity;
     private String note;
-    private List<Integer> locationQuantities;
+    private List<LocationQuantityDetail > locationQuantities;
 
 }

@@ -18,8 +18,8 @@ import java.util.Date;
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 
-@Table(name = "inventory_discrepancy_log")
-public class InventoryDiscrepancyLog {
+@Table(name = "receipt_discrepancy_log")
+public class ReceiptDiscrepancyLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -41,9 +41,6 @@ public class InventoryDiscrepancyLog {
     private double discrepancyValue;
 
 
-
-    @Column(name = "note", columnDefinition = "TEXT")
-    private String note;
 
     @Column(name = "log_time")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)

@@ -14,6 +14,7 @@ import java.util.List;
 @Builder
 public class ImportRequestReceiptDetailResponse {
     private Long id;
+    private Long itemId;
     private String itemName;
     private int quantity;
     private String unitName;

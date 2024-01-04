@@ -192,7 +192,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                                 detailResponse.setUnitName(detail.getUnitName());
                                // detailResponse.setPrice(detail.getPurchasePrice().getPrice());
                                 detailResponse.setTotalPrice(detail.getTotalPrice());
-
+                                detailResponse.setItemId(detail.getItem().getId());
                                 return detailResponse;
                             })
                             .collect(Collectors.toList());
@@ -242,7 +242,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                                 detailResponse.setUnitName(detail.getUnitName());
                                 // detailResponse.setPrice(detail.getPurchasePrice().getPrice());
                                 detailResponse.setTotalPrice(detail.getTotalPrice());
-
+                                detailResponse.setItemId(detail.getItem().getId());
                                 return detailResponse;
                             })
                             .collect(Collectors.toList());
@@ -293,7 +293,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                                 detailResponse.setUnitName(detail.getUnitName());
                                 // detailResponse.setPrice(detail.getPurchasePrice().getPrice());
                                 detailResponse.setTotalPrice(detail.getTotalPrice());
-
+                                detailResponse.setItemId(detail.getItem().getId());
                                 return detailResponse;
                             })
                             .collect(Collectors.toList());
@@ -337,7 +337,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                                 detailResponse.setUnitName(detail.getUnitName());
                                // detailResponse.setPrice(detail.getPurchasePrice().getPrice());
                                 detailResponse.setTotalPrice(detail.getTotalPrice());
-
+                                detailResponse.setItemId(detail.getItem().getId());
                                 return detailResponse;
                             })
                             .collect(Collectors.toList());
@@ -380,6 +380,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                     detailResponse.setUnitName(detail.getUnitName());
                     detailResponse.setPrice(detail.getUnitPrice());
                     detailResponse.setTotalPrice(detail.getTotalPrice());
+                    detailResponse.setItemId(detail.getItem().getId());
                     return detailResponse;
                 })
                 .collect(Collectors.toList());
@@ -420,6 +421,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                     detailResponse.setUnitName(detail.getUnitName());
                      detailResponse.setPrice(detail.getUnitPrice());
                     detailResponse.setTotalPrice(detail.getTotalPrice());
+                    detailResponse.setItemId(detail.getItem().getId());
                     return detailResponse;
                 })
                 .collect(Collectors.toList());
@@ -521,11 +523,11 @@ public class ReceiptServiceImpl implements ReceiptService {
                     }
                     detailResponse.setQuantity(detail.getQuantity());
                     detailResponse.setUnitName(detail.getUnitName());
+                    detailResponse.setItemId(detail.getItem().getId());
                     return detailResponse;
                 })
                 .collect(Collectors.toList());
         response.setDetails(detailResponses);
-
         return response;
     }
 
@@ -660,6 +662,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 //                        detailResponse.setPrice(0.0);
 //                    }
                     detailResponse.setTotalPrice(detail.getTotalPrice());
+                    detailResponse.setItemId(detail.getItem().getId());
                     return detailResponse;
                 })
                 .collect(Collectors.toList());
@@ -1444,6 +1447,7 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
 
         return ImportRequestReceiptDetailResponse.builder()
                 .id(detail.getId())
+                .itemId(detail.getItem().getId())
                 .itemName(detail.getItem().getSubCategory().getName())
                 .quantity(actualQuantity)
                 .unitName(detail.getUnitName())

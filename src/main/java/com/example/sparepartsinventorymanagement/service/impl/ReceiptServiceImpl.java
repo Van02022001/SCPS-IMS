@@ -45,6 +45,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final CustomerRequestReceiptService customerRequestReceiptService;
     private final CustomerRequestReceiptRepository customerRequestReceiptRepository;
     private final LocationRepository locationRepository;
+    private final ItemMovementRepository itemMovementRepository;
 
     private final PricingRepository pricingRepository;
     private final PricingAuditRepository pricingAuditRepository;
@@ -1028,17 +1029,29 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                     .orElseThrow(() -> new NotFoundException("Item not found with ID: " + detail.getItemId()));
 
             int totalLocationQuantity = 0;
-            for (LocationQuantityDetail locationQuantityDetail : detail.getLocationQuantities()) {
+
+            List<LocationQuantityDetail> locationQuantities = detail.getLocationQuantities();
+            Iterator<LocationQuantityDetail> iterator = locationQuantities.iterator();
+
+
+            while (iterator.hasNext()) {
+                LocationQuantityDetail locationQuantityDetail = iterator.next();
                 Location location = locationRepository.findById(locationQuantityDetail.getLocationId())
                         .orElseThrow(() -> new NotFoundException("Location not found with ID: " + locationQuantityDetail.getLocationId()));
 
+                // Cập nhật số lượng mới cho location từ form, ngay cả khi nó là 0
+                location.setItem_quantity(locationQuantityDetail.getQuantity());
+                locationRepository.save(location);
+
+                // Nếu số lượng mới là 0, xóa location
                 if (locationQuantityDetail.getQuantity() == 0) {
-                    // Xóa location nếu số lượng là 0
-                    locationRepository.delete(location);
+                    // Sử dụng phương thức tùy chỉnh để xóa location
+                    locationRepository.deleteLocationById(locationQuantityDetail.getLocationId());
+                    iterator.remove();
                 } else {
+
+
                     totalLocationQuantity += locationQuantityDetail.getQuantity();
-                    location.setItem_quantity(locationQuantityDetail.getQuantity());
-                    locationRepository.save(location);
                 }
             }
 
@@ -1298,27 +1311,20 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                 detailResponses
         );
     }
-
     private List<LocationQuantityResponse> getLocationQuantityResponsesForItem(Item item) {
-        // Lấy danh sách LocationQuantityResponse dựa trên thông tin của item và location
-        // Chúng tôi giả sử rằng bạn có một cách khác để lấy thông tin số lượng tại các location cho mỗi item.
-        // Bạn cần thay thế phần này bằng cách thích hợp cho ứng dụng của bạn.
-        List<LocationQuantityResponse> locationQuantityResponses = new ArrayList<>();
-
-        // Ví dụ: Lấy thông tin từ danh sách location của item
-        List<Location> itemLocations = item.getLocations();
-        for (Location location : itemLocations) {
-            LocationQuantityResponse locationQuantityResponse = new LocationQuantityResponse();
-            locationQuantityResponse.setLocationId(location.getId());
-            locationQuantityResponse.setShelfNumber(location.getShelfNumber());
-            locationQuantityResponse.setBinNumber(location.getBinNumber());
-            locationQuantityResponse.setQuantity(location.getItem_quantity());
-
-            locationQuantityResponses.add(locationQuantityResponse);
-        }
-
-        return locationQuantityResponses;
+        // Lấy ra tất cả locations từ item và loại bỏ những cái có quantity bằng 0
+        return item.getLocations().stream()
+                .filter(location -> location.getItem_quantity() > 0) // Chỉ lấy những location có quantity lớn hơn 0
+                .map(location -> new LocationQuantityResponse(
+                        location.getId(),
+                        location.getShelfNumber(),
+                        location.getBinNumber(),
+                        location.getItem_quantity()
+                        // Bạn có thể cần thêm các trường khác từ Location entity vào đây nếu cần
+                ))
+                .collect(Collectors.toList());
     }
+
     private String formatFullName(User user) {
         if (user != null) {
             return String.format("%s %s %s", user.getLastName(), user.getMiddleName(), user.getFirstName()).trim();

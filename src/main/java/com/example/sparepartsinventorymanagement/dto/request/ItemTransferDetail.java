@@ -1,5 +1,6 @@
 package com.example.sparepartsinventorymanagement.dto.request;
 
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,6 @@ public class ItemTransferDetail {
     private Long itemId;
     @Positive(message = "Số lượng phải lớn hơn 0")
     @NotNull(message = "quantity is required")
-
+    @NotEmpty(message = "Required field.")
     private int quantity;
 }

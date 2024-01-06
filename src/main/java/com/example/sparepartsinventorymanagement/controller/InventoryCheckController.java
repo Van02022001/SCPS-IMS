@@ -113,7 +113,7 @@ public class InventoryCheckController {
     }
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @Operation(summary = "Confirm an checking inventory receipt")
+        @Operation(summary = "Confirm an checking inventory receipt")
     @PutMapping(value ="/confirm/{receiptId}",  produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> confirmCheckingInventoryReceipt(@PathVariable Long receiptId) {
         try {

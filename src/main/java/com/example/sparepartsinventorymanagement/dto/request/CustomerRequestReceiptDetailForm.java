@@ -13,6 +13,7 @@ public class CustomerRequestReceiptDetailForm {
     @NotNull(message = "Item ID cannot be null")
     private Long itemId;
     @Min(value = 0, message = "Quantity must be non-negative")
+    @NotNull(message = "quantity cannot be null")
     private int quantity;
 
 

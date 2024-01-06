@@ -15,5 +15,6 @@ public class TransferRequest {
     @NotNull(message = "ID của kho đích không được để trống")
     private Long destinationWarehouseId; // ID của kho đích
     @Valid
+    @NotNull(message = "items của kho đích không được để trống")
     private List<ItemTransferDetail> items;
 }

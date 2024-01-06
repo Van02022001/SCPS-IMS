@@ -26,5 +26,6 @@ public class CreatePricingRequest {
     private Date startDate;
 
     @DecimalMin(value = "0.01", message = "Price must be greater than zero")
+    @NotNull(message = "price cannot be null")
     private double price;
 }

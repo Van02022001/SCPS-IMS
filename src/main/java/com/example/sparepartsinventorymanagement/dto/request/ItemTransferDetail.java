@@ -13,5 +13,7 @@ public class ItemTransferDetail {
     @NotNull(message = "Mã sản phẩm không được để trống")
     private Long itemId;
     @Positive(message = "Số lượng phải lớn hơn 0")
+    @NotNull(message = "quantity is required")
+
     private int quantity;
 }

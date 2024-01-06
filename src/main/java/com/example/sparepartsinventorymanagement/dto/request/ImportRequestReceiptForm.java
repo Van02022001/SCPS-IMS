@@ -20,5 +20,6 @@ public class ImportRequestReceiptForm {
     @Size(max = 500, message = "Description length must be less than or equal to 500 characters")
     private String description;
     @Valid
+    @NotNull(message = "details cannot be null")
     private List<ImportRequestReceiptDetailForm>  details;
 }

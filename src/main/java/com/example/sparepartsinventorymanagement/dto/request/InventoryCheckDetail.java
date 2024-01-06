@@ -18,11 +18,13 @@ import java.util.Map;
 public class InventoryCheckDetail {
     @NotNull(message = "Item ID cannot be null")
     private Long itemId;
+    @NotNull(message = "actualQuantity cannot be null")
     @Min(value = 0, message = "Actual quantity must be non-negative")
     private int actualQuantity;
     @Size(max = 1000, message = "Note length must be less than or equal to 1000 characters")
     private String note;
     @Valid
+    @NotNull(message = "locationQuantities cannot be null")
     private List<LocationQuantityDetail > locationQuantities;
 
 }

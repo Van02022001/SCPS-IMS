@@ -20,5 +20,6 @@ public class CustomerRequestReceiptForm {
     private Long inventoryStaff;
     private String note;
     @Valid
+    @NotNull(message = "details cannot be null")
     private List<CustomerRequestReceiptDetailForm> details;
 }

@@ -14,10 +14,12 @@ import java.util.List;
 @NoArgsConstructor
 public class CreateLocationForm {
     @NotBlank(message = "Shelf number is required")
+    @NotNull(message = "binNumber cannot be null")
     @Size(min = 1, max = 40, message = "Shelf number must be at least 1 character and at most 60 characters")
     private String shelfNumber; // số kệ
 
     @NotBlank(message = "Bin number is required")
+    @NotNull(message = "binNumber cannot be null")
     @Size(min = 1, max = 40, message = "Bin number must be at least 1 character and at most 40 characters")
     private String binNumber; // số ngăn
 

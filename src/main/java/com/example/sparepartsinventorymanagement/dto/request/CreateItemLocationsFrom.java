@@ -21,5 +21,6 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateItemLocationsFrom {
+    @NotNull(message = "locations cannot be null")
     Set<UpdateItemLocationRequest> locations;
 }

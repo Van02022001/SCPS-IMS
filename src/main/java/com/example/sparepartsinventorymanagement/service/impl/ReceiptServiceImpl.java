@@ -525,6 +525,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                     detailResponse.setQuantity(detail.getQuantity());
                     detailResponse.setUnitName(detail.getUnitName());
                     detailResponse.setItemId(detail.getItem().getId());
+                    detailResponse.setPrice(detail.getUnitPrice());
                     return detailResponse;
                 })
                 .collect(Collectors.toList());

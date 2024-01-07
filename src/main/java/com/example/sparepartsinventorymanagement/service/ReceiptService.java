@@ -53,6 +53,8 @@ public interface ReceiptService {
     CheckInventoryReceiptResponse  getCheckInventoryReceiptById(Long receiptId);
 
     void confirmCheckingInventoryReceipt(Long receiptId);
+    void cancelImportRequestReceipt(Long receiptId);
+
     ExportReceiptResponse getExportReceiptById(Long id);
 
     void deleteExportReceipt(Long id);

@@ -241,7 +241,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                                 detailResponse.setItemName(detail.getItem().getSubCategory().getName());
                                 detailResponse.setQuantity(detail.getQuantity());
                                 detailResponse.setUnitName(detail.getUnitName());
-                                // detailResponse.setPrice(detail.getPurchasePrice().getPrice());
+                                detailResponse.setPrice(detail.getUnitPrice());
                                 detailResponse.setTotalPrice(detail.getTotalPrice());
                                 detailResponse.setItemId(detail.getItem().getId());
                                 return detailResponse;
@@ -292,7 +292,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                                 detailResponse.setItemName(detail.getItem().getSubCategory().getName());
                                 detailResponse.setQuantity(detail.getQuantity());
                                 detailResponse.setUnitName(detail.getUnitName());
-                                // detailResponse.setPrice(detail.getPurchasePrice().getPrice());
+                                detailResponse.setPrice(detail.getUnitPrice());
                                 detailResponse.setTotalPrice(detail.getTotalPrice());
                                 detailResponse.setItemId(detail.getItem().getId());
                                 return detailResponse;
@@ -336,7 +336,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                                 detailResponse.setItemName(detail.getItem().getSubCategory().getName());
                                 detailResponse.setQuantity(detail.getQuantity());
                                 detailResponse.setUnitName(detail.getUnitName());
-                               // detailResponse.setPrice(detail.getPurchasePrice().getPrice());
+                                detailResponse.setPrice(detail.getUnitPrice());
                                 detailResponse.setTotalPrice(detail.getTotalPrice());
                                 detailResponse.setItemId(detail.getItem().getId());
                                 return detailResponse;
@@ -940,11 +940,12 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                             .map(detail -> {
                                 ExportReceiptDetailResponse detailResponse = new ExportReceiptDetailResponse();
                                 detailResponse.setId(detail.getId());
+                                detailResponse.setItemId(detail.getItem().getId());
                                 detailResponse.setItemName(detail.getItem().getSubCategory().getName());
                                 detailResponse.setQuantity(detail.getQuantity());
                                 detailResponse.setUnitName(detail.getUnitName());
                                 // Uncomment and adjust if you have a price field in the detail
-                                // detailResponse.setPrice(detail.getPrice());
+                                detailResponse.setPrice(detail.getUnitPrice());
                                 detailResponse.setTotalPrice(detail.getTotalPrice());
 
                                 return detailResponse;
@@ -989,11 +990,12 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                             .map(detail -> {
                                 ExportReceiptDetailResponse detailResponse = new ExportReceiptDetailResponse();
                                 detailResponse.setId(detail.getId());
+                                detailResponse.setItemId(detail.getItem().getId());
                                 detailResponse.setItemName(detail.getItem().getSubCategory().getName());
                                 detailResponse.setQuantity(detail.getQuantity());
                                 detailResponse.setUnitName(detail.getUnitName());
                                 // Uncomment and adjust if you have a price field in the detail
-                                // detailResponse.setPrice(detail.getPrice());
+                                detailResponse.setPrice(detail.getUnitPrice());
                                 detailResponse.setTotalPrice(detail.getTotalPrice());
 
                                 return detailResponse;
@@ -1259,6 +1261,41 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         );
     }
 
+    @Override
+    public void cancelImportRequestReceipt(Long receiptId) {
+        // Lấy thông tin người dùng hiện tại
+        User currentUser = getCurrentAuthenticatedUser();
+
+        var receipt = receiptRepository.findById(receiptId)
+                .filter(receipt1 -> receipt1.getType() == ReceiptType.PHIEU_YEU_CAU_NHAP_KHO)
+                .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found or not of type PHIEU_YEU_CAU_NHAP_KHO"));
+
+        // So sánh id của người dùng hiện tại với manager liên quan đến phiếu nhập kho
+        if (currentUser == null || !currentUser.getRole().getName().equals("MANAGER")) {
+            throw new AccessDeniedException("You do not have permission to confirm this Checking Inventory  receipt.");
+        }
+
+        // Kiểm tra xem phiếu đã được xác nhận chưa
+        if (receipt.getStatus() == ReceiptStatus.Canceled) {
+            throw new IllegalStateException("This import request  receipt has already been canceled.");
+        }
+
+        // Cập nhật trạng thái
+        receipt.setStatus(ReceiptStatus.Canceled);
+        var updatedReceipt = receiptRepository.save(receipt);
+
+        // Gửi thông báo cho inventory_staff
+        Notification notification =  notificationService.createAndSendNotification(
+                SourceType.RECEIPT,
+                EventType.CONFIRMED,
+                updatedReceipt.getId(),
+                updatedReceipt.getReceivedBy().getId(),
+                NotificationType.HUY_NHAP_KHO,
+                "Phiếu yêu cầu nhập kho #" + updatedReceipt.getId() + " đã được manager hủy yêu cầu."
+        );
+    }
+
+
 
     public List<Item> findItemsByWarehouse(Warehouse warehouse) {
         // Tìm tất cả các bản ghi Inventory dựa trên Warehouse
@@ -1365,6 +1402,7 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                 .map(detail -> {
                     ExportReceiptDetailResponse detailResponse = new ExportReceiptDetailResponse();
                     detailResponse.setId(detail.getId());
+                    detailResponse.setItemId(detail.getItem().getId());
                     detailResponse.setItemName(detail.getItem().getSubCategory().getName());
                     detailResponse.setQuantity(detail.getQuantity());
                     detailResponse.setUnitName(detail.getUnitName());

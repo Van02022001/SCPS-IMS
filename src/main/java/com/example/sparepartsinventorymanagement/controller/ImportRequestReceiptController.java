@@ -208,6 +208,32 @@ public class ImportRequestReceiptController {
             ));
         }
     }
+
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @Operation(summary = "Cancel an import request receipt")
+    @PutMapping(value ="/cancel/{receiptId}",  produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> cancelImportRequestReceipt(@PathVariable Long receiptId) {
+        try {
+            receiptService.cancelImportRequestReceipt(receiptId);
+            return ResponseEntity.ok(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Import request receipt canceled successfully",
+                    null
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
+                    HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                    "An error occurred while canceling the import request receipt",
+                    null
+            ));
+        }
+    }
     @PutMapping("/{receiptId}/start-import")
     @Operation(summary = "Import is Processing")
     @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")

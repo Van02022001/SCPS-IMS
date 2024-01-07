@@ -12,10 +12,12 @@ import com.example.sparepartsinventorymanagement.repository.*;
 import com.example.sparepartsinventorymanagement.service.CustomerRequestReceiptService;
 import com.example.sparepartsinventorymanagement.service.NotificationService;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -47,6 +49,7 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
     private final NotificationService notificationService;
     private final WarehouseRepository warehouseRepository;
     private final InventoryRepository inventoryRepository;
+    private final ReceiptRepository receiptRepository;
 
     @Override
     public CustomerRequestReceiptDTO createCustomerRequestReceipt(CustomerRequestReceiptForm form) {
@@ -151,9 +154,21 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
         return customerRequestReceiptDTO;
     }
     @Override
-    public void  startImportProcess(Long receiptId) {
+    public void  startCustomerRequestProcess(Long receiptId) {
+
+        // Lấy thông tin người dùng hiện tại
+        User currentUser = getCurrentAuthenticatedUser();
         CustomerRequestReceipt receipt = customerRequestReceiptRepository.findById(receiptId)
                 .orElseThrow(() -> new NotFoundException("Receipt with id " + receiptId +" not found"));
+        // So sánh id của người dùng hiện tại với inventoryStaffId liên quan đến phiếu nhập kho
+        if (currentUser == null || !currentUser.getId().equals(receipt.getReceivedBy().getId())) {
+            throw new AccessDeniedException("You do not have permission to confirm this import request receipt.");
+        }
+
+        // Kiểm tra xem phiếu đã được xác nhận chưa
+        if (receipt.getStatus() == CustomerRequestReceiptStatus.Approved) {
+            throw new IllegalStateException("This import request receipt has already been confirmed.");
+        }
         receipt.setStatus(CustomerRequestReceiptStatus.IN_PROGRESS);
         customerRequestReceiptRepository.save(receipt);
 
@@ -163,11 +178,47 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
                 EventType.CONFIRMED,
                 receipt.getId(),
                 receipt.getCreatedBy().getId(), // Giả sử createdBy là Manager
-                NotificationType.DANG_TIEN_HANH_NHAP_KHO,
-                "Phiếu yêu cầu nhập kho #" + receipt.getId() + " đang được tiến hành"
+                NotificationType.DANG_TIEN_HANH_XUAT_KHO,
+                "Phiếu yêu cầu xuất kho #" + receipt.getId() + " đang được tiến hành"
         );
 
     }
+
+    @Override
+    public void confirmCustomerRequestReceipt(Long receiptId) {
+
+    }
+
+    @Override
+    @Transactional
+    public void cancelCustomerRequestReceipt(Long receiptId) {
+        // Lấy thông tin người dùng hiện tại
+        User currentUser = getCurrentAuthenticatedUser();
+
+        CustomerRequestReceipt receipt = customerRequestReceiptRepository.findById(receiptId)
+                .orElseThrow(() -> new NotFoundException("Receipt with id " + receiptId +" not found"));
+
+        if (currentUser == null || !currentUser.getRole().getName().equals("SALE_STAFF")) {
+            throw new AccessDeniedException("You do not have permission to confirm this Checking Inventory  receipt.");
+        }
+        if (receipt.getStatus() == CustomerRequestReceiptStatus.Canceled) {
+            throw new IllegalStateException("This import request  receipt has already been canceled.");
+        }
+
+        receipt.setStatus(CustomerRequestReceiptStatus.Canceled);
+        var updatedReceipt =  customerRequestReceiptRepository.save(receipt);
+
+        // Gửi thông báo cho inventory_staff
+        Notification notification =  notificationService.createAndSendNotification(
+                SourceType.RECEIPT,
+                EventType.CONFIRMED,
+                updatedReceipt.getId(),
+                updatedReceipt.getReceivedBy().getId(),
+                NotificationType.HUY_XUAT_KHO,
+                "Phiếu yêu cầu xuất kho #" + updatedReceipt.getId() + " đã được nhân viên bán hàng hủy yêu cầu."
+        );
+    }
+
     @Override
     public CustomerRequestReceiptDTO getCustomerReceiptById(Long id) {
         CustomerRequestReceipt receipt = customerRequestReceiptRepository.findById(id)

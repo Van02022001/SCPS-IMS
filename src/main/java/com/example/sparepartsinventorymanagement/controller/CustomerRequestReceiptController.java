@@ -82,10 +82,10 @@ public class CustomerRequestReceiptController {
     @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
     public ResponseEntity<?> startImportProcess(@PathVariable Long customerRequestReceiptId) {
         try {
-            customerRequestReceiptService.startImportProcess(customerRequestReceiptId);
+            customerRequestReceiptService.startCustomerRequestProcess(customerRequestReceiptId);
             return ResponseEntity.ok(new ResponseObject(
                     HttpStatus.OK.toString(),
-                    "Import process started successfully",
+                    "Export process started successfully",
                     null
             ));
         } catch (NotFoundException e) {
@@ -102,7 +102,31 @@ public class CustomerRequestReceiptController {
             ));
         }
     }
-
+    @PreAuthorize("hasRole('ROLE_SALE_STAFF')")
+    @Operation(summary = "Cancel an customer request receipt")
+    @PutMapping(value ="/cancel/{receiptId}",  produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> cancelImportRequestReceipt(@PathVariable Long receiptId) {
+        try {
+            customerRequestReceiptService.cancelCustomerRequestReceipt(receiptId);
+            return ResponseEntity.ok(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Customer request receipt canceled successfully",
+                    null
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
+                    HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                    "An error occurred while canceling the Customer request receipt",
+                    null
+            ));
+        }
+    }
 
     @PreAuthorize("hasRole('ROLE_SALE_STAFF') or hasRole('ROLE_INVENTORY_STAFF')")
     @Operation(summary = "Get all customer request receipts")

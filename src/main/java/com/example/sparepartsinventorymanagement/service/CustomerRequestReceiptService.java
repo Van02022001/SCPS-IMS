@@ -10,7 +10,9 @@ public interface CustomerRequestReceiptService {
 
     CustomerRequestReceiptDTO createCustomerRequestReceipt(CustomerRequestReceiptForm form);
     CustomerRequestReceiptDTO getCustomerReceiptById(Long id);
-    void  startImportProcess(Long receiptId);
+    void  startCustomerRequestProcess(Long receiptId);
+    void confirmCustomerRequestReceipt(Long receiptId);
+    void cancelCustomerRequestReceipt(Long receiptId);
 
     List<CustomerRequestReceiptDTO> getAllCustomerRequestReceipts();
 

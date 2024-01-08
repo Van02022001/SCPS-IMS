@@ -1,10 +1,7 @@
 package com.example.sparepartsinventorymanagement.controller;
 
 import com.example.sparepartsinventorymanagement.dto.request.*;
-import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
-import com.example.sparepartsinventorymanagement.dto.response.PricingAuditDTO;
-import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
-import com.example.sparepartsinventorymanagement.dto.response.ReceiptDetailDTO;
+import com.example.sparepartsinventorymanagement.dto.response.*;
 import com.example.sparepartsinventorymanagement.entities.ItemStatus;
 import com.example.sparepartsinventorymanagement.entities.ReceiptDetail;
 import com.example.sparepartsinventorymanagement.exception.InvalidResourceException;
@@ -285,6 +282,35 @@ public class ItemController {
     ) {
         try {
             List<ItemDTO> items = itemService.getAllItemByWarehouse(warehouseId);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                    HttpStatus.OK.toString(),
+                    "Get list items by warehouse successfully",
+                    items
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    "Warehouse not found",
+                    null
+            ));
+        } catch (InvalidResourceException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseObject(
+                    HttpStatus.FORBIDDEN.toString(),
+                    "Access denied",
+                    null
+            ));
+        }
+    }
+
+    //@PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @Operation(summary = "Get all items by warehouse")
+    @GetMapping("/warehouse-inventory/{warehouseId}")
+    public ResponseEntity<?> getAllItemsWithDetailsByWarehouse(
+            @Parameter(description = "Enter warehouse ID", required = true, example = "1")
+            @PathVariable(name = "warehouseId") Long warehouseId
+    ) {
+        try {
+            List<ItemWarehouseDTO> items = itemService.getAllItemsWithDetailsByWarehouse(warehouseId);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                     HttpStatus.OK.toString(),
                     "Get list items by warehouse successfully",

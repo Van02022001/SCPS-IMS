@@ -4,6 +4,7 @@ import com.example.sparepartsinventorymanagement.dto.request.CreateItemLocations
 import com.example.sparepartsinventorymanagement.dto.request.ItemFormRequest;
 import com.example.sparepartsinventorymanagement.dto.request.UpdateItemLocationAfterExportForm;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
+import com.example.sparepartsinventorymanagement.dto.response.ItemWarehouseDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PricingAuditDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
 import com.example.sparepartsinventorymanagement.entities.ItemStatus;
@@ -32,6 +33,7 @@ public interface ItemService {
 
     boolean checkUpdateItemLocationAfterUpdate(Long receiptId);
     List<ItemDTO> getItemsByThisWarehouse();
+    List<ItemWarehouseDTO> getAllItemsWithDetailsByWarehouse(Long warehouseId);
 
     List<ItemDTO> getAllItemByWarehouseForSaleStaff(Long warehouseId);
 

@@ -191,7 +191,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                                 detailResponse.setItemName(detail.getItem().getSubCategory().getName());
                                 detailResponse.setQuantity(detail.getQuantity());
                                 detailResponse.setUnitName(detail.getUnitName());
-                               // detailResponse.setPrice(detail.getPurchasePrice().getPrice());
+                                detailResponse.setPrice(detail.getTotalPrice());
                                 detailResponse.setTotalPrice(detail.getTotalPrice());
                                 detailResponse.setItemId(detail.getItem().getId());
                                 return detailResponse;
@@ -463,6 +463,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         // Calculate total quantity and total price
         int totalQuantity = 0;
+        double totalPrice = 0;
 
         List<ReceiptDetail> receiptDetails = new ArrayList<>();
 
@@ -470,20 +471,25 @@ public class ReceiptServiceImpl implements ReceiptService {
             // Get product information
             Item item = itemRepository.findById(detailForm.getItemId())
                     .orElseThrow(() -> new NotFoundException("Item not found"));
-
+            double unitPrice = item.getPurchasePrice().getPrice();
+            double totalPriceForItem = unitPrice * detailForm.getQuantity();
             // Create receipt detail
             ReceiptDetail receiptDetail = ReceiptDetail.builder()
                     .item(item)
                     .quantity(detailForm.getQuantity())
                     .unitName(item.getSubCategory().getUnit().getName())
+                    .unitPrice(unitPrice)
+
+                    .totalPrice(totalPriceForItem)
                     .receipt(savedReceipt)
                     .build();
             receiptDetails.add(receiptDetail);
 
             totalQuantity += detailForm.getQuantity();
-
+            totalPrice += receiptDetail.getTotalPrice();
         }
         newReceipt.setTotalQuantity(totalQuantity);
+        newReceipt.setTotalPrice(totalPrice);
         // Save the receipt and receipt details
         receiptDetailRepository.saveAll(receiptDetails);
 
@@ -505,13 +511,14 @@ public class ReceiptServiceImpl implements ReceiptService {
         response.setType(savedReceipt.getType());
         response.setStatus(savedReceipt.getStatus());
         response.setDescription(savedReceipt.getDescription());
-        response.setReceivedBy(savedReceipt.getReceivedBy().getLastName() + " " + savedReceipt.getReceivedBy().getMiddleName() + " " + savedReceipt.getReceivedBy().getFirstName());
+      //  response.setReceivedBy(savedReceipt.getReceivedBy().getLastName() + " " + savedReceipt.getReceivedBy().getMiddleName() + " " + savedReceipt.getReceivedBy().getFirstName());
 
         response.setCreatedBy(savedReceipt.getCreatedBy().getLastName() + " " + savedReceipt.getCreatedBy().getMiddleName() + " " + savedReceipt.getCreatedBy().getFirstName());
         response.setLastModifiedBy(savedReceipt.getLastModifiedBy() != null ? savedReceipt.getLastModifiedBy().getLastName() + " " + savedReceipt.getLastModifiedBy().getLastName() + " " + savedReceipt.getLastModifiedBy().getFirstName() : null);
         response.setCreatedAt(savedReceipt.getCreationDate());
         response.setUpdatedAt(savedReceipt.getLastModifiedDate());
         response.setTotalQuantity(totalQuantity);
+        response.setTotalPrice(totalPrice);
 
         List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
                 .map(detail -> {
@@ -526,6 +533,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                     detailResponse.setUnitName(detail.getUnitName());
                     detailResponse.setItemId(detail.getItem().getId());
                     detailResponse.setPrice(detail.getUnitPrice());
+                    detailResponse.setTotalPrice(detail.getTotalPrice());
                     return detailResponse;
                 })
                 .collect(Collectors.toList());
@@ -768,7 +776,7 @@ public ImportRequestReceiptResponse createImportReceipt(Long receiptId, Map<Long
 
 
     @Override
-@Transactional
+    @Transactional
 public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integer> actualQuantities) {
     CustomerRequestReceipt customerRequestReceipt = customerRequestReceiptRepository.findById(receiptId)
             .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found"));
@@ -805,10 +813,8 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, savedExportReceipt.getWarehouse())
                 .orElseThrow(() -> new NotFoundException("Inventory not found"));
         if (actualQuantity > inventory.getTotalQuantity()) {
-            throw new IllegalStateException("Actual quantity is greater than total quantity in Inventory for item with ID " + item.getId());
+            throw new NotFoundException("Actual quantity is greater than total quantity in Inventory for item with ID " + item.getId());
         }
-
-
 
         double unitPrice = item.getPricing().getPrice();
         double totalPriceForItem = unitPrice * actualQuantity;

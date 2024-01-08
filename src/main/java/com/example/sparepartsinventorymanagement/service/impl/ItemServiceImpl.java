@@ -2,6 +2,7 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.*;
 import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
+import com.example.sparepartsinventorymanagement.dto.response.ItemWarehouseDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PricingAuditDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
@@ -347,6 +348,7 @@ public class ItemServiceImpl implements ItemService {
         return items.stream()
                 .map(item -> modelMapper.map(item, ItemDTO.class))
                 .collect(Collectors.toList());
+
     }
 
     @Override
@@ -590,6 +592,32 @@ public class ItemServiceImpl implements ItemService {
         return modelMapper.map(items, new TypeToken<List<ItemDTO>>(){}.getType());
     }
 
+    @Override
+    public List<ItemWarehouseDTO> getAllItemsWithDetailsByWarehouse(Long warehouseId) {
+        Warehouse warehouse = warehouseRepository.findById(warehouseId)
+                .orElseThrow(() -> new NotFoundException("Warehouse not found"));
+
+        List<Inventory> inventories = inventoryRepository.findByWarehouse(warehouse);
+
+        return inventories.stream().map(inventory -> {
+            Item item = inventory.getItem();
+            Image image = getImageForItem(item); // Assume this method fetches the Image entity for the Item
+            String imageUrl = (image != null) ? image.getUrl() : null;
+
+            ItemWarehouseDTO dto = new ItemWarehouseDTO();
+            dto.setId(item.getId());
+            dto.setName(item.getSubCategory().getName()); // Assuming name is from SubCategory
+            dto.setImageUrl(imageUrl);
+            dto.setAvailableQuantity(inventory.getAvailable());
+
+            return dto;
+        }).collect(Collectors.toList());
+    }
+    private Image getImageForItem(Item item) {
+        return null;
+        // Implement the logic to fetch the Image entity for the given item
+        // This might involve fetching the first image from a list of images or some other logic based on your requirements
+    }
     @Override
     public List<ItemDTO> getAllItemByWarehouseForSaleStaff(Long warehouseId) {
         // Lấy thông tin người dùng hiện tại từ SecurityContext

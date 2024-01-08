@@ -7,6 +7,7 @@ import com.example.sparepartsinventorymanagement.dto.response.CustomerRequestRec
 import com.example.sparepartsinventorymanagement.dto.response.ImportRequestReceiptDetailResponse;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
+import com.example.sparepartsinventorymanagement.exception.QuantityExceedsInventoryException;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
 import com.example.sparepartsinventorymanagement.repository.*;
 import com.example.sparepartsinventorymanagement.service.CustomerRequestReceiptService;
@@ -16,6 +17,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -52,6 +54,7 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
     private final ReceiptRepository receiptRepository;
 
     @Override
+    //@Transactional
     public CustomerRequestReceiptDTO createCustomerRequestReceipt(CustomerRequestReceiptForm form) {
         Customer customer = customerRepository.findById(form.getCustomerId())
                 .orElseThrow(() -> new NotFoundException("Customer not found"));
@@ -95,11 +98,18 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
             Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, savedReceipt.getWarehouse())
                     .orElseThrow(() -> new NotFoundException("Inventory not found"));
             int requestedQuantity = detailForm.getQuantity();
-            int actualQuantity = Math.min(requestedQuantity, inventory.getTotalQuantity()); // Lấy giá trị nhỏ hơn hoặc bằng số tồn kho
+            int actualQuantityInventory = inventory.getAvailable();
+            // Kiểm tra nếu số lượng yêu cầu vượt quá tồn kho
+            if (requestedQuantity > actualQuantityInventory) {
+                // Xử lý lỗi, ví dụ: in ra thông báo hoặc ném ra một RuntimeException
+                throw new QuantityExceedsInventoryException("Số lượng yêu cầu vượt quá số lượng có sẵn trong kho.");
+            }
+
+            //int actualQuantity = Math.min(requestedQuantity, inventory.getTotalQuantity()); // Lấy giá trị nhỏ hơn hoặc bằng số tồn kho
             CustomerRequestReceiptDetail requestReceiptDetail = CustomerRequestReceiptDetail.builder()
                     .items(item)
                     .customerRequestReceipt(savedReceipt)
-                    .quantity(actualQuantity)
+                    .quantity(requestedQuantity)
                     .unitName(item.getSubCategory().getUnit().getName())
                     .createdBy(getCurrentAuthenticatedUser())
                     .lastModifiedBy(getCurrentAuthenticatedUser())

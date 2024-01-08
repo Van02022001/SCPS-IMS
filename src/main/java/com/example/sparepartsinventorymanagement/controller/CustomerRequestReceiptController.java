@@ -4,6 +4,7 @@ import com.example.sparepartsinventorymanagement.dto.request.CustomerRequestRece
 import com.example.sparepartsinventorymanagement.dto.request.ImportRequestReceiptForm;
 import com.example.sparepartsinventorymanagement.dto.response.CustomerRequestReceiptDTO;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
+import com.example.sparepartsinventorymanagement.exception.QuantityExceedsInventoryException;
 import com.example.sparepartsinventorymanagement.service.CustomerRequestReceiptService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,7 +42,14 @@ public class CustomerRequestReceiptController {
                     e.getMessage(),
                     null
             ));
-        } catch (Exception e) {
+        } catch (QuantityExceedsInventoryException e) {
+            // Handle the specific case where the requested quantity exceeds inventory availability
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        }  catch (Exception e) {
             // Log the exception details here
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
                     HttpStatus.INTERNAL_SERVER_ERROR.toString(),

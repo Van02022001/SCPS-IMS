@@ -36,11 +36,6 @@ public class ItemFormRequest {
     @NotNull(message = "Origin ID is required")
     private Long origin_id;
 
-    @NotNull(message = "Start date cannot be null")
-    @FutureOrPresent(message = "Start date must be in the present or future")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-    private Date startDate;
 
     @DecimalMin(value = "0.01", message = "Price must be greater than zero")
     private double price;

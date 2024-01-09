@@ -77,12 +77,12 @@ public class ReceiptServiceImpl implements ReceiptService {
     @Override
     public List<ReceiptDetailDTO> getItemsNullLocation(Long id) {
         Receipt receipt = receiptRepository.findById(id).orElseThrow(
-                ()-> new NotFoundException("Receipt not found")
+                ()-> new NotFoundException("Không tìm thấy phiếu")
         );
         List<ReceiptDetail> detailResponses = new ArrayList<>();
 
         for (ReceiptDetail requestDetail : receipt.getDetails()) {
-            if(requestDetail.getItemMovements().isEmpty()){
+            if(!requestDetail.getItemMovements().isEmpty()){
                detailResponses.add(requestDetail);
             }
         }
@@ -1064,9 +1064,11 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
 
                 // Nếu số lượng mới là 0, xóa location
                 if (locationQuantityDetail.getQuantity() == 0) {
+                    location.setItem(null);
+                    locationRepository.save(location);
                     // Sử dụng phương thức tùy chỉnh để xóa location
-                    locationRepository.deleteLocationById(locationQuantityDetail.getLocationId());
-                    iterator.remove();
+                   // locationRepository.deleteLocationById(locationQuantityDetail.getLocationId());
+                   // iterator.remove();
                 } else {
 
 

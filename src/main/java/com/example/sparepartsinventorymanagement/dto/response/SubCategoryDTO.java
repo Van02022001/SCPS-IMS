@@ -37,7 +37,7 @@ public class SubCategoryDTO {
 
     private Set<CategoryDTO> categories;
 
-    private List<SubCategoryMetaDTO> productMetas;
+    private List<SubCategoryMetaDTO> subCategoryMeta;
 
     private SizeDTO size;
 }

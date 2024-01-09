@@ -32,10 +32,6 @@ public class ReceiptDetail  extends Auditable<User> {
     private double totalPrice;
 
 
-//    @Column(name = "total_quantity")
-//    private int totalQuantity;
-
-
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 

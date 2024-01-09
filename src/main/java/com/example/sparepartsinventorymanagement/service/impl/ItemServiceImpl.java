@@ -151,7 +151,7 @@ public class ItemServiceImpl implements ItemService {
                 .build();
         // Map the request to a Pricing entity
         Pricing pricing = new Pricing();
-        pricing.setStartDate(form.getStartDate());
+        pricing.setStartDate(currentDate);
         pricing.setPrice(form.getPrice());
 
         // Set the item to the pricing
@@ -255,7 +255,7 @@ public class ItemServiceImpl implements ItemService {
 
             // Update pricing
             item.getPricing().setPrice(form.getPrice());
-            item.getPricing().setStartDate(form.getStartDate());
+            item.getPricing().setStartDate(date);
             pricingRepository.save(item.getPricing());
 
             // Audit the price change

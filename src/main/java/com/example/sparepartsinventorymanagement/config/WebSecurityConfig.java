@@ -27,6 +27,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 public class WebSecurityConfig {
     private static final String[] UNAUTHORIZED_LIST_URLS = {
+            "/swagger-ui/index.html",
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/v2/api-docs/**",

@@ -13,7 +13,7 @@ public class CorsConfig implements WebMvcConfigurer {
                 .allowedMethods(HttpMethod.GET.name(), HttpMethod.POST.name(), HttpMethod.PUT.name(),
                         HttpMethod.OPTIONS.name(), HttpMethod.DELETE.name())
                 .allowedHeaders("*")
-                .allowedOrigins("*", "http://localhost:8080/**", "http://localhost:3000/**"
+                .allowedOrigins("*", "http://localhost:8080/**", "http://localhost:3000/**", "https://phu-tung-bom-be-tong-sg.azurewebsites.net/**"
                         );
 
     }

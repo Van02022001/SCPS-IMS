@@ -399,7 +399,7 @@ public class ItemController {
             ));
         }
     }
-    @Operation(summary = "For get list of receipt detail need update item location")
+    @Operation(summary = "For get list of receipt detail updated item location")
     @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
     @GetMapping(value = "/item-locations/receitp-detail/{receiptId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getItemsNullLocation(
@@ -416,7 +416,7 @@ public class ItemController {
         }
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
                 HttpStatus.OK.toString(),
-                "Lấy danh sách nội dung phiếu chưa cập nhật vị trí thành công.",
+                "Lấy danh sách nội dung phiếu đã cập nhật vị trí thành công.",
                 res
         ));
     }

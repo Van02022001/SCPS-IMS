@@ -28,6 +28,7 @@ public class UserDTO {
 
     private String email;
 
+    private String image;
 
     private Date registeredAt;
 

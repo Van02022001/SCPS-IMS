@@ -19,4 +19,5 @@ public class WarehouseTransferDTO {
     private Date lastModifiedDate;
     private Long createdByUserId;
     private Long lastModifiedByUserId;
+    private String status;
 }

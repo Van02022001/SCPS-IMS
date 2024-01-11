@@ -4,6 +4,7 @@ import com.example.sparepartsinventorymanagement.entities.CustomerRequestReceipt
 import com.example.sparepartsinventorymanagement.utils.DateTimeUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -14,12 +15,14 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class CustomerRequestReceiptDTO {
     private Long id;
     private String code;
     private String customerName;
     private CustomerRequestReceiptStatus status;
     private String note;
+    private double totalPrice;
     private int totalQuantity;
     private List<CustomerRequestReceiptDetailDTO> details;
     private String createdBy; // ID của người tạo

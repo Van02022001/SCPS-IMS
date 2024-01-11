@@ -40,6 +40,10 @@ public class WarehouseTransfer extends Auditable<User> {
     @Column(name = "quantity", nullable = false)
     private int quantity;
 
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private WarehouseTransferStatus status;
+
     @Column(name = "transfer_date", nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATE_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATE_FORMAT)

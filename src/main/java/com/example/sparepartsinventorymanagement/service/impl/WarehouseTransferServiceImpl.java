@@ -48,11 +48,31 @@ private final UserRepository userRepository;
             transferItem(detail.getItemId(), sourceWarehouse.getId(),
                     destinationWarehouse.getId(), detail.getQuantity());
         }
+        // Tạo danh sách các chi tiết chuyển giao để trả về
+        List<ItemTransferDetail> transferredItems = request.getItems().stream()
+                .map(detail -> {
+                    WarehouseTransfer transfer = new WarehouseTransfer();
+                    transfer.setItem(itemRepository.findById(detail.getItemId()).orElse(null));
+                    transfer.setSourceWarehouse(sourceWarehouse);
+                    transfer.setDestinationWarehouse(destinationWarehouse);
+                    transfer.setQuantity(detail.getQuantity());
+                    transfer.setStatus(WarehouseTransferStatus.NOT_COMPLETED);
+                    transfer.setTransferDate(new Date());
+                    warehouseTransferRepository.save(transfer);
+                    return detail;
+                })
+                .collect(Collectors.toList());
+
         return new TransferResult(
                 sourceWarehouse.getId(),
                 destinationWarehouse.getId(),
-                request.getItems()
+                transferredItems
         );
+//        return new TransferResult(
+//                sourceWarehouse.getId(),
+//                destinationWarehouse.getId(),
+//                request.getItems()
+//        );
     }
 
 
@@ -210,6 +230,7 @@ private final UserRepository userRepository;
         dto.setDestinationWarehouseId(transfer.getDestinationWarehouse().getId());
         dto.setSourceWarehouseId(transfer.getSourceWarehouse().getId());
         dto.setItemId(transfer.getItem().getId());
+        dto.setStatus(transfer.getStatus().name());
         dto.setCreationDate(transfer.getCreationDate());
         dto.setLastModifiedDate(transfer.getLastModifiedDate());
         dto.setCreatedByUserId(transfer.getCreatedBy() != null ? transfer.getCreatedBy().getId() : null);

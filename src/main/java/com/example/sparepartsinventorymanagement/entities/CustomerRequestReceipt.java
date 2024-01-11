@@ -35,6 +35,8 @@ public class CustomerRequestReceipt extends Auditable<User> {
     @Column(name = "total_quantity")
     private int totalQuantity;
 
+    @Column(name = "total_price")
+    private double totalPrice;
 
 
     @OneToMany(mappedBy = "customerRequestReceipt", cascade =CascadeType.ALL, orphanRemoval = true)

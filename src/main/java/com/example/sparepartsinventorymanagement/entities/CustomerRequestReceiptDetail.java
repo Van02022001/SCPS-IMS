@@ -29,6 +29,11 @@ public class CustomerRequestReceiptDetail extends Auditable<User> {
     @Column(name = "unit_name")
     private String unitName;
 
+    @Column(name = "total_price")
+    private double totalPrice;
+
+    @Column(name = "unit_price")
+    private double unitPrice;
 
     @ManyToOne
     @JoinColumn(name = "customer_request_id", nullable = false)

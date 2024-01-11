@@ -14,7 +14,7 @@ public class PrincipalDTO {
     private String lastName;
     private String email;
     private String username;
-
+    private String image;
 
     private Boolean status;
     private Role role;
@@ -38,6 +38,9 @@ public class PrincipalDTO {
 
     public String getEmail() {
         return email;
+    }
+    public String getImage() {
+        return image;
     }
     public String getUserName() {
         return username;

@@ -65,4 +65,8 @@ public class SubCategory {
     @OneToMany(mappedBy = "subCategory", fetch = FetchType.EAGER)
     @JsonIgnore
     private List<Item> items;
+
+    @OneToMany(mappedBy = "subCategory", fetch = FetchType.EAGER)
+    @JsonIgnore
+    private List<Image> images;
 }

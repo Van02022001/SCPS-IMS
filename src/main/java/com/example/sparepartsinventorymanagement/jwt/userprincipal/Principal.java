@@ -30,7 +30,7 @@ public class Principal implements UserDetails {
     private String email;
     private String username;
 
-
+    private String image;
     private String name;
 
     private Boolean status;
@@ -46,6 +46,7 @@ public class Principal implements UserDetails {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .email(user.getEmail())
+                .image(user.getImage())
                 .username(user.getUsername())
                 .password(user.getPassword())
                 .role(user.getRole())
@@ -90,7 +91,9 @@ public class Principal implements UserDetails {
         return email;
     }
 
-
+    public String getImage() {
+        return image;
+    }
     public String getName() {
         return name;
     }

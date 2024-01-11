@@ -614,9 +614,10 @@ public class ItemServiceImpl implements ItemService {
         }).collect(Collectors.toList());
     }
     private Image getImageForItem(Item item) {
+        if(!item.getSubCategory().getImages().isEmpty()){
+            return item.getSubCategory().getImages().get(0);
+        }
         return null;
-        // Implement the logic to fetch the Image entity for the given item
-        // This might involve fetching the first image from a list of images or some other logic based on your requirements
     }
     @Override
     public List<ItemDTO> getAllItemByWarehouseForSaleStaff(Long warehouseId) {

@@ -110,7 +110,7 @@ public class ImageController {
         ));
     }
     @PreAuthorize("hasRole('ROLE_MANAGER') or hasRole('ROLE_INVENTORY_STAFF') or hasRole('ROLE_SALE_STAFF')")
-    @Operation(summary = "For get image by id")
+    @Operation(summary = "For delete image by id")
     @DeleteMapping (value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> deleteImage(
             @Parameter(description = "Enter id to get", example = "1", required = true)

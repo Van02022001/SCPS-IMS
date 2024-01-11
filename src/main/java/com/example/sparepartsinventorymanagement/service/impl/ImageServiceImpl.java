@@ -70,6 +70,11 @@ public class ImageServiceImpl implements ImageService {
         } catch (IOException e) {
             throw new InvalidResourceException("Lỗi khi tải lên ảnh: " + e);
         }
+        if(user.getImage() != null){
+            BlobClient oldBlob = blobContainerClient
+                    .getBlobClient(multipartFile.getOriginalFilename());
+            oldBlob.delete();
+        }
         user.setImage(blob.getBlobUrl());
         return mapper.map(user, UserDTO.class);
     }

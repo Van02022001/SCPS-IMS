@@ -608,7 +608,7 @@ public class ItemServiceImpl implements ItemService {
 
         List<Inventory> inventories = inventoryRepository.findByWarehouse(warehouse);
 
-        return inventories.stream().map(inventory -> {
+        return inventories.stream().filter(inventory -> inventory.getItem().getStatus() == ItemStatus.Active).map(inventory -> {
             Item item = inventory.getItem();
             Image image = getImageForItem(item); // Assume this method fetches the Image entity for the Item
             String imageUrl = (image != null) ? image.getUrl() : null;

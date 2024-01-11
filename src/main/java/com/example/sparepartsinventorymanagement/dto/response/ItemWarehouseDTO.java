@@ -9,7 +9,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ItemWarehouseDTO {
     private Long id;
-    private String name;
+    private String code;
+    private String subcategoryName;
+    private String brandName;
+    private String supplierName;
+    private String originName;
     private String imageUrl;
     private int availableQuantity;
 }

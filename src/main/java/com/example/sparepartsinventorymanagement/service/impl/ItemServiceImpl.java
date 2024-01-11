@@ -589,6 +589,15 @@ public class ItemServiceImpl implements ItemService {
                 items.add(location.getItem());
             }
         }
+        for (Item item: items
+             ) {
+            Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, user.getWarehouse()).orElseThrow(
+                    ()-> new NotFoundException("Sản phẩm không có tồn kho.")
+            );
+            item.setAvailable(inventory.getAvailable());
+            item.setQuantity(inventory.getTotalQuantity());
+            item.setDefective(inventory.getDefective());
+        }
         return modelMapper.map(items, new TypeToken<List<ItemDTO>>(){}.getType());
     }
 
@@ -606,7 +615,11 @@ public class ItemServiceImpl implements ItemService {
 
             ItemWarehouseDTO dto = new ItemWarehouseDTO();
             dto.setId(item.getId());
-            dto.setName(item.getSubCategory().getName()); // Assuming name is from SubCategory
+            dto.setCode(item.getCode());
+            dto.setSubcategoryName(item.getSubCategory().getName()); // Assuming name is from SubCategory
+            dto.setBrandName(item.getBrand().getName());
+            dto.setSupplierName(item.getSupplier().getName());
+            dto.setOriginName(item.getOrigin().getName());
             dto.setImageUrl(imageUrl);
             dto.setAvailableQuantity(inventory.getAvailable());
 

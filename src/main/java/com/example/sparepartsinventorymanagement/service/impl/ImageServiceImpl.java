@@ -76,6 +76,7 @@ public class ImageServiceImpl implements ImageService {
             oldBlob.delete();
         }
         user.setImage(blob.getBlobUrl());
+        userRepository.save(user);
         return mapper.map(user, UserDTO.class);
     }
 

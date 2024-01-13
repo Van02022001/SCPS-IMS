@@ -185,19 +185,36 @@ public class UserServiceImpl implements UserService {
             user.getRole().setPermissions(selectedPermission);
         }
 
-        if(user.getRole().getName().equals("INVENTORY_STAFF") && form.getWarehouseId() == null){
-            List<Warehouse> warehouses = warehouseRepository.findAll();
-            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.toString()," Please select a warehouse for INVENTORY_STAFF role", warehouses));
-
-        } else if(user.getRole().getName().equals("INVENTORY_STAFF")){
-            Warehouse warehouse = warehouseRepository.findById(form.getWarehouseId())
-                    .orElseThrow(() -> new NotFoundException("Warehouse is not found"));
-            user.setWarehouse(warehouse);
+//        if(user.getRole().getName().equals("INVENTORY_STAFF") && form.getWarehouseId() == null){
+//            List<Warehouse> warehouses = warehouseRepository.findAll();
+//            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.toString()," Please select a warehouse for INVENTORY_STAFF role", warehouses));
+//
+//        } else if(user.getRole().getName().equals("INVENTORY_STAFF")){
+//            Warehouse warehouse = warehouseRepository.findById(form.getWarehouseId())
+//                    .orElseThrow(() -> new NotFoundException("Warehouse is not found"));
+//            user.setWarehouse(warehouse);
+//        }
+        if ("INVENTORY_STAFF".equals(form.getRoleName())) {
+            if (form.getWarehouseId() == null) {
+                return ResponseEntity.badRequest().body(new ResponseObject(HttpStatus.BAD_REQUEST.toString(),"Please select a warehouse for INVENTORY_STAFF role", null));
+            } else {
+                Warehouse warehouse = warehouseRepository.findById(form.getWarehouseId())
+                        .orElseThrow(() -> new NotFoundException("Warehouse is not found"));
+                user.setWarehouse(warehouse);
+            }
+        } else if ("INVENTORY_STAFF".equals(user.getRole().getName())) {
+            // Nếu người dùng trước đó là INVENTORY_STAFF và chuyển sang vai trò khác, xóa warehouseId
+            user.setWarehouse(null);
         }
         User updateUser =userRepository.save(user);
         UpdateUserDTO response = modelMapper.map(updateUser, UpdateUserDTO.class);
         response.setPermissions(updateUser.getRole().getPermissions());
-        response.setWarehouseId(updateUser.getWarehouse().getId());
+        // Thêm điều kiện kiểm tra null cho warehouse
+        if (updateUser.getWarehouse() != null) {
+            response.setWarehouseId(updateUser.getWarehouse().getId());
+        } else {
+            response.setWarehouseId(null); // hoặc bạn có thể không set gì nếu không muốn trả về warehouseId
+        }
 
         return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.toString(), "User updated successfully!", response));
     }

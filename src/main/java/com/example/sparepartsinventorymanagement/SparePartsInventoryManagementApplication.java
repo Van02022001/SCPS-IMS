@@ -34,7 +34,8 @@ public class SparePartsInventoryManagementApplication {
     private PasswordEncoder passwordEncoder;
     @Bean
     public CommandLineRunner initData(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository,  PasswordEncoder passwordEncoder,
-                                      WarehouseRepository warehouseRepository){
+                                      WarehouseRepository warehouseRepository,
+                                      UnitMeasurementRepository unitMeasurementRepository){
         return (args) -> {
 
 
@@ -145,8 +146,18 @@ public class SparePartsInventoryManagementApplication {
 //            adminUser.setRegisteredAt(new Date());
 //            adminUser.setRole(adminRole);
 //            userRepository.save(adminUser);
-
-
+//
+//              UnitMeasurement unitMeasurement1 = new UnitMeasurement();
+//              unitMeasurement1.setName("cm");
+//              unitMeasurementRepository.save(unitMeasurement1);
+//
+//            UnitMeasurement unitMeasurement2 = new UnitMeasurement();
+//            unitMeasurement2.setName("mm");
+//            unitMeasurementRepository.save(unitMeasurement2);
+//
+//            UnitMeasurement unitMeasurement3 = new UnitMeasurement();
+//            unitMeasurement3.setName("m");
+//            unitMeasurementRepository.save(unitMeasurement3);
         };
     }
 

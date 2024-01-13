@@ -15,7 +15,7 @@ import java.util.Set;
 @Data
 public class UpdateUserForm {
     @NotNull(message = "ID người dùng không được để trống")
-    @NotEmpty(message = "Required field.")
+    //@NotEmpty(message = "Required field.")
     private Long userId;
     @NotBlank(message = "Tên vai trò không được để trống")
     @NotEmpty(message = "Required field.")

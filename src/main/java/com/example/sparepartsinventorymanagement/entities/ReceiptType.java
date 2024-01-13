@@ -9,7 +9,10 @@ public enum ReceiptType {
 
     PHIEU_YEU_CAU_NHAP_KHO,
 
-    PHIEU_YEU_CAU_CUYEN_KHO,
+    PHIEU_YEU_CAU_CHUYEN_KHO,
+
+    PHIEU_XUAT_NOI_BO,
+    PHIEU_NHAP_NOI_BO,
 
     PHIEU_CHUYEN_KHO,
 

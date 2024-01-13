@@ -1,6 +1,5 @@
 package com.example.sparepartsinventorymanagement.dto.response;
 
-import com.example.sparepartsinventorymanagement.entities.ReceiptDiscrepancyLog;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,8 +13,7 @@ import java.util.List;
 @Builder
 public class ImportRequestReceiptDetailResponse {
     private Long id;
-    private Long itemId;
-    private String itemName;
+    private InfoItemDTO item;
     private int quantity;
     private String unitName;
     private double price;

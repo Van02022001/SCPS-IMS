@@ -8,7 +8,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ItemWarehouseDTO {
+@Builder
+public class InfoItemDTO {
     private Long id;
     private String code;
     private String subcategoryName;
@@ -16,5 +17,4 @@ public class ItemWarehouseDTO {
     private String supplierName;
     private String originName;
     private String imageUrl;
-    private int availableQuantity;
 }

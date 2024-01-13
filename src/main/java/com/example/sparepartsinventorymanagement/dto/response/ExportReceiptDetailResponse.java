@@ -15,8 +15,7 @@ import java.util.List;
 public class ExportReceiptDetailResponse {
 
     private Long id;
-    private Long itemId;
-    private String itemName;
+    private InfoItemDTO item;
     private int quantity;
     private String unitName;
     private double price;

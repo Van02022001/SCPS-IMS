@@ -7,7 +7,6 @@ import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
 import com.example.sparepartsinventorymanagement.repository.*;
-import com.example.sparepartsinventorymanagement.service.CustomerRequestReceiptService;
 import com.example.sparepartsinventorymanagement.service.NotificationService;
 import com.example.sparepartsinventorymanagement.service.ReceiptService;
 import jakarta.persistence.EntityManager;
@@ -42,13 +41,9 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final InventoryRepository inventoryRepository;
     private final InventoryDiscrepancyLogRepository inventoryDiscrepancyLogRepository;
     private final InventoryDiscrepancyLogsRepository inventoryDiscrepancyLogsRepository;
-    private final CustomerRequestReceiptService customerRequestReceiptService;
     private final CustomerRequestReceiptRepository customerRequestReceiptRepository;
     private final LocationRepository locationRepository;
-    private final ItemMovementRepository itemMovementRepository;
 
-    private final PricingRepository pricingRepository;
-    private final PricingAuditRepository pricingAuditRepository;
 
     @Override
     public void deleteImportRequestReceipt(Long id) {
@@ -183,17 +178,25 @@ public class ReceiptServiceImpl implements ReceiptService {
 
 
                     // Thêm thông tin chi tiết
+
                     List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
                     List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
                             .map(detail -> {
                                 ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
                                 detailResponse.setId(detail.getId());
-                                detailResponse.setItemName(detail.getItem().getSubCategory().getName());
                                 detailResponse.setQuantity(detail.getQuantity());
                                 detailResponse.setUnitName(detail.getUnitName());
                                 detailResponse.setPrice(detail.getTotalPrice());
                                 detailResponse.setTotalPrice(detail.getTotalPrice());
-                                detailResponse.setItemId(detail.getItem().getId());
+                                detailResponse.setItem(InfoItemDTO.builder()
+                                                .id(detail.getItem().getId())
+                                                .brandName(detail.getItem().getBrand().getName())
+                                                .originName(detail.getItem().getOrigin().getName())
+                                                .subcategoryName(detail.getItem().getSubCategory().getName())
+                                                .supplierName(detail.getItem().getSupplier().getName())
+                                                .code(detail.getItem().getCode())
+                                                .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                                        .build());
                                 return detailResponse;
                             })
                             .collect(Collectors.toList());
@@ -238,12 +241,19 @@ public class ReceiptServiceImpl implements ReceiptService {
                             .map(detail -> {
                                 ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
                                 detailResponse.setId(detail.getId());
-                                detailResponse.setItemName(detail.getItem().getSubCategory().getName());
                                 detailResponse.setQuantity(detail.getQuantity());
                                 detailResponse.setUnitName(detail.getUnitName());
                                 detailResponse.setPrice(detail.getUnitPrice());
                                 detailResponse.setTotalPrice(detail.getTotalPrice());
-                                detailResponse.setItemId(detail.getItem().getId());
+                                detailResponse.setItem(InfoItemDTO.builder()
+                                        .id(detail.getItem().getId())
+                                        .brandName(detail.getItem().getBrand().getName())
+                                        .originName(detail.getItem().getOrigin().getName())
+                                        .subcategoryName(detail.getItem().getSubCategory().getName())
+                                        .supplierName(detail.getItem().getSupplier().getName())
+                                        .code(detail.getItem().getCode())
+                                        .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                                        .build());
                                 return detailResponse;
                             })
                             .collect(Collectors.toList());
@@ -289,12 +299,19 @@ public class ReceiptServiceImpl implements ReceiptService {
                             .map(detail -> {
                                 ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
                                 detailResponse.setId(detail.getId());
-                                detailResponse.setItemName(detail.getItem().getSubCategory().getName());
                                 detailResponse.setQuantity(detail.getQuantity());
                                 detailResponse.setUnitName(detail.getUnitName());
                                 detailResponse.setPrice(detail.getUnitPrice());
                                 detailResponse.setTotalPrice(detail.getTotalPrice());
-                                detailResponse.setItemId(detail.getItem().getId());
+                                detailResponse.setItem(InfoItemDTO.builder()
+                                        .id(detail.getItem().getId())
+                                        .brandName(detail.getItem().getBrand().getName())
+                                        .originName(detail.getItem().getOrigin().getName())
+                                        .subcategoryName(detail.getItem().getSubCategory().getName())
+                                        .supplierName(detail.getItem().getSupplier().getName())
+                                        .code(detail.getItem().getCode())
+                                        .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                                        .build());
                                 return detailResponse;
                             })
                             .collect(Collectors.toList());
@@ -333,12 +350,19 @@ public class ReceiptServiceImpl implements ReceiptService {
                             .map(detail -> {
                                 ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
                                 detailResponse.setId(detail.getId());
-                                detailResponse.setItemName(detail.getItem().getSubCategory().getName());
                                 detailResponse.setQuantity(detail.getQuantity());
                                 detailResponse.setUnitName(detail.getUnitName());
                                 detailResponse.setPrice(detail.getUnitPrice());
                                 detailResponse.setTotalPrice(detail.getTotalPrice());
-                                detailResponse.setItemId(detail.getItem().getId());
+                                detailResponse.setItem(InfoItemDTO.builder()
+                                        .id(detail.getItem().getId())
+                                        .brandName(detail.getItem().getBrand().getName())
+                                        .originName(detail.getItem().getOrigin().getName())
+                                        .subcategoryName(detail.getItem().getSubCategory().getName())
+                                        .supplierName(detail.getItem().getSupplier().getName())
+                                        .code(detail.getItem().getCode())
+                                        .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                                        .build());
                                 return detailResponse;
                             })
                             .collect(Collectors.toList());
@@ -376,12 +400,19 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .map(detail -> {
                     ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
                     detailResponse.setId(detail.getId());
-                    detailResponse.setItemName(detail.getItem().getSubCategory().getName());
                     detailResponse.setQuantity(detail.getQuantity());
                     detailResponse.setUnitName(detail.getUnitName());
                     detailResponse.setPrice(detail.getUnitPrice());
                     detailResponse.setTotalPrice(detail.getTotalPrice());
-                    detailResponse.setItemId(detail.getItem().getId());
+                    detailResponse.setItem(InfoItemDTO.builder()
+                            .id(detail.getItem().getId())
+                            .brandName(detail.getItem().getBrand().getName())
+                            .originName(detail.getItem().getOrigin().getName())
+                            .subcategoryName(detail.getItem().getSubCategory().getName())
+                            .supplierName(detail.getItem().getSupplier().getName())
+                            .code(detail.getItem().getCode())
+                            .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                            .build());
                     return detailResponse;
                 })
                 .collect(Collectors.toList());
@@ -417,12 +448,19 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .map(detail -> {
                     ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
                     detailResponse.setId(detail.getId());
-                    detailResponse.setItemName(detail.getItem().getSubCategory().getName());
                     detailResponse.setQuantity(detail.getQuantity());
                     detailResponse.setUnitName(detail.getUnitName());
-                     detailResponse.setPrice(detail.getUnitPrice());
+                    detailResponse.setPrice(detail.getUnitPrice());
                     detailResponse.setTotalPrice(detail.getTotalPrice());
-                    detailResponse.setItemId(detail.getItem().getId());
+                    detailResponse.setItem(InfoItemDTO.builder()
+                            .id(detail.getItem().getId())
+                            .brandName(detail.getItem().getBrand().getName())
+                            .originName(detail.getItem().getOrigin().getName())
+                            .subcategoryName(detail.getItem().getSubCategory().getName())
+                            .supplierName(detail.getItem().getSupplier().getName())
+                            .code(detail.getItem().getCode())
+                            .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                            .build());
                     return detailResponse;
                 })
                 .collect(Collectors.toList());
@@ -524,16 +562,19 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .map(detail -> {
                     ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
                     detailResponse.setId(detail.getId());
-                    if (detail.getItem() != null && detail.getItem().getSubCategory() != null) {
-                        detailResponse.setItemName(detail.getItem().getSubCategory().getName());
-                    } else {
-                        detailResponse.setItemName("N/A"); // Hoặc xử lý khác
-                    }
                     detailResponse.setQuantity(detail.getQuantity());
                     detailResponse.setUnitName(detail.getUnitName());
-                    detailResponse.setItemId(detail.getItem().getId());
                     detailResponse.setPrice(detail.getUnitPrice());
                     detailResponse.setTotalPrice(detail.getTotalPrice());
+                    detailResponse.setItem(InfoItemDTO.builder()
+                            .id(detail.getItem().getId())
+                            .brandName(detail.getItem().getBrand().getName())
+                            .originName(detail.getItem().getOrigin().getName())
+                            .subcategoryName(detail.getItem().getSubCategory().getName())
+                            .supplierName(detail.getItem().getSupplier().getName())
+                            .code(detail.getItem().getCode())
+                            .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                            .build());
                     return detailResponse;
                 })
                 .collect(Collectors.toList());
@@ -659,20 +700,18 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .map(detail -> {
                     ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
                     detailResponse.setId(detail.getId());
-                    if (detail.getItem() != null && detail.getItem().getSubCategory() != null) {
-                        detailResponse.setItemName(detail.getItem().getSubCategory().getName());
-                    } else {
-                        detailResponse.setItemName("N/A");
-                    }
                     detailResponse.setQuantity(detail.getQuantity());
                     detailResponse.setUnitName(detail.getUnitName());
-//                    if (detail.getPurchasePrice() != null) {
-//                        detailResponse.setPrice(detail.getPurchasePrice().getPrice());
-//                    } else {
-//                        detailResponse.setPrice(0.0);
-//                    }
                     detailResponse.setTotalPrice(detail.getTotalPrice());
-                    detailResponse.setItemId(detail.getItem().getId());
+                    detailResponse.setItem(InfoItemDTO.builder()
+                            .id(detail.getItem().getId())
+                            .brandName(detail.getItem().getBrand().getName())
+                            .originName(detail.getItem().getOrigin().getName())
+                            .subcategoryName(detail.getItem().getSubCategory().getName())
+                            .supplierName(detail.getItem().getSupplier().getName())
+                            .code(detail.getItem().getCode())
+                            .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                            .build());
                     return detailResponse;
                 })
                 .collect(Collectors.toList());
@@ -839,8 +878,15 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
 
         ExportReceiptDetailResponse detailResponse = ExportReceiptDetailResponse.builder()
                 .id(receiptDetail.getId())
-                .itemId(item.getId())
-                .itemName(item.getSubCategory().getName())
+                .item(InfoItemDTO.builder()
+                        .id(item.getId())
+                        .brandName(item.getBrand().getName())
+                        .originName(item.getOrigin().getName())
+                        .subcategoryName(item.getSubCategory().getName())
+                        .supplierName(item.getSupplier().getName())
+                        .code(item.getCode())
+                        .imageUrl(item.getSubCategory().getImages().get(0).getUrl())
+                        .build())
                 .quantity(actualQuantity)
                 .unitName(receiptDetail.getUnitName())
                 .price(unitPrice)
@@ -954,8 +1000,15 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                             .map(detail -> {
                                 ExportReceiptDetailResponse detailResponse = new ExportReceiptDetailResponse();
                                 detailResponse.setId(detail.getId());
-                                detailResponse.setItemId(detail.getItem().getId());
-                                detailResponse.setItemName(detail.getItem().getSubCategory().getName());
+                                detailResponse.setItem(InfoItemDTO.builder()
+                                        .id(detail.getItem().getId())
+                                        .brandName(detail.getItem().getBrand().getName())
+                                        .originName(detail.getItem().getOrigin().getName())
+                                        .subcategoryName(detail.getItem().getSubCategory().getName())
+                                        .supplierName(detail.getItem().getSupplier().getName())
+                                        .code(detail.getItem().getCode())
+                                        .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                                        .build());
                                 detailResponse.setQuantity(detail.getQuantity());
                                 detailResponse.setUnitName(detail.getUnitName());
                                 // Uncomment and adjust if you have a price field in the detail
@@ -1004,8 +1057,15 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                             .map(detail -> {
                                 ExportReceiptDetailResponse detailResponse = new ExportReceiptDetailResponse();
                                 detailResponse.setId(detail.getId());
-                                detailResponse.setItemId(detail.getItem().getId());
-                                detailResponse.setItemName(detail.getItem().getSubCategory().getName());
+                                detailResponse.setItem(InfoItemDTO.builder()
+                                        .id(detail.getItem().getId())
+                                        .brandName(detail.getItem().getBrand().getName())
+                                        .originName(detail.getItem().getOrigin().getName())
+                                        .subcategoryName(detail.getItem().getSubCategory().getName())
+                                        .supplierName(detail.getItem().getSupplier().getName())
+                                        .code(detail.getItem().getCode())
+                                        .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                                        .build());
                                 detailResponse.setQuantity(detail.getQuantity());
                                 detailResponse.setUnitName(detail.getUnitName());
                                 // Uncomment and adjust if you have a price field in the detail
@@ -1418,8 +1478,15 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                 .map(detail -> {
                     ExportReceiptDetailResponse detailResponse = new ExportReceiptDetailResponse();
                     detailResponse.setId(detail.getId());
-                    detailResponse.setItemId(detail.getItem().getId());
-                    detailResponse.setItemName(detail.getItem().getSubCategory().getName());
+                    detailResponse.setItem(InfoItemDTO.builder()
+                            .id(detail.getItem().getId())
+                            .brandName(detail.getItem().getBrand().getName())
+                            .originName(detail.getItem().getOrigin().getName())
+                            .subcategoryName(detail.getItem().getSubCategory().getName())
+                            .supplierName(detail.getItem().getSupplier().getName())
+                            .code(detail.getItem().getCode())
+                            .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                            .build());
                     detailResponse.setQuantity(detail.getQuantity());
                     detailResponse.setUnitName(detail.getUnitName());
                     detailResponse.setPrice(detail.getUnitPrice());
@@ -1507,8 +1574,15 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
 
         return ImportRequestReceiptDetailResponse.builder()
                 .id(detail.getId())
-                .itemId(detail.getItem().getId())
-                .itemName(detail.getItem().getSubCategory().getName())
+                .item(InfoItemDTO.builder()
+                        .id(detail.getItem().getId())
+                        .brandName(detail.getItem().getBrand().getName())
+                        .originName(detail.getItem().getOrigin().getName())
+                        .subcategoryName(detail.getItem().getSubCategory().getName())
+                        .supplierName(detail.getItem().getSupplier().getName())
+                        .code(detail.getItem().getCode())
+                        .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                        .build())
                 .quantity(actualQuantity)
                 .unitName(detail.getUnitName())
                 .price(detail.getUnitPrice())

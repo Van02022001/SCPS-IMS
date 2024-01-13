@@ -2,9 +2,7 @@ package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.CustomerRequestReceiptDetailForm;
 import com.example.sparepartsinventorymanagement.dto.request.CustomerRequestReceiptForm;
-import com.example.sparepartsinventorymanagement.dto.response.CustomerRequestReceiptDTO;
-import com.example.sparepartsinventorymanagement.dto.response.CustomerRequestReceiptDetailDTO;
-import com.example.sparepartsinventorymanagement.dto.response.ImportRequestReceiptDetailResponse;
+import com.example.sparepartsinventorymanagement.dto.response.*;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.exception.QuantityExceedsInventoryException;
@@ -152,8 +150,19 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
                 .map(detail -> {
                     CustomerRequestReceiptDetailDTO detailResponse = new CustomerRequestReceiptDetailDTO();
                     detailResponse.setId(detail.getId());
-                    detailResponse.setItemId(detail.getItems().getId());
-                    detailResponse.setItemName(detail.getItems().getSubCategory().getName());
+//                    detailResponse.setItemId(detail.getItems().getId());
+//                    detailResponse.setItemName(detail.getItems().getSubCategory().getName());
+                    detailResponse.setItem(InfoItemDTO.builder()
+                                    .id(detail.getItems().getId())
+                                    .brandName(detail.getItems().getBrand().getName())
+                                    .originName(detail.getItems().getOrigin().getName())
+                                    .code(detail.getItems().getCode())
+                                    .imageUrl(detail.getItems().getSubCategory().getImages().get(0).getUrl())
+                                    .subcategoryName(detail.getItems().getSubCategory().getName())
+                                    .supplierName(detail.getItems().getSupplier().getName())
+
+
+                            .build());
                     detailResponse.setQuantity(detail.getQuantity());
                     detailResponse.setUnitName(detail.getUnitName());
 
@@ -253,7 +262,18 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
                 .map(detail -> {
                     CustomerRequestReceiptDetailDTO detailDTO = new CustomerRequestReceiptDetailDTO();
                     detailDTO.setId(detail.getId());
-                    detailDTO.setItemName(detail.getItems().getSubCategory().getName());
+                    detailDTO.setItem(
+                            InfoItemDTO.builder()
+                                    .id(detail.getItems().getId())
+                                    .brandName(detail.getItems().getBrand().getName())
+                                    .originName(detail.getItems().getOrigin().getName())
+                                    .code(detail.getItems().getCode())
+                                    .imageUrl(detail.getItems().getSubCategory().getImages().get(0).getUrl())
+                                    .subcategoryName(detail.getItems().getSubCategory().getName())
+                                    .supplierName(detail.getItems().getSupplier().getName())
+
+
+                                    .build());
                     detailDTO.setQuantity(detail.getQuantity());
                     detailDTO.setUnitName(detail.getUnitName());
                     return detailDTO;
@@ -317,13 +337,23 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
     }
 
     private CustomerRequestReceiptDetailDTO convertToCustomerRequestReceiptDetailDTO(CustomerRequestReceiptDetail detail) {
+        InfoItemDTO itemDTO = InfoItemDTO.builder()
+                .id(detail.getItems().getId())
+                .brandName(detail.getItems().getBrand().getName())
+                .originName(detail.getItems().getOrigin().getName())
+                .code(detail.getItems().getCode())
+                .imageUrl(detail.getItems().getSubCategory().getImages().get(0).getUrl())
+                .subcategoryName(detail.getItems().getSubCategory().getName())
+                .supplierName(detail.getItems().getSupplier().getName())
+
+                .build();
         return new CustomerRequestReceiptDetailDTO(
                 detail.getId(),
-                detail.getItems().getId(),
-                detail.getItems().getSubCategory().getName(),
+                itemDTO,
                 detail.getQuantity(),
                 detail.getUnitName()
         );
+
     }
 
     private User getCurrentAuthenticatedUser() {

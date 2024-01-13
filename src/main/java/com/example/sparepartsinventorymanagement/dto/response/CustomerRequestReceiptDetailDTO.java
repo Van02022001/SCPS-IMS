@@ -9,8 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CustomerRequestReceiptDetailDTO {
     private Long id; // ID of the detail record
-    private Long itemId;
-    private String itemName; // Name of the item for easy reference
+//    private Long itemId;
+//    private String itemName; // Name of the item for easy reference
+    private InfoItemDTO item;
     private int quantity; // The quantity requested
     private String unitName; // Name of the unit for display
 

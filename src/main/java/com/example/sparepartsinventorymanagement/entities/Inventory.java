@@ -54,6 +54,9 @@ public class Inventory {
     @Column(name = "defective")
     private int defective;
 
+    @Column(name = "lost")
+    private int lost;
+
     @Column(name = "discrepancy_quantity")
     private int discrepancyQuantity; // Sự khác biệt về số lượng
 

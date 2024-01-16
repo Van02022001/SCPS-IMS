@@ -37,8 +37,8 @@ public class Receipt extends Auditable<User> {
     private ReceiptStatus status;
 
 
-    @Column(name = "tax", nullable = false)
-    private float tax;
+//    @Column(name = "tax", nullable = false)
+//    private float tax;
 
     @Column(name = "total_price")
     private double totalPrice;

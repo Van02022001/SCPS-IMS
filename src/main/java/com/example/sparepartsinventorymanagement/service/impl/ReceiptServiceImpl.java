@@ -5,6 +5,7 @@ import com.example.sparepartsinventorymanagement.dto.request.*;
 import com.example.sparepartsinventorymanagement.dto.response.*;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
+import com.example.sparepartsinventorymanagement.exception.QuantityExceedsInventoryException;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
 import com.example.sparepartsinventorymanagement.repository.*;
 import com.example.sparepartsinventorymanagement.service.NotificationService;
@@ -1137,7 +1138,7 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
             }
 
             if (totalLocationQuantity != detail.getActualQuantity()) {
-                throw new IllegalArgumentException("The total quantity at locations does not match the actual quantity for item with ID: " + item.getId());
+                throw new QuantityExceedsInventoryException("The total quantity at locations does not match the actual quantity for item with ID: " + item.getId());
             }
 
             // Logic to handle inventory discrepancy

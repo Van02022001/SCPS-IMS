@@ -32,7 +32,7 @@ public class ReportController {
 
     @PreAuthorize("hasRole('ROLE_MANAGER') or hasRole('ADMIN')")
     @Operation(summary = "For get report")
-    @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/receipts", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getReceiptReport(
             @Valid @RequestBody ReportRequest form
     ) {
@@ -54,7 +54,6 @@ public class ReportController {
     @Operation(summary = "For get report")
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getReport(
-            @Valid @RequestBody ReportRequest form
     ) {
         ReportResponse res = reportService.getReport();
         if(res == null){

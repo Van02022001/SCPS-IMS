@@ -103,7 +103,10 @@ public class ReportServiceImpl implements ReportService {
         for (Receipt receipt: totalExportReceipts
         ) {
             totalExportValue += receipt.getTotalPrice();
-            totalItemExportQuantity += receipt.getTotalQuantity();
+            for (ReceiptDetail detail: receipt.getDetails()
+                 ) {
+                totalItemExportQuantity += detail.getQuantity();
+            }
         }
         double totalInventoryValue = 0;
         int totalItemQuantity = 0;
@@ -193,7 +196,7 @@ public class ReportServiceImpl implements ReportService {
     }
     private List<Receipt> getExportReceipts(List<Receipt> totalReceipts){
         return totalReceipts.stream()
-                .filter(receipt -> receipt.getType().equals(ReceiptType.PHIEU_NHAP_KHO)
+                .filter(receipt -> receipt.getType().equals(ReceiptType.PHIEU_XUAT_KHO)
                         && receipt.getStatus().equals(ReceiptStatus.Completed))
                 .toList();
     }
@@ -213,7 +216,10 @@ public class ReportServiceImpl implements ReportService {
         for (Receipt receipt: totalExportReceipts
         ) {
             exportedValue += receipt.getTotalPrice();
-            numberExportItem += receipt.getTotalQuantity();
+            for (ReceiptDetail detail: receipt.getDetails()
+                 ) {
+                numberExportItem += detail.getQuantity();
+            }
         }
         return ReceiptReportResponse.builder()
                 .importedItemValue(importedValue)

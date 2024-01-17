@@ -40,6 +40,8 @@ public class Item {
 
     @Column(name = "defective", nullable = false)
     private int defective;
+    @Column(name = "lost", nullable = false)
+    private int lost;
 
     @Column(name = "min_stock_level", nullable = false)
     private int minStockLevel;
@@ -107,6 +109,7 @@ public class Item {
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Location> locations;
-
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<ReceiptDetail> receiptDetails;
     // Getters and setters (omitted for brevity)
 }

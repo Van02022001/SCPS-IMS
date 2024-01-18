@@ -32,7 +32,7 @@ public class InventoryDTO {
     private int available;
     private int totalQuantity;
     private int averageUnitValue;
-
+    private WarehouseDTO warehouseDTO;
 
 
 

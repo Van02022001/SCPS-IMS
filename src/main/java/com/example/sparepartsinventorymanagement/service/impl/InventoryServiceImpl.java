@@ -1,6 +1,7 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.response.InventoryDTO;
+import com.example.sparepartsinventorymanagement.dto.response.WarehouseDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.InventoryRepository;
@@ -86,7 +87,7 @@ public class InventoryServiceImpl implements InventoryService {
         inventories.forEach(inventory -> {
             Long itemId = inventory.getItem().getId();
             InventoryDTO dto = sumaryMap.getOrDefault(itemId, new InventoryDTO());
-
+            WarehouseDTO warehouseDTO = modelMapper.map(inventory.getWarehouse(), WarehouseDTO.class);
             dto.setItemId(itemId);
             dto.setItemName(inventory.getItem().getSubCategory().getName());
             dto.setItemCode(inventory.getItem().getCode());
@@ -102,7 +103,7 @@ public class InventoryServiceImpl implements InventoryService {
             dto.setTotalQuantity(dto.getTotalQuantity() + inventory.getTotalQuantity());
             dto.setLost(dto.getLost() + inventory.getLost());
             dto.setAverageUnitValue((dto.getAverageUnitValue() + inventory.getAverageUnitValue()) / 2);
-
+            dto.setWarehouseDTO(warehouseDTO);
             sumaryMap.put(itemId, dto);
 
         });

@@ -21,5 +21,6 @@ public interface AuthService {
 
     String changeUserPassword(ChangePasswordForm passwordModel);
 
-//    ResponseEntity<?> forgetPassword(ForgetPasswordForm form);
+    ResponseEntity<?> forgetPassword(ForgetPasswordForm form);
+    ResponseEntity<?> resetPassword(String token);
 }

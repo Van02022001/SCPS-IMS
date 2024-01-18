@@ -7,9 +7,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-//@Repository
-//public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
-//    PasswordResetToken findByToken(String token);
-//    Optional<PasswordResetToken> findByUser(User user);
-//
-//}
+@Repository
+public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
+    PasswordResetToken findByToken(String token);
+    Optional<PasswordResetToken> findByUser(User user);
+
+}

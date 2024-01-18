@@ -12,15 +12,14 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -88,11 +87,15 @@ public class AuthController {
         return authService.login(loginForm);
     }
 
-//    @Operation(summary = "For resetting password")
-//    @PostMapping(value = "/reset-password")
-//    public ResponseEntity<?> forgetPassword(@RequestBody ForgetPasswordForm form){
-//        return authService.forgetPassword(form);
-//    }
-
+    @Operation(summary = "For forget password")
+    @PostMapping(value = "/forget-password")
+    public ResponseEntity<?> forgetPassword(@Valid @RequestBody ForgetPasswordForm form){
+        return authService.forgetPassword(form);
+    }
+    @Operation(summary = "For reset password")
+    @GetMapping(value = "/reset-password/{token}")
+    public ResponseEntity<?> resetPassword( @PathVariable(name = "token") @NotBlank @NotEmpty String token){
+        return authService.resetPassword(token);
+    }
 
 }

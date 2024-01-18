@@ -1,19 +1,16 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
-import com.example.sparepartsinventorymanagement.dto.request.ChangePasswordForm;
-import com.example.sparepartsinventorymanagement.dto.request.LoginForm;
-import com.example.sparepartsinventorymanagement.dto.request.LogoutForm;
-import com.example.sparepartsinventorymanagement.dto.request.RefreshTokenRequest;
+import com.example.sparepartsinventorymanagement.dto.request.*;
+import com.example.sparepartsinventorymanagement.dto.response.ForgetPasswordDTO;
 import com.example.sparepartsinventorymanagement.dto.response.PrincipalDTO;
 import com.example.sparepartsinventorymanagement.dto.response.RefreshTokenResponse;
+import com.example.sparepartsinventorymanagement.entities.PasswordResetToken;
 import com.example.sparepartsinventorymanagement.entities.User;
-import com.example.sparepartsinventorymanagement.exception.AuthenticationsException;
-import com.example.sparepartsinventorymanagement.exception.InvalidPasswordException;
-import com.example.sparepartsinventorymanagement.exception.NotFoundException;
-import com.example.sparepartsinventorymanagement.exception.PasswordMismatchException;
+import com.example.sparepartsinventorymanagement.exception.*;
 import com.example.sparepartsinventorymanagement.jwt.*;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
 //import com.example.sparepartsinventorymanagement.repository.PasswordResetTokenRepository;
+import com.example.sparepartsinventorymanagement.repository.PasswordResetTokenRepository;
 import com.example.sparepartsinventorymanagement.repository.UserRepository;
 import com.example.sparepartsinventorymanagement.service.AuthService;
 import com.example.sparepartsinventorymanagement.service.EmailService;
@@ -40,16 +37,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-   // private PasswordResetTokenRepository passwordResetTokenRepository;
+   private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     private final String companyEmail = "qvanwork@outlook.com.vn";
     @Autowired
@@ -196,45 +191,63 @@ public class AuthServiceImpl implements AuthService {
         return "Password changed successfully";
     }
 
-//    @Override
-//    public ResponseEntity<?> forgetPassword(ForgetPasswordForm form) {
-//        List<User> users = userRepository.findByEmail(form.getEmail());
-//
-//        ForgetPasswordDTO response = new ForgetPasswordDTO();
-//        response.setEmail(form.getEmail());
-//
-//        // If no users are found with the given email
-//        if(users.isEmpty()){
-//            response.setMessage("Email not found");
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
-//                    HttpStatus.NOT_FOUND.toString(), "Email not found", null
-//            ));
-//        }
-//
-//        User user = users.get(0);
-//
-//        Optional<PasswordResetToken> existingTokenOpt = passwordResetTokenRepository.findByUser(user);
-//        if (existingTokenOpt.isPresent()) {
-//            PasswordResetToken existingToken = existingTokenOpt.get();
-//            passwordResetTokenRepository.delete(existingToken);
-//            passwordResetTokenRepository.flush();
-//
-//        }
-//
-//        String token = UUID.randomUUID().toString();
-//        PasswordResetToken passwordResetToken = new PasswordResetToken(token, user);
-//        // Optionally, set the expiry date for the token here
-//
-//        passwordResetTokenRepository.save(passwordResetToken);
-//        emailService.sendPasswordResetEmail(user.getEmail(), token);
-//
-//        response.setMessage("If this email address is registered, a password reset link has been sent.");
-//        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
-//                HttpStatus.OK.toString(), response.getMessage(), response
-//        ));
-//    }
+    @Override
+    public ResponseEntity<?> forgetPassword(ForgetPasswordForm form) {
+        List<User> users = userRepository.findByEmail(form.getEmail());
 
+        ForgetPasswordDTO response = new ForgetPasswordDTO();
+        response.setEmail(form.getEmail());
 
+        // If no users are found with the given email
+        if(users.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(), "Email not found", null
+            ));
+        }
+
+        User user = users.get(0);
+
+        Optional<PasswordResetToken> existingTokenOpt = passwordResetTokenRepository.findByUser(user);
+        if (existingTokenOpt.isPresent()) {
+            PasswordResetToken existingToken = existingTokenOpt.get();
+            passwordResetTokenRepository.delete(existingToken);
+            passwordResetTokenRepository.flush();
+
+        }
+
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken passwordResetToken = new PasswordResetToken(token, user);
+        passwordResetToken.setExpiryDate(new Date(new Date().getTime()+120000));
+        // Optionally, set the expiry date for the token here
+
+        passwordResetTokenRepository.save(passwordResetToken);
+        emailService.sendPasswordResetEmail(user.getEmail(), token);
+
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(), "Nếu địa chỉ email này được đăng ký, liên kết đặt lại mật khẩu đã được gửi.", response
+        ));
+    }
+
+    @Override
+    public ResponseEntity<?> resetPassword(String token) {
+        PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByToken(token);
+        if(passwordResetToken== null){
+            throw new NotFoundException("Không tìm thấy token");
+        }
+        Date date = new Date();
+        if(passwordResetToken.getExpiryDate().before(date)){
+            throw new InvalidResourceException("Token đã hết hạn");
+        }
+        String rawPassword = UUID.randomUUID().toString().substring(0, 8);
+        passwordResetToken.getUser().setPassword(passwordEncoder.encode(rawPassword));
+        userRepository.save(passwordResetToken.getUser());
+        emailService.sendAccountDetail(passwordResetToken.getUser().getEmail(),
+                passwordResetToken.getUser().getUsername(),
+                rawPassword);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject(
+                HttpStatus.OK.toString(), "Mật khẩu đã được đặt lại, xin kiểm tra email để biết thông tin.", null
+        ));
+    }
 
 
     private Date calculateExpiryDate(int expiryTimeMinutes){

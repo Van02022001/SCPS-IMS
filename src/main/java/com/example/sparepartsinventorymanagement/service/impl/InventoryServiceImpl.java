@@ -19,9 +19,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 @Service
 @RequiredArgsConstructor
@@ -106,7 +109,26 @@ public class InventoryServiceImpl implements InventoryService {
 
         return new ArrayList<>(sumaryMap.values());
     }
+    private Map<Long, LocalDate> lastNotificationDateMap = new ConcurrentHashMap<>();
 
+    // ... existing methods ...
+
+    @Scheduled(fixedRate = 60000)
+    public void checkAndNotifyHighStock() {
+        List<Item> allItems = itemRepository.findAll();
+        Map<Long, Integer> totalQuantities = getTotalQuantitiesByItem();
+        LocalDate today = LocalDate.now();
+
+        for (Item item : allItems) {
+            int totalQuantity = totalQuantities.getOrDefault(item.getId(), 0);
+            LocalDate lastNotificationDate = lastNotificationDateMap.getOrDefault(item.getId(), LocalDate.MIN);
+
+            if (totalQuantity > item.getMaxStockLevel() && DAYS.between(lastNotificationDate, today) >= 1) {
+                sendHighStockNotification(item);
+                lastNotificationDateMap.put(item.getId(), today);
+            }
+        }
+    }
     @Override
     public List<InventoryDTO> getAllInventoryForCurrentStaff() {
         // Lấy thông tin người dùng hiện tại từ SecurityContext
@@ -142,45 +164,65 @@ public class InventoryServiceImpl implements InventoryService {
                 } )
                 .collect(Collectors.toList());
     }
-    private Map<Long, Boolean> lowStockNotificationSentMap = new ConcurrentHashMap<>();
-    @Scheduled(fixedRate = 600000)
+    private Map<Long, LocalDate> lastLowStockNotificationDateMap = new ConcurrentHashMap<>();
+
+
+
+    @Scheduled(fixedRate = 60000)
     public void checkAndNotifyLowStock() {
         List<Item> allItems = itemRepository.findAll();
         Map<Long, Integer> totalQuantities = getTotalQuantitiesByItem();
+        LocalDate today = LocalDate.now();
 
         for (Item item : allItems) {
             int totalQuantity = totalQuantities.getOrDefault(item.getId(), 0);
-            Boolean notificationSent = lowStockNotificationSentMap.getOrDefault(item.getId(), false);
+            LocalDate lastNotificationDate = lastLowStockNotificationDateMap.getOrDefault(item.getId(), LocalDate.MIN);
 
-            if (!notificationSent && totalQuantity < item.getMinStockLevel()) {
+            if (totalQuantity < item.getMinStockLevel() && DAYS.between(lastNotificationDate, today) >= 1) {
                 sendLowStockNotification(item);
-                lowStockNotificationSentMap.put(item.getId(), true);
-            } else if (notificationSent && totalQuantity >= item.getMinStockLevel()) {
-                // If the stock level is restored, reset the notification flag
-                lowStockNotificationSentMap.put(item.getId(), false);
+                lastLowStockNotificationDateMap.put(item.getId(), today);
             }
         }
     }
-    private Map<Long, Boolean> notificationSentMap = new ConcurrentHashMap<>();
-    @Scheduled(fixedRate = 600000)
-    public void checkAndNotifyHighStock(){
-        List<Item> allItems = itemRepository.findAll();
-        Map<Long, Integer> totalQuantities = getTotalQuantitiesByItem();
-
-        for (Item item : allItems) {
-            int totalQuantity = totalQuantities.getOrDefault(item.getId(), 0);
-            Boolean notificationSent = notificationSentMap.getOrDefault(item.getId(), false);
-
-            if (!notificationSent && totalQuantity > item.getMaxStockLevel()) {
-                sendHighStockNotification(item);
-                notificationSentMap.put(item.getId(), true);
-            } else if (notificationSent && totalQuantity <= item.getMaxStockLevel()) {
-                // If the stock level goes back to normal, reset the notification flag
-                notificationSentMap.put(item.getId(), false);
-            }
-        }
-
-    }
+//    private Map<Long, Boolean> lowStockNotificationSentMap = new ConcurrentHashMap<>();
+//    @Scheduled(fixedRate = 600000)
+//    public void checkAndNotifyLowStock() {
+//        List<Item> allItems = itemRepository.findAll();
+//        Map<Long, Integer> totalQuantities = getTotalQuantitiesByItem();
+//
+//        for (Item item : allItems) {
+//            int totalQuantity = totalQuantities.getOrDefault(item.getId(), 0);
+//            Boolean notificationSent = lowStockNotificationSentMap.getOrDefault(item.getId(), false);
+//
+//            if (!notificationSent && totalQuantity < item.getMinStockLevel()) {
+//                sendLowStockNotification(item);
+//                lowStockNotificationSentMap.put(item.getId(), true);
+//            } else if (notificationSent && totalQuantity >= item.getMinStockLevel()) {
+//                // If the stock level is restored, reset the notification flag
+//                lowStockNotificationSentMap.put(item.getId(), false);
+//            }
+//        }
+//    }
+//    private Map<Long, Boolean> notificationSentMap = new ConcurrentHashMap<>();
+//    @Scheduled(fixedRate = 600000)
+//    public void checkAndNotifyHighStock(){
+//        List<Item> allItems = itemRepository.findAll();
+//        Map<Long, Integer> totalQuantities = getTotalQuantitiesByItem();
+//
+//        for (Item item : allItems) {
+//            int totalQuantity = totalQuantities.getOrDefault(item.getId(), 0);
+//            Boolean notificationSent = notificationSentMap.getOrDefault(item.getId(), false);
+//
+//            if (!notificationSent && totalQuantity > item.getMaxStockLevel()) {
+//                sendHighStockNotification(item);
+//                notificationSentMap.put(item.getId(), true);
+//            } else if (notificationSent && totalQuantity <= item.getMaxStockLevel()) {
+//                // If the stock level goes back to normal, reset the notification flag
+//                notificationSentMap.put(item.getId(), false);
+//            }
+//        }
+//
+//    }
     //@Cacheable("totalQuantities")
     private Map<Long, Integer> getTotalQuantitiesByItem() {
         List<Inventory> inventories = inventoryRepository.findAll();

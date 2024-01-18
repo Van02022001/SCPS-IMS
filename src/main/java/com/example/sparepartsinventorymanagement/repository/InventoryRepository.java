@@ -33,4 +33,5 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
             "FROM Inventory i " +
             "GROUP BY i.item.id")
     List<InventoryItemSummaryDTO> getInventorySummaryForAllItems();
+    Optional<Inventory> findByItemIdAndWarehouseId(Long itemId, Long warehouseId);
 }

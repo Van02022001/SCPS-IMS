@@ -65,6 +65,8 @@ public class InventoryServiceImpl implements InventoryService {
                 .map(inventory -> {
                     InventoryDTO dto =  modelMapper.map(inventory, InventoryDTO.class);
                     dto.setItemId(inventory.getItem().getId());
+                    dto.setItemCode(inventory.getItem().getCode());
+
                     if (inventory.getItem() != null) {
                         dto.setItemName(inventory.getItem().getSubCategory().getName()); // Giả sử có phương thức getName() trong entity Item
                     }
@@ -84,6 +86,7 @@ public class InventoryServiceImpl implements InventoryService {
 
             dto.setItemId(itemId);
             dto.setItemName(inventory.getItem().getSubCategory().getName());
+            dto.setItemCode(inventory.getItem().getCode());
 
 
             dto.setInboundQuantity(dto.getInboundQuantity() + inventory.getInboundQuantity());
@@ -91,6 +94,11 @@ public class InventoryServiceImpl implements InventoryService {
             dto.setOutboundQuantity(dto.getOutboundQuantity() + inventory.getOutboundQuantity());
             dto.setOutboundValue(dto.getOutboundValue() + inventory.getOutboundValue());
             dto.setTotalValue(dto.getTotalValue() + inventory.getTotalValue());
+            dto.setAvailable(dto.getAvailable() + inventory.getAvailable());
+            dto.setDefective(dto.getDefective() + inventory.getDefective());
+            dto.setTotalQuantity(dto.getTotalQuantity() + inventory.getTotalQuantity());
+            dto.setLost(dto.getLost() + inventory.getLost());
+            dto.setAverageUnitValue((dto.getAverageUnitValue() + inventory.getAverageUnitValue()) / 2);
 
             sumaryMap.put(itemId, dto);
 
@@ -126,6 +134,7 @@ public class InventoryServiceImpl implements InventoryService {
         return inventories.stream()
                 .map(inventory ->{
                     InventoryDTO dto = modelMapper.map(inventory, InventoryDTO.class);
+                    dto.setItemCode(inventory.getItem().getCode());
                     dto.setItemId(inventory.getItem().getId());
                     dto.setItemName(inventory.getItem().getSubCategory().getName());
 

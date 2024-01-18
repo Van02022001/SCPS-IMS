@@ -31,4 +31,8 @@ public class InventoryCheckDetail {
     @NotEmpty(message = "Required field.")
     private List<LocationQuantityDetail > locationQuantities;
 
+    @NotNull(message = "Status quantities cannot be null")
+    private Map<InventoryStatus, Integer> statusQuantities;
+
+
 }

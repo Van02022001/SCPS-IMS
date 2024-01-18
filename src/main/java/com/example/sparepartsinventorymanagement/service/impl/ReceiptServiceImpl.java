@@ -4,6 +4,7 @@ import com.example.sparepartsinventorymanagement.dto.request.*;
 
 import com.example.sparepartsinventorymanagement.dto.response.*;
 import com.example.sparepartsinventorymanagement.entities.*;
+import com.example.sparepartsinventorymanagement.exception.InvalidInventoryDataException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.exception.QuantityExceedsInventoryException;
 import com.example.sparepartsinventorymanagement.jwt.userprincipal.Principal;
@@ -11,6 +12,7 @@ import com.example.sparepartsinventorymanagement.repository.*;
 import com.example.sparepartsinventorymanagement.service.NotificationService;
 import com.example.sparepartsinventorymanagement.service.ReceiptService;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -1154,17 +1156,43 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
 
         return buildCheckInventoryReceiptResponse(checkInventoryReceipt, checkInventoryReceiptForm.getDetails());
     }
+    private void validateStatusQuantities(Map<InventoryStatus, Integer> statusQuantities, int actualQuantity) throws InvalidInventoryDataException {
+        if (statusQuantities == null) {
+            throw new InvalidInventoryDataException("Status quantities cannot be null");
+        }
 
+        int totalStatusQuantity = 0;
+        for (Map.Entry<InventoryStatus, Integer> entry : statusQuantities.entrySet()) {
+            if (entry.getValue() < 0) {
+                throw new InvalidInventoryDataException("Quantities for " + entry.getKey() + " cannot be negative");
+            }
+            totalStatusQuantity += entry.getValue();
+        }
+
+        if (totalStatusQuantity > actualQuantity) {
+            throw new InvalidInventoryDataException("Total status quantities exceed actual quantity");
+        }
+    }
     private void handleInventoryDiscrepancy(InventoryCheckDetail detail, Inventory inventory, boolean hasDiscrepancy) {
         int actualQuantity = detail.getActualQuantity();
-        int discrepancyQuantity = actualQuantity - inventory.getAvailable();
-        double discrepancyValue = discrepancyQuantity * inventory.getAverageUnitValue();
+        Map<InventoryStatus, Integer> statusQuantities = detail.getStatusQuantities();
+        // Lưu trữ số lượng dự kiến trước khi xử lý chênh lệch
+        int expectedQuantity = inventory.getTotalQuantity();
 
-        if (discrepancyQuantity != 0) {
+        // Validate dữ liệu trước khi xử lý
+        validateStatusQuantities(statusQuantities, actualQuantity);
+
+        // Tính toán discrepancyQuantity và discrepancyValue
+        int discrepancyQuantity = actualQuantity - inventory.getAvailable();
+
+        double discrepancyValue = calculateDiscrepancyValue(inventory.getItem().getId(), inventory.getWarehouse().getId(), inventory,statusQuantities);
+
+        // Nếu có sự chênh lệch, đánh dấu hasDiscrepancy và tạo log
+        if (discrepancyQuantity != 0 || !statusQuantities.isEmpty()) {
             hasDiscrepancy = true;
             InventoryDiscrepancyLogs log = InventoryDiscrepancyLogs.builder()
                     .inventory(inventory)
-                    .requiredQuantity(inventory.getTotalQuantity())
+                    .requiredQuantity(expectedQuantity)
                     .actualQuantity(actualQuantity)
                     .discrepancyQuantity(discrepancyQuantity)
                     .discrepancyValue(discrepancyValue)
@@ -1175,21 +1203,61 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
             inventoryDiscrepancyLogsRepository.save(log);
         }
 
-        updateInventoryQuantity(inventory, discrepancyQuantity, discrepancyValue);
+        // Cập nhật số lượng tồn kho bằng cách sử dụng thông tin từ statusQuantities
+        updateInventoryQuantity(inventory, statusQuantities);
     }
 
-    private void updateInventoryQuantity(Inventory inventory, int discrepancyQuantity, double discrepancyValue) {
-        if (discrepancyQuantity > 0) {
-            inventory.setAvailable(inventory.getAvailable() - discrepancyQuantity);
-            inventory.setDefective(inventory.getDefective() + discrepancyQuantity);
-            inventory.setTotalValue(inventory.getTotalValue() - discrepancyValue);
-        } else {
-            inventory.setAvailable(inventory.getAvailable() + discrepancyQuantity);
-            inventory.setDefective(inventory.getDefective() - discrepancyQuantity);
-            inventory.setTotalValue(inventory.getTotalValue() + discrepancyValue);
-        }
+
+    private void updateInventoryQuantity(Inventory inventory, Map<InventoryStatus, Integer> statusQuantities) {
+        int lostQuantity = statusQuantities.getOrDefault(InventoryStatus.LOST, 0);
+        int redundantQuantity = statusQuantities.getOrDefault(InventoryStatus.REDUNDANT, 0);
+        int defectiveQuantity = statusQuantities.getOrDefault(InventoryStatus.DEFECTIVE, 0);
+
+        // Cập nhật số lượng dựa trên LOST và DEFECTIVE
+        inventory.setAvailable(inventory.getAvailable() - lostQuantity - defectiveQuantity + redundantQuantity);
+        inventory.setTotalQuantity(inventory.getTotalQuantity() - lostQuantity + redundantQuantity);
+
+        // Cập nhật số lượng hàng mất và hư hỏng
+        inventory.setLost(inventory.getLost() + lostQuantity);
+        inventory.setDefective(inventory.getDefective() + defectiveQuantity);
+
         inventoryRepository.save(inventory);
     }
+    private double calculateDiscrepancyValue(Long itemId, Long warehouseId, Inventory inventory, Map<InventoryStatus, Integer> statusQuantities) {
+        double discrepancyValue = 0.0;
+        double unitValue = getAverageUnitValueOfItemInWarehouse(itemId, warehouseId);
+        for (Map.Entry<InventoryStatus, Integer> entry : statusQuantities.entrySet()) {
+           // double unitValue = inventory.getAverageUnitValue();
+            switch (entry.getKey()) {
+                case LOST:
+                    // Giảm giá trị chênh lệch cho hàng bị mất
+                    discrepancyValue -= entry.getValue() * unitValue;
+                    break;
+                case DEFECTIVE:
+                    // Tăng giá trị chênh lệch cho hàng hư hỏng (nếu bạn coi hàng hư hỏng vẫn có giá trị)
+                    discrepancyValue += entry.getValue() * unitValue;
+                    break;
+                case REDUNDANT:
+                    // Giảm giá trị chênh lệch cho hàng thừa (nếu bạn coi hàng thừa không làm tăng giá trị tồn kho)
+                    discrepancyValue -= entry.getValue() * unitValue;
+                    break;
+                case ENOUGH:
+                    // Không thay đổi giá trị chênh lệch
+                    break;
+                // Các trường hợp khác nếu có
+            }
+        }
+        return discrepancyValue;
+    }
+
+    public double getAverageUnitValueOfItemInWarehouse(Long itemId, Long warehouseId) {
+        // Tìm kiếm Inventory dựa trên itemId và warehouseId
+        Optional<Inventory> inventory = inventoryRepository.findByItemIdAndWarehouseId(itemId, warehouseId);
+
+        // Nếu Inventory tìm thấy, trả về averageUnitValue
+        return inventory.map(Inventory::getAverageUnitValue).orElse(0);
+    }
+
 
 
 
@@ -1270,6 +1338,7 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
             List<InventoryCheckDetailResponse> detailResponses = new ArrayList<>();
 
             for (Inventory inventory : inventories) {
+
                 InventoryCheckDetailResponse detailResponse = new InventoryCheckDetailResponse();
                 detailResponse.setItemId(inventory.getItem().getId());
                 detailResponse.setCodeItem(inventory.getItem().getCode());
@@ -1372,17 +1441,6 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         );
     }
 
-
-
-    public List<Item> findItemsByWarehouse(Warehouse warehouse) {
-        // Tìm tất cả các bản ghi Inventory dựa trên Warehouse
-        List<Inventory> inventoryList = inventoryRepository.findByWarehouse(warehouse);
-
-        // Sử dụng Java Stream API để chuyển đổi từ Inventory sang Item
-        return inventoryList.stream()
-                .map(Inventory::getItem)
-                .collect(Collectors.toList());
-    }
 
     private CheckInventoryReceiptResponse buildCheckInventoryReceiptResponse(Receipt receipt, List<InventoryCheckDetail> checkDetails) {
         List<InventoryCheckDetailResponse> detailResponses = new ArrayList<>();

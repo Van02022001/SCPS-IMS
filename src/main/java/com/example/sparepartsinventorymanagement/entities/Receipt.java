@@ -38,7 +38,6 @@ public class Receipt extends Auditable<User> {
 
 
 
-
     @Column(name = "total_price")
     private double totalPrice;
 

@@ -332,9 +332,9 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("Warehouse not found"));
 
         // Kiểm tra xem người dùng hiện tại có phải là nhân viên kho của Warehouse đang được truy vấn không
-        if (!currentUser.getWarehouse().getId().equals(warehouseId)) {
-            throw new InvalidResourceException("User is not an inventory staff of the requested warehouse");
-        }
+//        if (!currentUser.getWarehouse().getId().equals(warehouseId)) {
+//            throw new InvalidResourceException("User is not an inventory staff of the requested warehouse");
+//        }
 
         // Lấy ra danh sách Inventory trong kho
         List<Inventory> inventoryList = warehouse.getInventoryList();

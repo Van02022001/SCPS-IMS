@@ -50,6 +50,8 @@ public interface ReceiptService {
     ImportRequestReceiptResponse getInternalExportReceiptById(Long id);
     List<ImportRequestReceiptResponse> getAllInternalExportReceiptsByWareHouse();
 
+    ImportRequestReceiptResponse createInternalExportReceipt(Long receiptId, Map<Long, Integer> actualQuantities);
+
 
 
     //for  import receipt

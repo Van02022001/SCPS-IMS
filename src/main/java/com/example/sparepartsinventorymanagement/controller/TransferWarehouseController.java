@@ -1,6 +1,7 @@
 package com.example.sparepartsinventorymanagement.controller;
 
 import com.example.sparepartsinventorymanagement.dto.request.ImportRequestReceiptForm;
+import com.example.sparepartsinventorymanagement.dto.response.ExportReceiptResponse;
 import com.example.sparepartsinventorymanagement.dto.response.ImportRequestReceiptResponse;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.service.ReceiptService;
@@ -124,6 +125,38 @@ public class TransferWarehouseController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
                     HttpStatus.INTERNAL_SERVER_ERROR.toString(),
                     "An error occurred while retrieving the internal export request receipts",
+                    null
+            ));
+        }
+    }
+    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @Operation(summary = "Create a new internal export receipt")
+    @PostMapping(value = "/internal-export/{receiptId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> createExportReceipt(@PathVariable Long receiptId, @RequestBody Map<Long, Integer> actualQuantities) {
+        try {
+            ImportRequestReceiptResponse exportReceiptResponse = receiptService.createInternalExportReceipt(receiptId, actualQuantities);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject(
+                    HttpStatus.CREATED.toString(),
+                    "Internal Export receipt created successfully",
+                    exportReceiptResponse
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        } catch (Exception e) {
+            // Log the exception details here
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
+                    HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                    "An error occurred while creating the internal export receipt",
                     null
             ));
         }

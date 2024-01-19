@@ -792,8 +792,8 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
             int requiredQuantity = requestDetail.getQuantity();
-            int actualQuantity = actualQuantities.get(requestDetail.getId());
-            //int actualQuantity = actualQuantities.getOrDefault(requestDetail.getId(), requiredQuantity);
+            //int actualQuantity = actualQuantities.get(requestDetail.getId());
+            int actualQuantity = actualQuantities.getOrDefault(requestDetail.getId(), requiredQuantity);
             int discrepancyQuantity = actualQuantity - requiredQuantity;
             double unitPrice = requestDetail.getItem().getPurchasePrice().getPrice();
             double totalPriceForItem = unitPrice * actualQuantity;
@@ -1666,9 +1666,11 @@ public class ReceiptServiceImpl implements ReceiptService {
         List<ImportRequestReceiptDetailResponse> detailResponses = new ArrayList<>();
 
         for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
+
+
             int requiredQuantity = requestDetail.getQuantity();
-            int actualQuantity = actualQuantities.get(requestDetail.getId());
-            //int actualQuantity = actualQuantities.getOrDefault(requestDetail.getId(), requiredQuantity);
+           // int actualQuantity = actualQuantities.get(requestDetail.getId());
+            int actualQuantity = actualQuantities.getOrDefault(requestDetail.getId(), requiredQuantity);
             int discrepancyQuantity = actualQuantity - requiredQuantity;
             double unitPrice = requestDetail.getItem().getPurchasePrice().getPrice();
             double totalPriceForItem = unitPrice * actualQuantity;

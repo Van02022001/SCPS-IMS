@@ -12,7 +12,6 @@ import com.example.sparepartsinventorymanagement.repository.*;
 import com.example.sparepartsinventorymanagement.service.NotificationService;
 import com.example.sparepartsinventorymanagement.service.ReceiptService;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -583,6 +582,1055 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .collect(Collectors.toList());
         response.setDetails(detailResponses);
         return response;
+    }
+
+    @Override
+    public ImportRequestReceiptResponse createInternalRequestReceipt(ImportRequestReceiptForm internalRequestReceiptForm) {
+        // Check warehouse
+        List<Warehouse> warehouseList = warehouseRepository.findAll();
+        Warehouse warehouse = warehouseList.stream()
+                .filter( warehouse1 -> warehouse1.getId().equals(internalRequestReceiptForm.getWarehouseId()))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Warehouse not found!"));
+
+
+        // Check inventory staff
+        List<User> inventoryStaffList = userRepository.findAllByWarehouseAndRoleName(warehouse, "INVENTORY_STAFF");
+        User inventoryStaff = inventoryStaffList.stream()
+                .filter(user -> user.getId().equals(internalRequestReceiptForm.getInventoryStaffId()))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Inventory Staff not found!"));
+
+        // Create a new receipt
+        Receipt newReceipt = Receipt.builder()
+                .code(generateAndValidateUniqueCode())
+                .type(ReceiptType.PHIEU_YEU_CAU_NHAP_NOI_BO)
+                .status(ReceiptStatus.Pending_Approval)
+                .description(internalRequestReceiptForm.getDescription())
+                .createdBy(getCurrentAuthenticatedUser())
+                .receivedBy(inventoryStaff)
+                .warehouse(warehouse)
+                .build();
+        Receipt savedReceipt = receiptRepository.save(newReceipt);
+
+        // Calculate total quantity and total price
+        int totalQuantity = 0;
+        double totalPrice = 0;
+
+        List<ReceiptDetail> receiptDetails = new ArrayList<>();
+
+        for (ImportRequestReceiptDetailForm detailForm : internalRequestReceiptForm.getDetails()) {
+            // Get product information
+            Item item = itemRepository.findById(detailForm.getItemId())
+                    .orElseThrow(() -> new NotFoundException("Item not found"));
+            double unitPrice = item.getPurchasePrice().getPrice();
+            double totalPriceForItem = unitPrice * detailForm.getQuantity();
+            // Create receipt detail
+            ReceiptDetail receiptDetail = ReceiptDetail.builder()
+                    .item(item)
+                    .quantity(detailForm.getQuantity())
+                    .unitName(item.getSubCategory().getUnit().getName())
+                    .unitPrice(unitPrice)
+                    .totalPrice(totalPriceForItem)
+                    .receipt(savedReceipt)
+                    .build();
+            receiptDetails.add(receiptDetail);
+
+            totalQuantity += detailForm.getQuantity();
+            totalPrice += receiptDetail.getTotalPrice();
+        }
+        newReceipt.setTotalQuantity(totalQuantity);
+        newReceipt.setTotalPrice(totalPrice);
+        // Save the receipt and receipt details
+        receiptDetailRepository.saveAll(receiptDetails);
+
+        // Send a notification
+        notificationService.createAndSendNotification(
+                SourceType.RECEIPT,
+                EventType.REQUESTED,
+                savedReceipt.getId(),
+                inventoryStaff.getId(),
+                NotificationType.YEU_CAU_NHAP_KHO_NOI_BO,
+                "Yêu cầu nhập kho noi bo #" + savedReceipt.getId() + " đã được tạo."
+        );
+
+        // Create response
+        ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+        response.setWarehouseId(savedReceipt.getWarehouse().getId());
+        response.setId(savedReceipt.getId());
+        response.setCode(savedReceipt.getCode());
+        response.setType(savedReceipt.getType());
+        response.setStatus(savedReceipt.getStatus());
+        response.setDescription(savedReceipt.getDescription());
+        //  response.setReceivedBy(savedReceipt.getReceivedBy().getLastName() + " " + savedReceipt.getReceivedBy().getMiddleName() + " " + savedReceipt.getReceivedBy().getFirstName());
+
+        response.setCreatedBy(savedReceipt.getCreatedBy().getLastName() + " " + savedReceipt.getCreatedBy().getMiddleName() + " " + savedReceipt.getCreatedBy().getFirstName());
+        response.setLastModifiedBy(savedReceipt.getLastModifiedBy() != null ? savedReceipt.getLastModifiedBy().getLastName() + " " + savedReceipt.getLastModifiedBy().getLastName() + " " + savedReceipt.getLastModifiedBy().getFirstName() : null);
+        response.setCreatedAt(savedReceipt.getCreationDate());
+        response.setUpdatedAt(savedReceipt.getLastModifiedDate());
+        response.setTotalQuantity(totalQuantity);
+        response.setTotalPrice(totalPrice);
+
+        List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                .map(detail -> {
+                    ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                    detailResponse.setId(detail.getId());
+                    detailResponse.setQuantity(detail.getQuantity());
+                    detailResponse.setUnitName(detail.getUnitName());
+                    detailResponse.setPrice(detail.getUnitPrice());
+                    detailResponse.setTotalPrice(detail.getTotalPrice());
+                    detailResponse.setItem(InfoItemDTO.builder()
+                            .id(detail.getItem().getId())
+                            .brandName(detail.getItem().getBrand().getName())
+                            .originName(detail.getItem().getOrigin().getName())
+                            .subcategoryName(detail.getItem().getSubCategory().getName())
+                            .supplierName(detail.getItem().getSupplier().getName())
+                            .code(detail.getItem().getCode())
+                            .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                            .build());
+                    return detailResponse;
+                })
+                .collect(Collectors.toList());
+        response.setDetails(detailResponses);
+        return response;
+    }
+
+    @Override
+    public void confirmInternalImportRequestReceipt(Long receiptId) {
+        // Lấy thông tin người dùng hiện tại
+        User currentUser = getCurrentAuthenticatedUser();
+
+        var receipt = receiptRepository.findById(receiptId)
+                .filter(receipt1 -> receipt1.getType() == ReceiptType.PHIEU_YEU_CAU_NHAP_NOI_BO)
+                .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found or not of type PHIEU_YEU_CAU_CHUYEN_KHO"));
+
+        // So sánh id của người dùng hiện tại với inventoryStaffId liên quan đến phiếu nhập kho
+        if (currentUser == null || !currentUser.getId().equals(receipt.getReceivedBy().getId())) {
+            throw new AccessDeniedException("You do not have permission to confirm this import request receipt.");
+        }
+
+        // Kiểm tra xem phiếu đã được xác nhận chưa
+        if (receipt.getStatus() == ReceiptStatus.Approved) {
+            throw new IllegalStateException("This internal import request receipt has already been confirmed.");
+        }
+        // Cập nhật trạng thái
+        receipt.setStatus(ReceiptStatus.Approved);
+        var updatedReceipt = receiptRepository.save(receipt);
+
+        // Gửi thông báo cho Manager
+        Notification notification =  notificationService.createAndSendNotification(
+                SourceType.RECEIPT,
+                EventType.CONFIRMED,
+                updatedReceipt.getId(),
+                updatedReceipt.getCreatedBy().getId(), // Giả sử createdBy là Manager
+                NotificationType.XAC_NHAN_NHAP_KHO_NOI_BO,
+                "Phiếu yêu cầu nhap kho noi bo #" + updatedReceipt.getId() + " đã được xác nhận."
+        );
+    }
+
+    @Override
+    public void startInternalImportProcess(Long receiptId) {
+        // Lấy thông tin người dùng hiện tại
+        User currentUser = getCurrentAuthenticatedUser();
+
+        Receipt receipt = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new NotFoundException("Receipt with id " + receiptId +" not found"));
+
+
+        // So sánh id của người dùng hiện tại với inventoryStaffId liên quan đến phiếu nhập kho
+        if (currentUser == null || !currentUser.getId().equals(receipt.getReceivedBy().getId())) {
+            throw new AccessDeniedException("You do not have permission to confirm this import request receipt.");
+        }
+        // Kiểm tra xem phiếu đã được xác nhận chưa
+        if (receipt.getStatus() == ReceiptStatus.IN_PROGRESS) {
+            throw new IllegalStateException("This internal import request receipt has already been in progress.");
+        }
+        receipt.setStatus(ReceiptStatus.IN_PROGRESS);
+        receiptRepository.save(receipt);
+
+        // Gửi thông báo cho Manager
+        Notification notification = notificationService.createAndSendNotification(
+                SourceType.RECEIPT,
+                EventType.CONFIRMED,
+                receipt.getId(),
+                receipt.getCreatedBy().getId(), // Giả sử createdBy là Manager
+                NotificationType.DANG_TIEN_HANH_NHAP_KHO,
+                "Phiếu yêu cầu nhập kho nội bộ #" + receipt.getId() + " đang được tiến hành"
+        );
+
+    }
+
+    @Override
+    public ImportRequestReceiptResponse createInternalImportReceipt(Long receiptId, Map<Long, Integer> actualQuantities) {
+        Receipt requestReceipt = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found"));
+
+        // Kiểm tra xem tất cả các chi tiết trong requestReceipt đã có số lượng thực tế tương ứng trong actualQuantities chưa
+        for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
+            if (!actualQuantities.containsKey(requestDetail.getId()) || actualQuantities.get(requestDetail.getId()) == null) {
+                throw new IllegalArgumentException("Actual quantity for detail ID " + requestDetail.getId() + " is required");
+            }
+        }
+        requestReceipt.setStatus(ReceiptStatus.Completed);
+        receiptRepository.save(requestReceipt);
+
+        Receipt actualReceipt = Receipt.builder()
+                .code(generateAndValidateUniqueCode())
+                .type(ReceiptType.PHIEU_NHAP_KHO)
+                .status(ReceiptStatus.NOT_COMPLETED)
+                .description("Actual Import based on Request Receipt #" + receiptId)
+                .createdBy(getCurrentAuthenticatedUser())
+                .lastModifiedBy(getCurrentAuthenticatedUser())
+                .warehouse(requestReceipt.getWarehouse())
+                .build();
+        actualReceipt = receiptRepository.save(actualReceipt);
+
+        boolean hasDiscrepancy = false;
+        List<ImportRequestReceiptDetailResponse> detailResponses = new ArrayList<>();
+
+        for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
+            int requiredQuantity = requestDetail.getQuantity();
+            int actualQuantity = actualQuantities.get(requestDetail.getId());
+            //int actualQuantity = actualQuantities.getOrDefault(requestDetail.getId(), requiredQuantity);
+            int discrepancyQuantity = actualQuantity - requiredQuantity;
+            double unitPrice = requestDetail.getItem().getPurchasePrice().getPrice();
+            double totalPriceForItem = unitPrice * actualQuantity;
+
+            ReceiptDetail actualDetail = ReceiptDetail.builder()
+                    .receipt(actualReceipt)
+                    .item(requestDetail.getItem())
+                    .quantity(actualQuantity)
+                    .unitPrice(unitPrice)
+                    .totalPrice(totalPriceForItem)
+                    .unitName(requestDetail.getUnitName())
+                    .build();
+            actualDetail = receiptDetailRepository.save(actualDetail);
+            ImportRequestReceiptDetailResponse detailResponse = buildImportRequestReceiptDetailResponse(actualDetail, actualQuantity, discrepancyQuantity, null);
+            if (discrepancyQuantity != 0) {
+                ReceiptDiscrepancyLogResponse discrepancyLog = handleDiscrepancy(actualDetail, requiredQuantity, actualQuantity, unitPrice);
+                detailResponse = buildImportRequestReceiptDetailResponse(actualDetail, actualQuantity, discrepancyQuantity, discrepancyLog);
+                hasDiscrepancy = true;
+            }else {
+                detailResponse = buildImportRequestReceiptDetailResponse(actualDetail, actualQuantity, 0, null);
+            }
+
+            detailResponses.add(detailResponse);
+
+            updateInventoryForInbound(requestDetail.getItem(), actualQuantity, unitPrice, actualReceipt.getWarehouse().getId());
+        }
+
+        actualReceipt.setTotalQuantity(detailResponses.stream().mapToInt(ImportRequestReceiptDetailResponse::getQuantity).sum());
+        actualReceipt.setTotalPrice(detailResponses.stream().mapToDouble(ImportRequestReceiptDetailResponse::getTotalPrice).sum());
+        receiptRepository.save(actualReceipt);
+
+        if (hasDiscrepancy) {
+            createAndSendNotificationForReceipt(actualReceipt, true);
+        }
+
+        return buildImportRequestReceiptResponse(actualReceipt, detailResponses);
+    }
+
+    @Override
+    public List<ImportRequestReceiptResponse> getAllInternalImportRequestReceipts() {
+        List<Receipt> receipts = receiptRepository.findByType(ReceiptType.PHIEU_YEU_CAU_NHAP_NOI_BO);
+        return receipts.stream()
+                .sorted(Comparator.comparing(Receipt::getCreationDate).reversed())
+                .map(receipt -> {
+                    ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+                    response.setWarehouseId(receipt.getWarehouse().getId());
+                    response.setId(receipt.getId());
+                    response.setCode(receipt.getCode());
+                    response.setType(receipt.getType());
+                    response.setStatus(receipt.getStatus());
+                    response.setDescription(receipt.getDescription());
+                    response.setTotalQuantity(receipt.getTotalQuantity());
+                    response.setTotalPrice(receipt.getTotalPrice());
+                    response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
+                    response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
+                    response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
+                    response.setCreatedAt(receipt.getCreationDate());
+                    response.setUpdatedAt(receipt.getLastModifiedDate());
+
+
+                    // Thêm thông tin chi tiết
+
+                    List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+                    List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                            .map(detail -> {
+                                ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                                detailResponse.setId(detail.getId());
+                                detailResponse.setQuantity(detail.getQuantity());
+                                detailResponse.setUnitName(detail.getUnitName());
+                                detailResponse.setPrice(detail.getTotalPrice());
+                                detailResponse.setTotalPrice(detail.getTotalPrice());
+                                detailResponse.setItem(InfoItemDTO.builder()
+                                        .id(detail.getItem().getId())
+                                        .brandName(detail.getItem().getBrand().getName())
+                                        .originName(detail.getItem().getOrigin().getName())
+                                        .subcategoryName(detail.getItem().getSubCategory().getName())
+                                        .supplierName(detail.getItem().getSupplier().getName())
+                                        .code(detail.getItem().getCode())
+                                        .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                                        .build());
+                                return detailResponse;
+                            })
+                            .collect(Collectors.toList());
+
+                    response.setDetails(detailResponses);
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ImportRequestReceiptResponse getInternalImportRequestReceiptById(Long id) {
+        Receipt receipt = receiptRepository.findById(id)
+                .filter(r -> r.getType() == ReceiptType.PHIEU_YEU_CAU_NHAP_NOI_BO)
+                .orElseThrow(() -> new NotFoundException("Receipt with ID " + id + " not found or not of type PHIEU_YEU_CAU_NHAP_KHO"));
+
+        ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+        response.setWarehouseId(receipt.getWarehouse().getId());
+        response.setId(receipt.getId());
+        response.setCode(receipt.getCode());
+        response.setType(receipt.getType());
+        response.setStatus(receipt.getStatus());
+        response.setDescription(receipt.getDescription());
+        response.setTotalQuantity(receipt.getTotalQuantity());
+        response.setTotalPrice(receipt.getTotalPrice());
+        response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
+        response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
+        response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
+        response.setCreatedAt(receipt.getCreationDate());
+        response.setUpdatedAt(receipt.getLastModifiedDate());
+
+        // Thêm thông tin chi tiết phiếu
+        List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+        List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                .map(detail -> {
+                    ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                    detailResponse.setId(detail.getId());
+                    detailResponse.setQuantity(detail.getQuantity());
+                    detailResponse.setUnitName(detail.getUnitName());
+                    detailResponse.setPrice(detail.getUnitPrice());
+                    detailResponse.setTotalPrice(detail.getTotalPrice());
+                    detailResponse.setItem(InfoItemDTO.builder()
+                            .id(detail.getItem().getId())
+                            .brandName(detail.getItem().getBrand().getName())
+                            .originName(detail.getItem().getOrigin().getName())
+                            .subcategoryName(detail.getItem().getSubCategory().getName())
+                            .supplierName(detail.getItem().getSupplier().getName())
+                            .code(detail.getItem().getCode())
+                            .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                            .build());
+                    return detailResponse;
+                })
+                .collect(Collectors.toList());
+        response.setDetails(detailResponses);
+
+        return response;
+    }
+
+    @Override
+    public List<ImportRequestReceiptResponse> getAllInternalImportRequestReceiptsByWareHouse() {
+        // Get the current authenticated user
+        User currentUser = getCurrentAuthenticatedUser();
+
+        // Use the warehouse ID from the current user to fetch receipts
+        Long warehouseId = currentUser.getWarehouse().getId();
+        List<Receipt> receipts = receiptRepository.findByTypeAndWarehouseId(ReceiptType.PHIEU_YEU_CAU_NHAP_NOI_BO, warehouseId);
+
+        return receipts.stream()
+                .sorted(Comparator.comparing(Receipt::getCreationDate).reversed())
+                .map(receipt -> {
+                    ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+                    response.setWarehouseId(receipt.getWarehouse().getId());
+                    response.setId(receipt.getId());
+                    response.setCode(receipt.getCode());
+                    response.setType(receipt.getType());
+                    response.setStatus(receipt.getStatus());
+                    response.setDescription(receipt.getDescription());
+                    response.setTotalQuantity(receipt.getTotalQuantity());
+                    response.setTotalPrice(receipt.getTotalPrice());
+                    response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
+                    response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
+                    response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
+                    response.setCreatedAt(receipt.getCreationDate());
+                    response.setUpdatedAt(receipt.getLastModifiedDate());
+
+
+                    // Thêm thông tin chi tiết
+                    List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+                    List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                            .map(detail -> {
+                                ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                                detailResponse.setId(detail.getId());
+                                detailResponse.setQuantity(detail.getQuantity());
+                                detailResponse.setUnitName(detail.getUnitName());
+                                detailResponse.setPrice(detail.getUnitPrice());
+                                detailResponse.setTotalPrice(detail.getTotalPrice());
+                                detailResponse.setItem(InfoItemDTO.builder()
+                                        .id(detail.getItem().getId())
+                                        .brandName(detail.getItem().getBrand().getName())
+                                        .originName(detail.getItem().getOrigin().getName())
+                                        .subcategoryName(detail.getItem().getSubCategory().getName())
+                                        .supplierName(detail.getItem().getSupplier().getName())
+                                        .code(detail.getItem().getCode())
+                                        .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                                        .build());
+                                return detailResponse;
+                            })
+                            .collect(Collectors.toList());
+
+                    response.setDetails(detailResponses);
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ImportRequestReceiptResponse> getAllInternalImportReceipts() {
+        List<Receipt> receipts = receiptRepository.findByType(ReceiptType.PHIEU_NHAP_NOI_BO);
+        return receipts.stream()
+                .sorted(Comparator.comparing(Receipt::getCreationDate).reversed())
+                .map(receipt -> {
+                    ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+                    response.setWarehouseId(receipt.getWarehouse().getId());
+                    response.setId(receipt.getId());
+                    response.setCode(receipt.getCode());
+                    response.setType(receipt.getType());
+                    response.setStatus(receipt.getStatus());
+                    response.setDescription(receipt.getDescription());
+                    response.setTotalQuantity(receipt.getTotalQuantity());
+                    response.setTotalPrice(receipt.getTotalPrice());
+                    response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
+                    response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
+                    response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
+                    response.setCreatedAt(receipt.getCreationDate());
+                    response.setUpdatedAt(receipt.getLastModifiedDate());
+
+
+                    // Thêm thông tin chi tiết
+                    List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+                    List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                            .map(detail -> {
+                                ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                                detailResponse.setId(detail.getId());
+                                detailResponse.setQuantity(detail.getQuantity());
+                                detailResponse.setUnitName(detail.getUnitName());
+                                detailResponse.setPrice(detail.getUnitPrice());
+                                detailResponse.setTotalPrice(detail.getTotalPrice());
+                                detailResponse.setItem(InfoItemDTO.builder()
+                                        .id(detail.getItem().getId())
+                                        .brandName(detail.getItem().getBrand().getName())
+                                        .originName(detail.getItem().getOrigin().getName())
+                                        .subcategoryName(detail.getItem().getSubCategory().getName())
+                                        .supplierName(detail.getItem().getSupplier().getName())
+                                        .code(detail.getItem().getCode())
+                                        .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                                        .build());
+                                return detailResponse;
+                            })
+                            .collect(Collectors.toList());
+
+                    response.setDetails(detailResponses);
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ImportRequestReceiptResponse getInternalImportReceiptById(Long id) {
+        Receipt receipt = receiptRepository.findById(id)
+                .filter(r -> r.getType() == ReceiptType.PHIEU_NHAP_NOI_BO)
+                .orElseThrow(() -> new NotFoundException("Receipt with ID " + id + " not found or not of type PHIEU_NHAP_NOI_BO"));
+
+        ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+        response.setWarehouseId(receipt.getWarehouse().getId());
+        response.setId(receipt.getId());
+        response.setCode(receipt.getCode());
+        response.setType(receipt.getType());
+        response.setStatus(receipt.getStatus());
+        response.setDescription(receipt.getDescription());
+        response.setTotalQuantity(receipt.getTotalQuantity());
+        response.setTotalPrice(receipt.getTotalPrice());
+        response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
+        response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
+        response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
+        response.setCreatedAt(receipt.getCreationDate());
+        response.setUpdatedAt(receipt.getLastModifiedDate());
+
+        // Thêm thông tin chi tiết phiếu
+        List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+        List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                .map(detail -> {
+                    ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                    detailResponse.setId(detail.getId());
+                    detailResponse.setQuantity(detail.getQuantity());
+                    detailResponse.setUnitName(detail.getUnitName());
+                    detailResponse.setPrice(detail.getUnitPrice());
+                    detailResponse.setTotalPrice(detail.getTotalPrice());
+                    detailResponse.setItem(InfoItemDTO.builder()
+                            .id(detail.getItem().getId())
+                            .brandName(detail.getItem().getBrand().getName())
+                            .originName(detail.getItem().getOrigin().getName())
+                            .subcategoryName(detail.getItem().getSubCategory().getName())
+                            .supplierName(detail.getItem().getSupplier().getName())
+                            .code(detail.getItem().getCode())
+                            .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                            .build());
+                    return detailResponse;
+                })
+                .collect(Collectors.toList());
+        response.setDetails(detailResponses);
+
+        return response;
+    }
+
+    @Override
+    public List<ImportRequestReceiptResponse> getAllInternalImportReceiptsByWareHouse() {
+        // Get the current authenticated user
+        User currentUser = getCurrentAuthenticatedUser();
+
+        // Use the warehouse ID from the current user to fetch receipts
+        Long warehouseId = currentUser.getWarehouse().getId();
+        List<Receipt> receipts = receiptRepository.findByTypeAndWarehouseId(ReceiptType.PHIEU_NHAP_NOI_BO, warehouseId);
+
+
+        return receipts.stream()
+                .sorted(Comparator.comparing(Receipt::getCreationDate).reversed())
+                .map(receipt -> {
+                    ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+                    response.setWarehouseId(receipt.getWarehouse().getId());
+                    response.setId(receipt.getId());
+                    response.setCode(receipt.getCode());
+                    response.setType(receipt.getType());
+                    response.setStatus(receipt.getStatus());
+                    response.setDescription(receipt.getDescription());
+                    response.setTotalQuantity(receipt.getTotalQuantity());
+                    response.setTotalPrice(receipt.getTotalPrice());
+                    response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
+                    response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
+                    response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
+                    response.setCreatedAt(receipt.getCreationDate());
+                    response.setUpdatedAt(receipt.getLastModifiedDate());
+
+
+                    // Thêm thông tin chi tiết
+                    List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+                    List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                            .map(detail -> {
+                                ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                                detailResponse.setId(detail.getId());
+                                detailResponse.setQuantity(detail.getQuantity());
+                                detailResponse.setUnitName(detail.getUnitName());
+                                detailResponse.setPrice(detail.getUnitPrice());
+                                detailResponse.setTotalPrice(detail.getTotalPrice());
+                                detailResponse.setItem(InfoItemDTO.builder()
+                                        .id(detail.getItem().getId())
+                                        .brandName(detail.getItem().getBrand().getName())
+                                        .originName(detail.getItem().getOrigin().getName())
+                                        .subcategoryName(detail.getItem().getSubCategory().getName())
+                                        .supplierName(detail.getItem().getSupplier().getName())
+                                        .code(detail.getItem().getCode())
+                                        .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                                        .build());
+                                return detailResponse;
+                            })
+                            .collect(Collectors.toList());
+
+                    response.setDetails(detailResponses);
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ImportRequestReceiptResponse createInternalExportRequestReceipt(ImportRequestReceiptForm internalRequestReceiptForm) {
+        // Check warehouse
+        List<Warehouse> warehouseList = warehouseRepository.findAll();
+        Warehouse warehouse = warehouseList.stream()
+                .filter( warehouse1 -> warehouse1.getId().equals(internalRequestReceiptForm.getWarehouseId()))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Warehouse not found!"));
+
+
+        // Check inventory staff
+        List<User> inventoryStaffList = userRepository.findAllByWarehouseAndRoleName(warehouse, "INVENTORY_STAFF");
+        User inventoryStaff = inventoryStaffList.stream()
+                .filter(user -> user.getId().equals(internalRequestReceiptForm.getInventoryStaffId()))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Inventory Staff not found!"));
+
+        // Create a new receipt
+        Receipt newReceipt = Receipt.builder()
+                .code(generateAndValidateUniqueCode())
+                .type(ReceiptType.PHIEU_YEU_CAU_XUAT_NOI_BO)
+                .status(ReceiptStatus.Pending_Approval)
+                .description(internalRequestReceiptForm.getDescription())
+                .createdBy(getCurrentAuthenticatedUser())
+                .receivedBy(inventoryStaff)
+                .warehouse(warehouse)
+                .build();
+        Receipt savedReceipt = receiptRepository.save(newReceipt);
+
+        // Calculate total quantity and total price
+        int totalQuantity = 0;
+        double totalPrice = 0;
+
+        List<ReceiptDetail> receiptDetails = new ArrayList<>();
+
+        for (ImportRequestReceiptDetailForm detailForm : internalRequestReceiptForm.getDetails()) {
+            // Get product information
+            Item item = itemRepository.findById(detailForm.getItemId())
+                    .orElseThrow(() -> new NotFoundException("Item not found"));
+            double unitPrice = item.getPricing().getPrice();
+            double totalPriceForItem = unitPrice * detailForm.getQuantity();
+            // Create receipt detail
+            ReceiptDetail receiptDetail = ReceiptDetail.builder()
+                    .item(item)
+                    .quantity(detailForm.getQuantity())
+                    .unitName(item.getSubCategory().getUnit().getName())
+                    .unitPrice(unitPrice)
+                    .totalPrice(totalPriceForItem)
+                    .receipt(savedReceipt)
+                    .build();
+            receiptDetails.add(receiptDetail);
+
+            totalQuantity += detailForm.getQuantity();
+            totalPrice += receiptDetail.getTotalPrice();
+        }
+        newReceipt.setTotalQuantity(totalQuantity);
+        newReceipt.setTotalPrice(totalPrice);
+        // Save the receipt and receipt details
+        receiptDetailRepository.saveAll(receiptDetails);
+
+        // Send a notification
+        notificationService.createAndSendNotification(
+                SourceType.RECEIPT,
+                EventType.REQUESTED,
+                savedReceipt.getId(),
+                inventoryStaff.getId(),
+                NotificationType.YEU_CAU_XUAT_KHO_NOI_BO,
+                "Yêu cầu xuất kho nội bộ #" + savedReceipt.getId() + " đã được tạo."
+        );
+
+        // Create response
+        ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+        response.setWarehouseId(savedReceipt.getWarehouse().getId());
+        response.setId(savedReceipt.getId());
+        response.setCode(savedReceipt.getCode());
+        response.setType(savedReceipt.getType());
+        response.setStatus(savedReceipt.getStatus());
+        response.setDescription(savedReceipt.getDescription());
+        //  response.setReceivedBy(savedReceipt.getReceivedBy().getLastName() + " " + savedReceipt.getReceivedBy().getMiddleName() + " " + savedReceipt.getReceivedBy().getFirstName());
+
+        response.setCreatedBy(savedReceipt.getCreatedBy().getLastName() + " " + savedReceipt.getCreatedBy().getMiddleName() + " " + savedReceipt.getCreatedBy().getFirstName());
+        response.setLastModifiedBy(savedReceipt.getLastModifiedBy() != null ? savedReceipt.getLastModifiedBy().getLastName() + " " + savedReceipt.getLastModifiedBy().getLastName() + " " + savedReceipt.getLastModifiedBy().getFirstName() : null);
+        response.setCreatedAt(savedReceipt.getCreationDate());
+        response.setUpdatedAt(savedReceipt.getLastModifiedDate());
+        response.setTotalQuantity(totalQuantity);
+        response.setTotalPrice(totalPrice);
+
+        List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                .map(detail -> {
+                    ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                    detailResponse.setId(detail.getId());
+                    detailResponse.setQuantity(detail.getQuantity());
+                    detailResponse.setUnitName(detail.getUnitName());
+                    detailResponse.setPrice(detail.getUnitPrice());
+                    detailResponse.setTotalPrice(detail.getTotalPrice());
+                    detailResponse.setItem(InfoItemDTO.builder()
+                            .id(detail.getItem().getId())
+                            .brandName(detail.getItem().getBrand().getName())
+                            .originName(detail.getItem().getOrigin().getName())
+                            .subcategoryName(detail.getItem().getSubCategory().getName())
+                            .supplierName(detail.getItem().getSupplier().getName())
+                            .code(detail.getItem().getCode())
+                            .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                            .build());
+                    return detailResponse;
+                })
+                .collect(Collectors.toList());
+        response.setDetails(detailResponses);
+        return response;
+    }
+
+    @Override
+    public void confirmInternalExportRequestReceipt(Long receiptId) {
+        // Lấy thông tin người dùng hiện tại
+        User currentUser = getCurrentAuthenticatedUser();
+
+        var receipt = receiptRepository.findById(receiptId)
+                .filter(receipt1 -> receipt1.getType() == ReceiptType.PHIEU_YEU_CAU_XUAT_NOI_BO)
+                .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found or not of type PHIEU_YEU_CAU_XUAT_NOI_BO"));
+
+        // So sánh id của người dùng hiện tại với inventoryStaffId liên quan đến phiếu nhập kho
+        if (currentUser == null || !currentUser.getId().equals(receipt.getReceivedBy().getId())) {
+            throw new AccessDeniedException("You do not have permission to confirm this internal export request receipt.");
+        }
+
+        // Kiểm tra xem phiếu đã được xác nhận chưa
+        if (receipt.getStatus() == ReceiptStatus.Approved) {
+            throw new IllegalStateException("This internal import request receipt has already been confirmed.");
+        }
+        // Cập nhật trạng thái
+        receipt.setStatus(ReceiptStatus.Approved);
+        var updatedReceipt = receiptRepository.save(receipt);
+
+        // Gửi thông báo cho Manager
+        Notification notification =  notificationService.createAndSendNotification(
+                SourceType.RECEIPT,
+                EventType.CONFIRMED,
+                updatedReceipt.getId(),
+                updatedReceipt.getCreatedBy().getId(), // Giả sử createdBy là Manager
+                NotificationType.XAC_NHAN_XUAT_KHO_NOI_BO,
+                "Phiếu yêu cầu xuất kho nội bộ #" + updatedReceipt.getId() + " đã được xác nhận."
+        );
+    }
+
+    @Override
+    public void startInternalExportProcess(Long receiptId) {
+        // Lấy thông tin người dùng hiện tại
+        User currentUser = getCurrentAuthenticatedUser();
+
+        Receipt receipt = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new NotFoundException("Receipt with id " + receiptId +" not found"));
+
+
+        // So sánh id của người dùng hiện tại với inventoryStaffId liên quan đến phiếu nhập kho
+        if (currentUser == null || !currentUser.getId().equals(receipt.getReceivedBy().getId())) {
+            throw new AccessDeniedException("You do not have permission to confirm this import request receipt.");
+        }
+        // Kiểm tra xem phiếu đã được xác nhận chưa
+        if (receipt.getStatus() == ReceiptStatus.IN_PROGRESS) {
+            throw new IllegalStateException("This internal import request receipt has already been in progress.");
+        }
+        receipt.setStatus(ReceiptStatus.IN_PROGRESS);
+        receiptRepository.save(receipt);
+
+        // Gửi thông báo cho Manager
+        Notification notification = notificationService.createAndSendNotification(
+                SourceType.RECEIPT,
+                EventType.CONFIRMED,
+                receipt.getId(),
+                receipt.getCreatedBy().getId(), // Giả sử createdBy là Manager
+                NotificationType.DANG_TIEN_HANH_XUAT_KHO,
+                "Phiếu yêu cầu xuất kho nội bộ #" + receipt.getId() + " đang được tiến hành"
+        );
+    }
+
+    @Override
+    public List<ImportRequestReceiptResponse> getAllInternalExportRequestReceipts() {
+        List<Receipt> receipts = receiptRepository.findByType(ReceiptType.PHIEU_YEU_CAU_XUAT_NOI_BO);
+        return receipts.stream()
+                .sorted(Comparator.comparing(Receipt::getCreationDate).reversed())
+                .map(receipt -> {
+                    ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+                    response.setWarehouseId(receipt.getWarehouse().getId());
+                    response.setId(receipt.getId());
+                    response.setCode(receipt.getCode());
+                    response.setType(receipt.getType());
+                    response.setStatus(receipt.getStatus());
+                    response.setDescription(receipt.getDescription());
+                    response.setTotalQuantity(receipt.getTotalQuantity());
+                    response.setTotalPrice(receipt.getTotalPrice());
+                    response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
+                    response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
+                    response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
+                    response.setCreatedAt(receipt.getCreationDate());
+                    response.setUpdatedAt(receipt.getLastModifiedDate());
+
+
+                    // Thêm thông tin chi tiết
+
+                    List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+                    List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                            .map(detail -> {
+                                ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                                detailResponse.setId(detail.getId());
+                                detailResponse.setQuantity(detail.getQuantity());
+                                detailResponse.setUnitName(detail.getUnitName());
+                                detailResponse.setPrice(detail.getTotalPrice());
+                                detailResponse.setTotalPrice(detail.getTotalPrice());
+                                detailResponse.setItem(InfoItemDTO.builder()
+                                        .id(detail.getItem().getId())
+                                        .brandName(detail.getItem().getBrand().getName())
+                                        .originName(detail.getItem().getOrigin().getName())
+                                        .subcategoryName(detail.getItem().getSubCategory().getName())
+                                        .supplierName(detail.getItem().getSupplier().getName())
+                                        .code(detail.getItem().getCode())
+                                        .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                                        .build());
+                                return detailResponse;
+                            })
+                            .collect(Collectors.toList());
+
+                    response.setDetails(detailResponses);
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ImportRequestReceiptResponse getInternalExportRequestReceiptById(Long id) {
+        Receipt receipt = receiptRepository.findById(id)
+                .filter(r -> r.getType() == ReceiptType.PHIEU_YEU_CAU_XUAT_NOI_BO)
+                .orElseThrow(() -> new NotFoundException("Receipt with ID " + id + " not found or not of type PHIEU_YEU_CAU_NHAP_KHO"));
+
+        ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+        response.setWarehouseId(receipt.getWarehouse().getId());
+        response.setId(receipt.getId());
+        response.setCode(receipt.getCode());
+        response.setType(receipt.getType());
+        response.setStatus(receipt.getStatus());
+        response.setDescription(receipt.getDescription());
+        response.setTotalQuantity(receipt.getTotalQuantity());
+        response.setTotalPrice(receipt.getTotalPrice());
+        response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
+        response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
+        response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
+        response.setCreatedAt(receipt.getCreationDate());
+        response.setUpdatedAt(receipt.getLastModifiedDate());
+
+        // Thêm thông tin chi tiết phiếu
+        List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+        List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                .map(detail -> {
+                    ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                    detailResponse.setId(detail.getId());
+                    detailResponse.setQuantity(detail.getQuantity());
+                    detailResponse.setUnitName(detail.getUnitName());
+                    detailResponse.setPrice(detail.getUnitPrice());
+                    detailResponse.setTotalPrice(detail.getTotalPrice());
+                    detailResponse.setItem(InfoItemDTO.builder()
+                            .id(detail.getItem().getId())
+                            .brandName(detail.getItem().getBrand().getName())
+                            .originName(detail.getItem().getOrigin().getName())
+                            .subcategoryName(detail.getItem().getSubCategory().getName())
+                            .supplierName(detail.getItem().getSupplier().getName())
+                            .code(detail.getItem().getCode())
+                            .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                            .build());
+                    return detailResponse;
+                })
+                .collect(Collectors.toList());
+        response.setDetails(detailResponses);
+
+        return response;
+    }
+
+    @Override
+    public List<ImportRequestReceiptResponse> getAllInternalExportRequestReceiptsByWareHouse() {
+        // Get the current authenticated user
+        User currentUser = getCurrentAuthenticatedUser();
+
+        // Use the warehouse ID from the current user to fetch receipts
+        Long warehouseId = currentUser.getWarehouse().getId();
+        List<Receipt> receipts = receiptRepository.findByTypeAndWarehouseId(ReceiptType.PHIEU_YEU_CAU_XUAT_NOI_BO, warehouseId);
+
+        return receipts.stream()
+                .sorted(Comparator.comparing(Receipt::getCreationDate).reversed())
+                .map(receipt -> {
+                    ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+                    response.setWarehouseId(receipt.getWarehouse().getId());
+                    response.setId(receipt.getId());
+                    response.setCode(receipt.getCode());
+                    response.setType(receipt.getType());
+                    response.setStatus(receipt.getStatus());
+                    response.setDescription(receipt.getDescription());
+                    response.setTotalQuantity(receipt.getTotalQuantity());
+                    response.setTotalPrice(receipt.getTotalPrice());
+                    response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
+                    response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
+                    response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
+                    response.setCreatedAt(receipt.getCreationDate());
+                    response.setUpdatedAt(receipt.getLastModifiedDate());
+
+
+                    // Thêm thông tin chi tiết
+                    List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+                    List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                            .map(detail -> {
+                                ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                                detailResponse.setId(detail.getId());
+                                detailResponse.setQuantity(detail.getQuantity());
+                                detailResponse.setUnitName(detail.getUnitName());
+                                detailResponse.setPrice(detail.getUnitPrice());
+                                detailResponse.setTotalPrice(detail.getTotalPrice());
+                                detailResponse.setItem(InfoItemDTO.builder()
+                                        .id(detail.getItem().getId())
+                                        .brandName(detail.getItem().getBrand().getName())
+                                        .originName(detail.getItem().getOrigin().getName())
+                                        .subcategoryName(detail.getItem().getSubCategory().getName())
+                                        .supplierName(detail.getItem().getSupplier().getName())
+                                        .code(detail.getItem().getCode())
+                                        .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                                        .build());
+                                return detailResponse;
+                            })
+                            .collect(Collectors.toList());
+
+                    response.setDetails(detailResponses);
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ImportRequestReceiptResponse> getAllInternalExportReceipts() {
+        List<Receipt> receipts = receiptRepository.findByType(ReceiptType.PHIEU_XUAT_NOI_BO);
+        return receipts.stream()
+                .sorted(Comparator.comparing(Receipt::getCreationDate).reversed())
+                .map(receipt -> {
+                    ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+                    response.setWarehouseId(receipt.getWarehouse().getId());
+                    response.setId(receipt.getId());
+                    response.setCode(receipt.getCode());
+                    response.setType(receipt.getType());
+                    response.setStatus(receipt.getStatus());
+                    response.setDescription(receipt.getDescription());
+                    response.setTotalQuantity(receipt.getTotalQuantity());
+                    response.setTotalPrice(receipt.getTotalPrice());
+                    response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
+                    response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
+                    response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
+                    response.setCreatedAt(receipt.getCreationDate());
+                    response.setUpdatedAt(receipt.getLastModifiedDate());
+
+
+                    // Thêm thông tin chi tiết
+                    List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+                    List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                            .map(detail -> {
+                                ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                                detailResponse.setId(detail.getId());
+                                detailResponse.setQuantity(detail.getQuantity());
+                                detailResponse.setUnitName(detail.getUnitName());
+                                detailResponse.setPrice(detail.getUnitPrice());
+                                detailResponse.setTotalPrice(detail.getTotalPrice());
+                                detailResponse.setItem(InfoItemDTO.builder()
+                                        .id(detail.getItem().getId())
+                                        .brandName(detail.getItem().getBrand().getName())
+                                        .originName(detail.getItem().getOrigin().getName())
+                                        .subcategoryName(detail.getItem().getSubCategory().getName())
+                                        .supplierName(detail.getItem().getSupplier().getName())
+                                        .code(detail.getItem().getCode())
+                                        .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                                        .build());
+                                return detailResponse;
+                            })
+                            .collect(Collectors.toList());
+
+                    response.setDetails(detailResponses);
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ImportRequestReceiptResponse getInternalExportReceiptById(Long id) {
+        Receipt receipt = receiptRepository.findById(id)
+                .filter(r -> r.getType() == ReceiptType.PHIEU_XUAT_NOI_BO)
+                .orElseThrow(() -> new NotFoundException("Receipt with ID " + id + " not found or not of type PHIEU_XUAT_NOI_BO"));
+
+        ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+        response.setWarehouseId(receipt.getWarehouse().getId());
+        response.setId(receipt.getId());
+        response.setCode(receipt.getCode());
+        response.setType(receipt.getType());
+        response.setStatus(receipt.getStatus());
+        response.setDescription(receipt.getDescription());
+        response.setTotalQuantity(receipt.getTotalQuantity());
+        response.setTotalPrice(receipt.getTotalPrice());
+        response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
+        response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
+        response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
+        response.setCreatedAt(receipt.getCreationDate());
+        response.setUpdatedAt(receipt.getLastModifiedDate());
+
+        // Thêm thông tin chi tiết phiếu
+        List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+        List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                .map(detail -> {
+                    ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                    detailResponse.setId(detail.getId());
+                    detailResponse.setQuantity(detail.getQuantity());
+                    detailResponse.setUnitName(detail.getUnitName());
+                    detailResponse.setPrice(detail.getUnitPrice());
+                    detailResponse.setTotalPrice(detail.getTotalPrice());
+                    detailResponse.setItem(InfoItemDTO.builder()
+                            .id(detail.getItem().getId())
+                            .brandName(detail.getItem().getBrand().getName())
+                            .originName(detail.getItem().getOrigin().getName())
+                            .subcategoryName(detail.getItem().getSubCategory().getName())
+                            .supplierName(detail.getItem().getSupplier().getName())
+                            .code(detail.getItem().getCode())
+                            .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                            .build());
+                    return detailResponse;
+                })
+                .collect(Collectors.toList());
+        response.setDetails(detailResponses);
+
+        return response;
+    }
+
+    @Override
+    public List<ImportRequestReceiptResponse> getAllInternalExportReceiptsByWareHouse() {
+        // Get the current authenticated user
+        User currentUser = getCurrentAuthenticatedUser();
+
+        // Use the warehouse ID from the current user to fetch receipts
+        Long warehouseId = currentUser.getWarehouse().getId();
+        List<Receipt> receipts = receiptRepository.findByTypeAndWarehouseId(ReceiptType.PHIEU_XUAT_NOI_BO, warehouseId);
+
+
+        return receipts.stream()
+                .sorted(Comparator.comparing(Receipt::getCreationDate).reversed())
+                .map(receipt -> {
+                    ImportRequestReceiptResponse response = new ImportRequestReceiptResponse();
+                    response.setWarehouseId(receipt.getWarehouse().getId());
+                    response.setId(receipt.getId());
+                    response.setCode(receipt.getCode());
+                    response.setType(receipt.getType());
+                    response.setStatus(receipt.getStatus());
+                    response.setDescription(receipt.getDescription());
+                    response.setTotalQuantity(receipt.getTotalQuantity());
+                    response.setTotalPrice(receipt.getTotalPrice());
+                    response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() +" " + receipt.getReceivedBy().getMiddleName()+" " + receipt.getReceivedBy().getFirstName()  : null);
+                    response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() +" " + receipt.getCreatedBy().getMiddleName()+" " + receipt.getCreatedBy().getFirstName()  : null);
+                    response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() +" " +receipt.getLastModifiedBy().getLastName()+ " "+ receipt.getLastModifiedBy().getFirstName() : null);
+                    response.setCreatedAt(receipt.getCreationDate());
+                    response.setUpdatedAt(receipt.getLastModifiedDate());
+
+
+                    // Thêm thông tin chi tiết
+                    List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceiptId(receipt.getId());
+                    List<ImportRequestReceiptDetailResponse> detailResponses = receiptDetails.stream()
+                            .map(detail -> {
+                                ImportRequestReceiptDetailResponse detailResponse = new ImportRequestReceiptDetailResponse();
+                                detailResponse.setId(detail.getId());
+                                detailResponse.setQuantity(detail.getQuantity());
+                                detailResponse.setUnitName(detail.getUnitName());
+                                detailResponse.setPrice(detail.getUnitPrice());
+                                detailResponse.setTotalPrice(detail.getTotalPrice());
+                                detailResponse.setItem(InfoItemDTO.builder()
+                                        .id(detail.getItem().getId())
+                                        .brandName(detail.getItem().getBrand().getName())
+                                        .originName(detail.getItem().getOrigin().getName())
+                                        .subcategoryName(detail.getItem().getSubCategory().getName())
+                                        .supplierName(detail.getItem().getSupplier().getName())
+                                        .code(detail.getItem().getCode())
+                                        .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
+                                        .build());
+                                return detailResponse;
+                            })
+                            .collect(Collectors.toList());
+
+                    response.setDetails(detailResponses);
+                    return response;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -1655,6 +2703,24 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
 
     private ImportRequestReceiptResponse buildImportRequestReceiptResponse(Receipt receipt, List<ImportRequestReceiptDetailResponse> detailResponses) {
         return ImportRequestReceiptResponse.builder()
+                .warehouseId(receipt.getWarehouse().getId())
+                .id(receipt.getId())
+                .code(receipt.getCode())
+                .type(receipt.getType())
+                .status(receipt.getStatus())
+                .description(receipt.getDescription())
+                .createdBy(receipt.getCreatedBy().getLastName() + " " + receipt.getCreatedBy().getFirstName()) // hoặc bất kỳ định dạng nào bạn chọn
+                .lastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() + " " + receipt.getLastModifiedBy().getFirstName() : null)
+                .createdAt(receipt.getCreationDate())
+                .updatedAt(receipt.getLastModifiedDate())
+                .totalQuantity(receipt.getTotalQuantity())
+                .totalPrice(receipt.getTotalPrice())
+                .details(detailResponses)
+                .build();
+    }
+
+    private InternalRequestReceiptResponse buildInternalImportReceiptResponse(Receipt receipt, List<InternalRequestReceiptDetailResponse> detailResponses) {
+        return InternalRequestReceiptResponse.builder()
                 .warehouseId(receipt.getWarehouse().getId())
                 .id(receipt.getId())
                 .code(receipt.getCode())

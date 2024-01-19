@@ -2,14 +2,18 @@ package com.example.sparepartsinventorymanagement.entities;
 
 public enum NotificationType {
     YEU_CAU_NHAP_KHO,
+    YEU_CAU_NHAP_KHO_NOI_BO,
     XAC_NHAN_NHAP_KHO,
+    XAC_NHAN_NHAP_KHO_NOI_BO,
     DANG_TIEN_HANH_NHAP_KHO,
     NHAP_KHO_HOAN_TAT,
 
     HUY_NHAP_KHO,
     YEU_CAU_XUAT_KHO,
+    YEU_CAU_XUAT_KHO_NOI_BO,
     HUY_XUAT_KHO,
     XAC_NHAN_XUAT_KHO,
+    XAC_NHAN_XUAT_KHO_NOI_BO,
     DANG_TIEN_HANH_XUAT_KHO,
     XUAT_KHO_HOAN_TAT,
     CANH_BAO_HET_HANG,

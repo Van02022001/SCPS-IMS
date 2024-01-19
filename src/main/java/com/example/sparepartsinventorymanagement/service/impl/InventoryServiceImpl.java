@@ -1,6 +1,7 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.response.InventoryDTO;
+import com.example.sparepartsinventorymanagement.dto.response.WarehouseDTO;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.repository.InventoryRepository;
@@ -19,9 +20,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +69,8 @@ public class InventoryServiceImpl implements InventoryService {
                 .map(inventory -> {
                     InventoryDTO dto =  modelMapper.map(inventory, InventoryDTO.class);
                     dto.setItemId(inventory.getItem().getId());
+                    dto.setItemCode(inventory.getItem().getCode());
+
                     if (inventory.getItem() != null) {
                         dto.setItemName(inventory.getItem().getSubCategory().getName()); // Giả sử có phương thức getName() trong entity Item
                     }
@@ -81,9 +87,10 @@ public class InventoryServiceImpl implements InventoryService {
         inventories.forEach(inventory -> {
             Long itemId = inventory.getItem().getId();
             InventoryDTO dto = sumaryMap.getOrDefault(itemId, new InventoryDTO());
-
+            WarehouseDTO warehouseDTO = modelMapper.map(inventory.getWarehouse(), WarehouseDTO.class);
             dto.setItemId(itemId);
             dto.setItemName(inventory.getItem().getSubCategory().getName());
+            dto.setItemCode(inventory.getItem().getCode());
 
 
             dto.setInboundQuantity(dto.getInboundQuantity() + inventory.getInboundQuantity());
@@ -91,14 +98,38 @@ public class InventoryServiceImpl implements InventoryService {
             dto.setOutboundQuantity(dto.getOutboundQuantity() + inventory.getOutboundQuantity());
             dto.setOutboundValue(dto.getOutboundValue() + inventory.getOutboundValue());
             dto.setTotalValue(dto.getTotalValue() + inventory.getTotalValue());
-
+            dto.setAvailable(dto.getAvailable() + inventory.getAvailable());
+            dto.setDefective(dto.getDefective() + inventory.getDefective());
+            dto.setTotalQuantity(dto.getTotalQuantity() + inventory.getTotalQuantity());
+            dto.setLost(dto.getLost() + inventory.getLost());
+            dto.setAverageUnitValue((dto.getAverageUnitValue() + inventory.getAverageUnitValue()) / 2);
+            dto.setWarehouseDTO(warehouseDTO);
             sumaryMap.put(itemId, dto);
 
         });
 
         return new ArrayList<>(sumaryMap.values());
     }
+    private Map<Long, LocalDate> lastNotificationDateMap = new ConcurrentHashMap<>();
 
+    // ... existing methods ...
+
+    @Scheduled(fixedRate = 60000)
+    public void checkAndNotifyHighStock() {
+        List<Item> allItems = itemRepository.findAll();
+        Map<Long, Integer> totalQuantities = getTotalQuantitiesByItem();
+        LocalDate today = LocalDate.now();
+
+        for (Item item : allItems) {
+            int totalQuantity = totalQuantities.getOrDefault(item.getId(), 0);
+            LocalDate lastNotificationDate = lastNotificationDateMap.getOrDefault(item.getId(), LocalDate.MIN);
+
+            if (totalQuantity > item.getMaxStockLevel() && DAYS.between(lastNotificationDate, today) >= 1) {
+                sendHighStockNotification(item);
+                lastNotificationDateMap.put(item.getId(), today);
+            }
+        }
+    }
     @Override
     public List<InventoryDTO> getAllInventoryForCurrentStaff() {
         // Lấy thông tin người dùng hiện tại từ SecurityContext
@@ -126,6 +157,7 @@ public class InventoryServiceImpl implements InventoryService {
         return inventories.stream()
                 .map(inventory ->{
                     InventoryDTO dto = modelMapper.map(inventory, InventoryDTO.class);
+                    dto.setItemCode(inventory.getItem().getCode());
                     dto.setItemId(inventory.getItem().getId());
                     dto.setItemName(inventory.getItem().getSubCategory().getName());
 
@@ -133,45 +165,65 @@ public class InventoryServiceImpl implements InventoryService {
                 } )
                 .collect(Collectors.toList());
     }
-    private Map<Long, Boolean> lowStockNotificationSentMap = new ConcurrentHashMap<>();
-    @Scheduled(fixedRate = 600000)
+    private Map<Long, LocalDate> lastLowStockNotificationDateMap = new ConcurrentHashMap<>();
+
+
+
+    @Scheduled(fixedRate = 60000)
     public void checkAndNotifyLowStock() {
         List<Item> allItems = itemRepository.findAll();
         Map<Long, Integer> totalQuantities = getTotalQuantitiesByItem();
+        LocalDate today = LocalDate.now();
 
         for (Item item : allItems) {
             int totalQuantity = totalQuantities.getOrDefault(item.getId(), 0);
-            Boolean notificationSent = lowStockNotificationSentMap.getOrDefault(item.getId(), false);
+            LocalDate lastNotificationDate = lastLowStockNotificationDateMap.getOrDefault(item.getId(), LocalDate.MIN);
 
-            if (!notificationSent && totalQuantity < item.getMinStockLevel()) {
+            if (totalQuantity < item.getMinStockLevel() && DAYS.between(lastNotificationDate, today) >= 1) {
                 sendLowStockNotification(item);
-                lowStockNotificationSentMap.put(item.getId(), true);
-            } else if (notificationSent && totalQuantity >= item.getMinStockLevel()) {
-                // If the stock level is restored, reset the notification flag
-                lowStockNotificationSentMap.put(item.getId(), false);
+                lastLowStockNotificationDateMap.put(item.getId(), today);
             }
         }
     }
-    private Map<Long, Boolean> notificationSentMap = new ConcurrentHashMap<>();
-    @Scheduled(fixedRate = 600000)
-    public void checkAndNotifyHighStock(){
-        List<Item> allItems = itemRepository.findAll();
-        Map<Long, Integer> totalQuantities = getTotalQuantitiesByItem();
-
-        for (Item item : allItems) {
-            int totalQuantity = totalQuantities.getOrDefault(item.getId(), 0);
-            Boolean notificationSent = notificationSentMap.getOrDefault(item.getId(), false);
-
-            if (!notificationSent && totalQuantity > item.getMaxStockLevel()) {
-                sendHighStockNotification(item);
-                notificationSentMap.put(item.getId(), true);
-            } else if (notificationSent && totalQuantity <= item.getMaxStockLevel()) {
-                // If the stock level goes back to normal, reset the notification flag
-                notificationSentMap.put(item.getId(), false);
-            }
-        }
-
-    }
+//    private Map<Long, Boolean> lowStockNotificationSentMap = new ConcurrentHashMap<>();
+//    @Scheduled(fixedRate = 600000)
+//    public void checkAndNotifyLowStock() {
+//        List<Item> allItems = itemRepository.findAll();
+//        Map<Long, Integer> totalQuantities = getTotalQuantitiesByItem();
+//
+//        for (Item item : allItems) {
+//            int totalQuantity = totalQuantities.getOrDefault(item.getId(), 0);
+//            Boolean notificationSent = lowStockNotificationSentMap.getOrDefault(item.getId(), false);
+//
+//            if (!notificationSent && totalQuantity < item.getMinStockLevel()) {
+//                sendLowStockNotification(item);
+//                lowStockNotificationSentMap.put(item.getId(), true);
+//            } else if (notificationSent && totalQuantity >= item.getMinStockLevel()) {
+//                // If the stock level is restored, reset the notification flag
+//                lowStockNotificationSentMap.put(item.getId(), false);
+//            }
+//        }
+//    }
+//    private Map<Long, Boolean> notificationSentMap = new ConcurrentHashMap<>();
+//    @Scheduled(fixedRate = 600000)
+//    public void checkAndNotifyHighStock(){
+//        List<Item> allItems = itemRepository.findAll();
+//        Map<Long, Integer> totalQuantities = getTotalQuantitiesByItem();
+//
+//        for (Item item : allItems) {
+//            int totalQuantity = totalQuantities.getOrDefault(item.getId(), 0);
+//            Boolean notificationSent = notificationSentMap.getOrDefault(item.getId(), false);
+//
+//            if (!notificationSent && totalQuantity > item.getMaxStockLevel()) {
+//                sendHighStockNotification(item);
+//                notificationSentMap.put(item.getId(), true);
+//            } else if (notificationSent && totalQuantity <= item.getMaxStockLevel()) {
+//                // If the stock level goes back to normal, reset the notification flag
+//                notificationSentMap.put(item.getId(), false);
+//            }
+//        }
+//
+//    }
     //@Cacheable("totalQuantities")
     private Map<Long, Integer> getTotalQuantitiesByItem() {
         List<Inventory> inventories = inventoryRepository.findAll();

@@ -18,4 +18,15 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(responseObject, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(InvalidInventoryDataException.class)
+    public ResponseEntity<ResponseObject> InvalidInventoryDataException(QuantityExceedsInventoryException ex) {
+        ResponseObject responseObject = ResponseObject.builder()
+                .status(HttpStatus.BAD_REQUEST.toString())
+                .message(ex.getMessage())
+                .data(null) // hoặc bạn có thể cung cấp thêm dữ liệu nếu cần
+                .build();
+
+        return new ResponseEntity<>(responseObject, HttpStatus.BAD_REQUEST);
+    }
 }

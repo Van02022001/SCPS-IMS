@@ -2,8 +2,6 @@ package com.example.sparepartsinventorymanagement.service;
 
 import com.example.sparepartsinventorymanagement.dto.request.*;
 import com.example.sparepartsinventorymanagement.dto.response.*;
-import com.example.sparepartsinventorymanagement.entities.Notification;
-import com.example.sparepartsinventorymanagement.entities.ReceiptDetail;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +10,51 @@ public interface ReceiptService {
 
 
     ImportRequestReceiptResponse createImportRequestReceipt(ImportRequestReceiptForm importRequestReceiptForm);
-    
+
+    ImportRequestReceiptResponse createInternalRequestReceipt(ImportRequestReceiptForm internalRequestReceiptForm);
+    void confirmInternalImportRequestReceipt(Long receiptId);
+
+    void  startInternalImportProcess(Long receiptId);
+
+    ImportRequestReceiptResponse createInternalImportReceipt(Long receiptId, Map<Long, Integer> actualQuantities);
+
+    List<ImportRequestReceiptResponse> getAllInternalImportRequestReceipts();
+
+    ImportRequestReceiptResponse getInternalImportRequestReceiptById(Long id);
+
+
+    List<ImportRequestReceiptResponse> getAllInternalImportRequestReceiptsByWareHouse();
+
+    List<ImportRequestReceiptResponse> getAllInternalImportReceipts();
+
+    ImportRequestReceiptResponse getInternalImportReceiptById(Long id);
+
+    List<ImportRequestReceiptResponse> getAllInternalImportReceiptsByWareHouse();
+
+
+    //for internal-export
+    ImportRequestReceiptResponse createInternalExportRequestReceipt(ImportRequestReceiptForm internalRequestReceiptForm);
+
+    void confirmInternalExportRequestReceipt(Long receiptId);
+
+    void  startInternalExportProcess(Long receiptId);
+
+    List<ImportRequestReceiptResponse> getAllInternalExportRequestReceipts();
+
+    ImportRequestReceiptResponse getInternalExportRequestReceiptById(Long id);
+
+    List<ImportRequestReceiptResponse> getAllInternalExportRequestReceiptsByWareHouse();
+
+    List<ImportRequestReceiptResponse> getAllInternalExportReceipts();
+
+    ImportRequestReceiptResponse getInternalExportReceiptById(Long id);
+    List<ImportRequestReceiptResponse> getAllInternalExportReceiptsByWareHouse();
+
+    ImportRequestReceiptResponse createInternalExportReceipt(Long receiptId, Map<Long, Integer> actualQuantities);
+
+
+
+    //for  import receipt
     List<ImportRequestReceiptResponse> getAllImportRequestReceipts();
 
     List<ImportRequestReceiptResponse> getAllImportRequestReceiptsByWareHouse();

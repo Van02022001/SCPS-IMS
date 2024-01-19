@@ -1,12 +1,15 @@
 package com.example.sparepartsinventorymanagement.dto.response;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ForgetPasswordDTO {
-    private String email;
+@Builder
+public class ReportResponse {
+    private StaffReportResponse staffReportResponse;
+    private SubcategoryReportResponse subcategoryReportResponse;
 }

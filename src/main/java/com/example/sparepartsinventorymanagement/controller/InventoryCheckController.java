@@ -4,6 +4,7 @@ import com.example.sparepartsinventorymanagement.dto.request.CheckInventoryRecei
 import com.example.sparepartsinventorymanagement.dto.request.InventoryCheckDetail;
 import com.example.sparepartsinventorymanagement.dto.response.CheckInventoryReceiptResponse;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
+import com.example.sparepartsinventorymanagement.exception.QuantityExceedsInventoryException;
 import com.example.sparepartsinventorymanagement.service.ReceiptService;
 import com.example.sparepartsinventorymanagement.utils.ResponseObject;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,7 +42,8 @@ public class InventoryCheckController {
                     e.getMessage(),
                     null
             ));
-        } catch (IllegalStateException e) {
+        } catch (QuantityExceedsInventoryException e) {
+            // Handle the specific case where the requested quantity exceeds inventory availability
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
                     HttpStatus.BAD_REQUEST.toString(),
                     e.getMessage(),
@@ -129,7 +131,7 @@ public class InventoryCheckController {
                     e.getMessage(),
                     null
             ));
-        } catch (Exception e) {
+        }  catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
                     HttpStatus.INTERNAL_SERVER_ERROR.toString(),
                     "An error occurred while confirming the Checking Inventory receipt",

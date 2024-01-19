@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class InventoryDTO {
 
     private Long itemId;
+    private String itemCode;
     private String itemName;
 
     private int inboundQuantity; // Số lượng nhập
@@ -26,7 +27,12 @@ public class InventoryDTO {
 
 
     private double totalValue; // Giá trị xuất
-
+    private int lost;
+    private int defective;
+    private int available;
+    private int totalQuantity;
+    private int averageUnitValue;
+    private WarehouseDTO warehouseDTO;
 
 
 

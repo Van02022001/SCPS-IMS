@@ -273,7 +273,7 @@ public class ItemController {
                 null
         ));
     }
-    @PreAuthorize("hasRole('ROLE_INVENTORY_STAFF')")
+    @PreAuthorize("hasRole('ROLE_MANAGER') or hasRole('ROLE_INVENTORY_STAFF')")
     @Operation(summary = "Get all items by warehouse")
     @GetMapping("/items-by-warehouse/{warehouseId}")
     public ResponseEntity<?> getAllItemsByWarehouse(

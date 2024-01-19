@@ -42,7 +42,7 @@ public class CustomerController {
     @PreAuthorize("hasRole('ROLE_SALE_STAFF')or hasRole('ROLE_MANAGER')")
     @Operation(summary = "For getting all customers")
     @GetMapping()
-    public ResponseEntity<?> getAllCustomers(){
+        public ResponseEntity<?> getAllCustomers(){
         List<CustomerDTO> customerDTOs = customerService.getAllCustomerDTOs();
         if (customerDTOs.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(

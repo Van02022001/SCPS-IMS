@@ -32,7 +32,8 @@ public class WebSecurityConfig {
             "/v3/api-docs/**",
             "/v2/api-docs/**",
             "/api/v1/auth/authentication",
-            "/api/v1/auth/reset-password",
+            "/api/v1/auth/reset-password/{token}",
+            "/api/v1/auth/forget-password",
             "/css/**",
             "/js/**", "/img/**", "/lib/**",
             "/favicon.ico",
@@ -40,7 +41,8 @@ public class WebSecurityConfig {
             "/api/v1/origins/",
             "/api/v1/units", "/api/v1/units/search", "/api/v1/origins", "/api/v1/origins/search",
             "/api/v1/products", "/api/v1/products/search", "/api/v1/products/products-by-categories",
-            "/api/v1/products/active-products"
+            "/api/v1/products/active-products",
+            "/api/v1/accessToken"
 
     };
     @Autowired

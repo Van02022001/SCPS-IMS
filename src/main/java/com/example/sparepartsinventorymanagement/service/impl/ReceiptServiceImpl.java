@@ -764,13 +764,15 @@ public class ReceiptServiceImpl implements ReceiptService {
     public ImportRequestReceiptResponse createInternalImportReceipt(Long receiptId, Map<Long, Integer> actualQuantities) {
         Receipt requestReceipt = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found"));
-
-        // Kiểm tra xem tất cả các chi tiết trong requestReceipt đã có số lượng thực tế tương ứng trong actualQuantities chưa
-        for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
-            if (!actualQuantities.containsKey(requestDetail.getId()) || actualQuantities.get(requestDetail.getId()) == null) {
-                throw new IllegalArgumentException("Actual quantity for detail ID " + requestDetail.getId() + " is required");
-            }
+        if (requestReceipt.getStatus() != ReceiptStatus.IN_PROGRESS) {
+            throw new IllegalStateException("Receipt is not in the approved state for processing");
         }
+        // Kiểm tra xem tất cả các chi tiết trong requestReceipt đã có số lượng thực tế tương ứng trong actualQuantities chưa
+//        for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
+//            if (!actualQuantities.containsKey(requestDetail.getId()) || actualQuantities.get(requestDetail.getId()) == null) {
+//                throw new IllegalArgumentException("Actual quantity for detail ID " + requestDetail.getId() + " is required");
+//            }
+//        }
         requestReceipt.setStatus(ReceiptStatus.Completed);
         receiptRepository.save(requestReceipt);
 
@@ -1637,13 +1639,15 @@ public class ReceiptServiceImpl implements ReceiptService {
     public ImportRequestReceiptResponse createInternalExportReceipt(Long receiptId, Map<Long, Integer> actualQuantities) {
         Receipt requestReceipt = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found"));
-
-        // Kiểm tra xem tất cả các chi tiết trong requestReceipt đã có số lượng thực tế tương ứng trong actualQuantities chưa
-        for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
-            if (!actualQuantities.containsKey(requestDetail.getId()) || actualQuantities.get(requestDetail.getId()) == null) {
-                throw new IllegalArgumentException("Actual quantity for detail ID " + requestDetail.getId() + " is required");
-            }
+        if (requestReceipt.getStatus() != ReceiptStatus.IN_PROGRESS) {
+            throw new IllegalStateException("Receipt is not in the approved state for processing");
         }
+        // Kiểm tra xem tất cả các chi tiết trong requestReceipt đã có số lượng thực tế tương ứng trong actualQuantities chưa
+//        for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
+//            if (!actualQuantities.containsKey(requestDetail.getId()) || actualQuantities.get(requestDetail.getId()) == null) {
+//                throw new IllegalArgumentException("Actual quantity for detail ID " + requestDetail.getId() + " is required");
+//            }
+//        }
         requestReceipt.setStatus(ReceiptStatus.Completed);
         receiptRepository.save(requestReceipt);
 

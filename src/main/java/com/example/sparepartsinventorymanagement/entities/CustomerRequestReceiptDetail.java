@@ -15,7 +15,7 @@ import lombok.experimental.SuperBuilder;
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 
 @Table(name="customer_request_recipt_detail")
-public class CustomerRequestReceiptDetail extends Auditable<User> {
+public class CustomerRequestReceiptDetail  {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="customer_request_detail_id")

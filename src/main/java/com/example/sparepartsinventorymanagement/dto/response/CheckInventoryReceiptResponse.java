@@ -27,7 +27,7 @@ public class CheckInventoryReceiptResponse {
     private String description;
     private String createdBy; // ID của người tạo
     private String lastModifiedBy; // ID của người chỉnh sửa cuối cùng
-    private String receivedBy;
+    //private String receivedBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtils.DATETIME_FORMAT)
     @DateTimeFormat(pattern = DateTimeUtils.DATETIME_FORMAT)
     private Date createdAt;

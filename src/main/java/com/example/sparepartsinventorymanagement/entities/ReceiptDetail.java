@@ -15,7 +15,7 @@ import java.util.List;
 @SuperBuilder
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Table(name = "receipt_details")
-public class ReceiptDetail  extends Auditable<User> {
+public class ReceiptDetail   {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

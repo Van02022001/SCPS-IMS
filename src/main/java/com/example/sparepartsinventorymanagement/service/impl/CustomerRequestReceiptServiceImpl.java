@@ -76,7 +76,9 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
         CustomerRequestReceipt requestReceipt = CustomerRequestReceipt.builder()
                 .code(generateAndValidateUniqueCode())
                 .createdBy(getCurrentAuthenticatedUser())
-                .receivedBy(inventoryStaff)
+                .lastModifiedDate(new Date())
+               // .receivedBy(inventoryStaff)
+                .lastModifiedBy(inventoryStaff)
                 .customer(customer)
                 .note(form.getNote())
                 .status(CustomerRequestReceiptStatus.Pending_Approval)
@@ -109,10 +111,10 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
                     .customerRequestReceipt(savedReceipt)
                     .quantity(requestedQuantity)
                     .unitName(item.getSubCategory().getUnit().getName())
-                    .createdBy(getCurrentAuthenticatedUser())
-                    .lastModifiedBy(getCurrentAuthenticatedUser())
-                    .creationDate(new Date())
-                    .lastModifiedDate(new Date())
+//                    .createdBy(getCurrentAuthenticatedUser())
+//                    .lastModifiedBy(getCurrentAuthenticatedUser())
+//                    .creationDate(new Date())
+//                    .lastModifiedDate(new Date())
                     .build();
             requestReceiptDetails.add(requestReceiptDetail);
             totalQuantity += detailForm.getQuantity();
@@ -137,7 +139,7 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
         customerRequestReceiptDTO.setNote(savedReceipt.getNote());
         customerRequestReceiptDTO.setCode(savedReceipt.getCode());
         customerRequestReceiptDTO.setStatus(savedReceipt.getStatus());
-        customerRequestReceiptDTO.setReceivedBy(savedReceipt.getReceivedBy().getLastName() + " " + savedReceipt.getReceivedBy().getMiddleName() + " " + savedReceipt.getReceivedBy().getFirstName());
+       // customerRequestReceiptDTO.setReceivedBy(savedReceipt.getReceivedBy().getLastName() + " " + savedReceipt.getReceivedBy().getMiddleName() + " " + savedReceipt.getReceivedBy().getFirstName());
         customerRequestReceiptDTO.setCreatedBy(savedReceipt.getCreatedBy().getLastName() + " " + savedReceipt.getCreatedBy().getMiddleName() + " " + savedReceipt.getCreatedBy().getFirstName());
         customerRequestReceiptDTO.setLastModifiedBy(savedReceipt.getLastModifiedBy() != null ? savedReceipt.getLastModifiedBy().getLastName() + " " + savedReceipt.getLastModifiedBy().getLastName() + " " + savedReceipt.getLastModifiedBy().getFirstName() : null);
         customerRequestReceiptDTO.setCreatedAt(savedReceipt.getCreationDate());
@@ -180,10 +182,12 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
         CustomerRequestReceipt receipt = customerRequestReceiptRepository.findById(receiptId)
                 .orElseThrow(() -> new NotFoundException("Receipt with id " + receiptId +" not found"));
         // So sánh id của người dùng hiện tại với inventoryStaffId liên quan đến phiếu nhập kho
-        if (currentUser == null || !currentUser.getId().equals(receipt.getReceivedBy().getId())) {
+//        if (currentUser == null || !currentUser.getId().equals(receipt.getReceivedBy().getId())) {
+//            throw new AccessDeniedException("You do not have permission to confirm this import request receipt.");
+//        }
+        if (currentUser == null || !currentUser.getWarehouse().equals(receipt.getWarehouse())) {
             throw new AccessDeniedException("You do not have permission to confirm this import request receipt.");
         }
-
         // Kiểm tra xem phiếu đã được xác nhận chưa
         if (receipt.getStatus() == CustomerRequestReceiptStatus.Approved) {
             throw new IllegalStateException("This import request receipt has already been confirmed.");
@@ -232,7 +236,7 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
                 SourceType.RECEIPT,
                 EventType.CONFIRMED,
                 updatedReceipt.getId(),
-                updatedReceipt.getReceivedBy().getId(),
+                updatedReceipt.getLastModifiedBy().getId(),
                 NotificationType.HUY_XUAT_KHO,
                 "Phiếu yêu cầu xuất kho #" + updatedReceipt.getId() + " đã được nhân viên bán hàng hủy yêu cầu."
         );
@@ -250,7 +254,7 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
         response.setStatus(receipt.getStatus());
         response.setNote(receipt.getNote());
         response.setTotalQuantity(receipt.getTotalQuantity());
-        response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() + " " + receipt.getReceivedBy().getMiddleName() + " " + receipt.getReceivedBy().getFirstName() : null);
+       // response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() + " " + receipt.getReceivedBy().getMiddleName() + " " + receipt.getReceivedBy().getFirstName() : null);
         response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() + " " + receipt.getCreatedBy().getMiddleName() + " " + receipt.getCreatedBy().getFirstName() : null);
         response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() + " " + receipt.getLastModifiedBy().getLastName() + " " + receipt.getLastModifiedBy().getFirstName() : null);
         response.setCreatedAt(receipt.getCreationDate());
@@ -318,7 +322,7 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
 
         User createdByUser = receipt.getCreatedBy();
         User lastModifiedByUser = receipt.getLastModifiedBy();
-        User receivedUser = receipt.getReceivedBy();
+      //  User receivedUser = receipt.getReceivedBy();
 
         return new CustomerRequestReceiptDTO(
                 receipt.getId(),
@@ -328,7 +332,7 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
                 receipt.getNote(),
                 receipt.getTotalQuantity(),
                 detailDTOs,
-                receivedUser != null ? receivedUser.getLastName() + " " + receivedUser.getMiddleName() + " " + receivedUser.getFirstName() : null,
+               // receivedUser != null ? receivedUser.getLastName() + " " + receivedUser.getMiddleName() + " " + receivedUser.getFirstName() : null,
                 createdByUser != null ? createdByUser.getLastName() + " " + createdByUser.getMiddleName() + " " + createdByUser.getFirstName() : null,
                 lastModifiedByUser != null ? lastModifiedByUser.getLastName() + " " + lastModifiedByUser.getLastName() + " " + lastModifiedByUser.getFirstName() : null,
                 receipt.getCreationDate(),

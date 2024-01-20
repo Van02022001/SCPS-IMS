@@ -37,6 +37,5 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     List<InventoryItemSummaryDTO> getInventorySummaryForAllItems();
     Optional<Inventory> findByItemIdAndWarehouseId(Long itemId, Long warehouseId);
 
-//    @Query("SELECT i FROM Inventory i WHERE i.date >= :startDate AND i.date <= :endDate")
-//    List<Inventory> findAllBetweenDates(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
 }

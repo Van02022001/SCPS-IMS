@@ -39,7 +39,7 @@ public class SparePartsInventoryManagementApplication {
         return (args) -> {
 
 
-
+//
 //            Warehouse warehouse1 = new Warehouse();
 //            warehouse1.setName("Kho 1");
 //            warehouse1.setStatus(WarehouseStatus.Active);

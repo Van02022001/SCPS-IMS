@@ -21,6 +21,7 @@ public class CustomerRequestReceiptDTO {
     private CustomerRequestReceiptStatus status;
     private String note;
     private int totalQuantity;
+    private double totalPrice;
     private List<CustomerRequestReceiptDetailDTO> details;
     private String createdBy; // ID của người tạo
     private String lastModifiedBy; // ID của người chỉnh sửa cuối cùng

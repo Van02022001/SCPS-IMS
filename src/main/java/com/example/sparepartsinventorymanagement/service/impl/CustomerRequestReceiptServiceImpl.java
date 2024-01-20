@@ -87,13 +87,14 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
         CustomerRequestReceipt savedReceipt = customerRequestReceiptRepository.save(requestReceipt);
 
         int totalQuantity = 0;
-
+        double totalPrice = 0;
         List<CustomerRequestReceiptDetail>  requestReceiptDetails = new ArrayList<>();
 
         for(CustomerRequestReceiptDetailForm detailForm : form.getDetails()){
             Item item = itemRepository.findById(detailForm.getItemId())
                     .orElseThrow(() -> new NotFoundException("Item not found"));
-
+            double unitPrice = item.getPricing().getPrice();
+            double totalPriceForItem = unitPrice * detailForm.getQuantity();
             // Tìm kiếm thông tin tồn kho
             Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, savedReceipt.getWarehouse())
                     .orElseThrow(() -> new NotFoundException("Inventory not found"));
@@ -115,12 +116,16 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
 //                    .lastModifiedBy(getCurrentAuthenticatedUser())
 //                    .creationDate(new Date())
 //                    .lastModifiedDate(new Date())
+                    .unitPrice(unitPrice)
+                    .totalPrice(totalPriceForItem)
                     .build();
             requestReceiptDetails.add(requestReceiptDetail);
             totalQuantity += detailForm.getQuantity();
+            totalPrice += requestReceiptDetail.getTotalPrice();
 
         }
         requestReceipt.setTotalQuantity(totalQuantity);
+        requestReceipt.setTotalPrice(totalPrice);
         customerRequestReceiptDetailRepository.saveAll(requestReceiptDetails);
 
         // Send a notification
@@ -146,6 +151,7 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
         customerRequestReceiptDTO.setCreatedAt(savedReceipt.getCreationDate());
         customerRequestReceiptDTO.setUpdatedAt(savedReceipt.getLastModifiedDate());
         customerRequestReceiptDTO.setTotalQuantity(totalQuantity);
+        customerRequestReceiptDTO.setTotalPrice(totalPrice);
 
 
         List<CustomerRequestReceiptDetailDTO> detailResponses = requestReceiptDetails.stream()
@@ -167,6 +173,8 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
                             .build());
                     detailResponse.setQuantity(detail.getQuantity());
                     detailResponse.setUnitName(detail.getUnitName());
+                    detailResponse.setPrice(detail.getUnitPrice());
+                    detailResponse.setTotalPrice(detail.getTotalPrice());
 
                     return detailResponse;
                 })
@@ -254,6 +262,7 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
         response.setStatus(receipt.getStatus());
         response.setNote(receipt.getNote());
         response.setTotalQuantity(receipt.getTotalQuantity());
+        response.setTotalPrice(receipt.getTotalPrice());
        // response.setReceivedBy(receipt.getReceivedBy() != null ? receipt.getReceivedBy().getLastName() + " " + receipt.getReceivedBy().getMiddleName() + " " + receipt.getReceivedBy().getFirstName() : null);
         response.setCreatedBy(receipt.getCreatedBy() != null ? receipt.getCreatedBy().getLastName() + " " + receipt.getCreatedBy().getMiddleName() + " " + receipt.getCreatedBy().getFirstName() : null);
         response.setLastModifiedBy(receipt.getLastModifiedBy() != null ? receipt.getLastModifiedBy().getLastName() + " " + receipt.getLastModifiedBy().getLastName() + " " + receipt.getLastModifiedBy().getFirstName() : null);
@@ -280,6 +289,8 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
                                     .build());
                     detailDTO.setQuantity(detail.getQuantity());
                     detailDTO.setUnitName(detail.getUnitName());
+                    detailDTO.setPrice(detail.getUnitPrice());
+                    detailDTO.setTotalPrice(detail.getTotalPrice());
                     return detailDTO;
                 })
                 .collect(Collectors.toList());
@@ -331,6 +342,7 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
                 receipt.getStatus(),
                 receipt.getNote(),
                 receipt.getTotalQuantity(),
+                receipt.getTotalPrice(),
                 detailDTOs,
                // receivedUser != null ? receivedUser.getLastName() + " " + receivedUser.getMiddleName() + " " + receivedUser.getFirstName() : null,
                 createdByUser != null ? createdByUser.getLastName() + " " + createdByUser.getMiddleName() + " " + createdByUser.getFirstName() : null,
@@ -355,7 +367,9 @@ public class CustomerRequestReceiptServiceImpl implements CustomerRequestReceipt
                 detail.getId(),
                 itemDTO,
                 detail.getQuantity(),
-                detail.getUnitName()
+                detail.getUnitName(),
+                detail.getUnitPrice(),
+                detail.getTotalPrice()
         );
 
     }

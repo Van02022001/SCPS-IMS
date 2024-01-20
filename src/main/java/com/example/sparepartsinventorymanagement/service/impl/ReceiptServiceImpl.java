@@ -2252,11 +2252,14 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
 
         checkInventoryReceipt = receiptRepository.save(checkInventoryReceipt);
 
+        Map<Long, InventoryDiscrepancyLogs> discrepancyLogsMap = new HashMap<>();
+
         boolean hasDiscrepancy = false;
 
         for (InventoryCheckDetail detail : checkInventoryReceiptForm.getDetails()) {
             Item item = itemRepository.findById(detail.getItemId())
                     .orElseThrow(() -> new NotFoundException("Item not found with ID: " + detail.getItemId()));
+
 
             int totalLocationQuantity = 0;
 
@@ -2295,14 +2298,17 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
             Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, warehouse)
                     .orElseThrow(() -> new NotFoundException("Inventory not found for item with ID: " + item.getId()));
 
-            handleInventoryDiscrepancy(detail, inventory, hasDiscrepancy);
+            InventoryDiscrepancyLogs log = handleInventoryDiscrepancy(detail, inventory, hasDiscrepancy);
+            if (log != null) {
+                discrepancyLogsMap.put(detail.getItemId(), log);
+            }
         }
 
         if (hasDiscrepancy) {
             createAndSendNotificationForInventoryCheck(checkInventoryReceipt, hasDiscrepancy);
         }
 
-        return buildCheckInventoryReceiptResponse(checkInventoryReceipt, checkInventoryReceiptForm.getDetails());
+        return buildCheckInventoryReceiptResponse(checkInventoryReceipt, checkInventoryReceiptForm.getDetails(), discrepancyLogsMap);
     }
     private void validateStatusQuantities(Map<InventoryStatus, Integer> statusQuantities, int actualQuantity) throws InvalidInventoryDataException {
         if (statusQuantities == null) {
@@ -2321,7 +2327,40 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
             throw new InvalidInventoryDataException("Total status quantities exceed actual quantity");
         }
     }
-    private void handleInventoryDiscrepancy(InventoryCheckDetail detail, Inventory inventory, boolean hasDiscrepancy) {
+//    private void handleInventoryDiscrepancy(InventoryCheckDetail detail, Inventory inventory, boolean hasDiscrepancy) {
+//        int actualQuantity = detail.getActualQuantity();
+//        Map<InventoryStatus, Integer> statusQuantities = detail.getStatusQuantities();
+//        // Lưu trữ số lượng dự kiến trước khi xử lý chênh lệch
+//        int expectedQuantity = inventory.getTotalQuantity();
+//
+//        // Validate dữ liệu trước khi xử lý
+//        validateStatusQuantities(statusQuantities, actualQuantity);
+//
+//        // Tính toán discrepancyQuantity và discrepancyValue
+//        int discrepancyQuantity = actualQuantity - inventory.getAvailable();
+//
+//        double discrepancyValue = calculateDiscrepancyValue(inventory.getItem().getId(), inventory.getWarehouse().getId(), inventory,statusQuantities);
+//
+//        // Nếu có sự chênh lệch, đánh dấu hasDiscrepancy và tạo log
+//        if (discrepancyQuantity != 0 || !statusQuantities.isEmpty()) {
+//            hasDiscrepancy = true;
+//            InventoryDiscrepancyLogs log = InventoryDiscrepancyLogs.builder()
+//                    .inventory(inventory)
+//                    .requiredQuantity(expectedQuantity)
+//                    .actualQuantity(actualQuantity)
+//                    .discrepancyQuantity(discrepancyQuantity)
+//                    .discrepancyValue(discrepancyValue)
+//                    .logTime(new Date())
+//                    .note(detail.getNote())
+//                    .build();
+//
+//            inventoryDiscrepancyLogsRepository.save(log);
+//        }
+//
+//        // Cập nhật số lượng tồn kho bằng cách sử dụng thông tin từ statusQuantities
+//        updateInventoryQuantity(inventory, statusQuantities);
+//    }
+    private InventoryDiscrepancyLogs  handleInventoryDiscrepancy(InventoryCheckDetail detail, Inventory inventory, boolean hasDiscrepancy) {
         int actualQuantity = detail.getActualQuantity();
         Map<InventoryStatus, Integer> statusQuantities = detail.getStatusQuantities();
         // Lưu trữ số lượng dự kiến trước khi xử lý chênh lệch
@@ -2336,9 +2375,10 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         double discrepancyValue = calculateDiscrepancyValue(inventory.getItem().getId(), inventory.getWarehouse().getId(), inventory,statusQuantities);
 
         // Nếu có sự chênh lệch, đánh dấu hasDiscrepancy và tạo log
+        InventoryDiscrepancyLogs log = null;
         if (discrepancyQuantity != 0 || !statusQuantities.isEmpty()) {
             hasDiscrepancy = true;
-            InventoryDiscrepancyLogs log = InventoryDiscrepancyLogs.builder()
+             log = InventoryDiscrepancyLogs.builder()
                     .inventory(inventory)
                     .requiredQuantity(expectedQuantity)
                     .actualQuantity(actualQuantity)
@@ -2353,41 +2393,25 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
 
         // Cập nhật số lượng tồn kho bằng cách sử dụng thông tin từ statusQuantities
         updateInventoryQuantity(inventory, statusQuantities);
-    }
 
-
-    private void updateInventoryQuantity(Inventory inventory, Map<InventoryStatus, Integer> statusQuantities) {
-        int lostQuantity = statusQuantities.getOrDefault(InventoryStatus.LOST, 0);
-        int redundantQuantity = statusQuantities.getOrDefault(InventoryStatus.REDUNDANT, 0);
-        int defectiveQuantity = statusQuantities.getOrDefault(InventoryStatus.DEFECTIVE, 0);
-
-        // Cập nhật số lượng dựa trên LOST và DEFECTIVE
-        inventory.setAvailable(inventory.getAvailable() - lostQuantity - defectiveQuantity + redundantQuantity);
-        inventory.setTotalQuantity(inventory.getTotalQuantity() - lostQuantity + redundantQuantity);
-
-        // Cập nhật số lượng hàng mất và hư hỏng
-        inventory.setLost(inventory.getLost() + lostQuantity);
-        inventory.setDefective(inventory.getDefective() + defectiveQuantity);
-
-        inventoryRepository.save(inventory);
+        return log;
     }
     private double calculateDiscrepancyValue(Long itemId, Long warehouseId, Inventory inventory, Map<InventoryStatus, Integer> statusQuantities) {
         double discrepancyValue = 0.0;
         double unitValue = getAverageUnitValueOfItemInWarehouse(itemId, warehouseId);
+
         for (Map.Entry<InventoryStatus, Integer> entry : statusQuantities.entrySet()) {
-           // double unitValue = inventory.getAverageUnitValue();
             switch (entry.getKey()) {
                 case LOST:
                     // Giảm giá trị chênh lệch cho hàng bị mất
                     discrepancyValue -= entry.getValue() * unitValue;
                     break;
                 case DEFECTIVE:
-                    // Tăng giá trị chênh lệch cho hàng hư hỏng (nếu bạn coi hàng hư hỏng vẫn có giá trị)
-                    discrepancyValue += entry.getValue() * unitValue;
+                    // Không thay đổi giá trị chênh lệch cho hàng hư hỏng
                     break;
                 case REDUNDANT:
-                    // Giảm giá trị chênh lệch cho hàng thừa (nếu bạn coi hàng thừa không làm tăng giá trị tồn kho)
-                    discrepancyValue -= entry.getValue() * unitValue;
+                    // Tăng giá trị chênh lệch cho hàng thừa
+                    discrepancyValue += entry.getValue() * unitValue;
                     break;
                 case ENOUGH:
                     // Không thay đổi giá trị chênh lệch
@@ -2397,6 +2421,93 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         }
         return discrepancyValue;
     }
+
+
+    private CheckInventoryReceiptResponse buildCheckInventoryReceiptResponse(Receipt receipt, List<InventoryCheckDetail> checkDetails, Map<Long, InventoryDiscrepancyLogs> discrepancyLogsMap) {
+        List<InventoryCheckDetailResponse> detailResponses = new ArrayList<>();
+
+        for (InventoryCheckDetail detail : checkDetails) {
+            // Lấy ra item dựa trên itemId
+            Item item = itemRepository.findById(detail.getItemId())
+                    .orElseThrow(() -> new NotFoundException("Item not found with ID: " + detail.getItemId()));
+            Long warehouseId = receipt.getWarehouse().getId();
+
+            // Tìm Inventory dựa trên itemId và warehouseId
+            Inventory inventory = inventoryRepository.findByItemIdAndWarehouseId(detail.getItemId(), warehouseId)
+                    .orElseThrow(() -> new NotFoundException("Inventory not found for item with ID: " + detail.getItemId()));
+
+
+
+            // Lấy InventoryDiscrepancyLogs từ map
+            InventoryDiscrepancyLogs latestLog = discrepancyLogsMap.get(detail.getItemId());
+
+
+            // Tạo danh sách LocationQuantityResponse dựa trên danh sách location của item
+            List<LocationQuantityResponse> locationQuantityResponses = getLocationQuantityResponsesForItem(inventory.getItem());
+
+            // Tạo và thiết lập các thông tin cho InventoryCheckDetailResponse
+            InventoryCheckDetailResponse detailResponse = new InventoryCheckDetailResponse();
+            detailResponse.setItemId(item.getId());
+            detailResponse.setCodeItem(item.getCode());
+            detailResponse.setItemName(item.getSubCategory().getName());
+            detailResponse.setExpectedQuantity(latestLog.getRequiredQuantity());
+            detailResponse.setActualQuantity(latestLog.getActualQuantity());
+            detailResponse.setDiscrepancyQuantity(latestLog.getDiscrepancyQuantity());
+            detailResponse.setDiscrepancyValue(latestLog.getDiscrepancyValue());
+            detailResponse.setNote(detail.getNote());
+            detailResponse.setLocations(locationQuantityResponses);
+            // ... Xử lý và thiết lập locationQuantityResponses
+
+            detailResponses.add(detailResponse);
+        }
+
+        // Tạo và trả về CheckInventoryReceiptResponse
+        return new CheckInventoryReceiptResponse(
+                receipt.getWarehouse().getId(),
+                receipt.getId(),
+                receipt.getCode(),
+                receipt.getType(),
+                receipt.getStatus(),
+                receipt.getDescription(),
+                formatFullName(receipt.getCreatedBy()),
+                receipt.getLastModifiedBy() != null ? formatFullName(receipt.getLastModifiedBy()) : null,
+                receipt.getCreationDate(),
+                receipt.getLastModifiedDate(),
+                detailResponses
+        );
+    }
+
+    private void updateInventoryQuantity(Inventory inventory, Map<InventoryStatus, Integer> statusQuantities) {
+        int lostQuantity = statusQuantities.getOrDefault(InventoryStatus.LOST, 0);
+        int redundantQuantity = statusQuantities.getOrDefault(InventoryStatus.REDUNDANT, 0);
+        int defectiveQuantity = statusQuantities.getOrDefault(InventoryStatus.DEFECTIVE, 0);
+
+        // Cập nhật số lượng dựa trên LOST và DEFECTIVE, và cập nhật giá trị tồn kho
+        inventory.setAvailable(inventory.getAvailable() - lostQuantity - defectiveQuantity + redundantQuantity);
+        inventory.setTotalQuantity(inventory.getTotalQuantity() - lostQuantity + redundantQuantity);
+
+        // Điều chỉnh giá trị tồn kho
+        inventory.setTotalValue(inventory.getTotalValue() - (lostQuantity * getAverageUnitValueOfItemInWarehouse(inventory.getItem().getId(), inventory.getWarehouse().getId()))
+                + (redundantQuantity * getAverageUnitValueOfItemInWarehouse(inventory.getItem().getId(), inventory.getWarehouse().getId())));
+
+        // Cập nhật số lượng hàng mất và hư hỏng
+        inventory.setLost(inventory.getLost() + lostQuantity);
+        inventory.setDefective(inventory.getDefective() + defectiveQuantity);
+
+        inventoryRepository.save(inventory);
+    }
+
+    // Đoạn mã giả định để lấy số lượng tổng cộng mong đợi từ bảng inventory
+    private int getExpectedQuantityBeforeCheck(Long itemId, Long warehouseId) {
+        // Giả định rằng có một phương thức trong repository để lấy Inventory dựa trên itemId và warehouse
+
+        Optional<Inventory> inventory = inventoryRepository.findByItemIdAndWarehouseId(itemId, warehouseId);
+        // Nếu Inventory tồn tại, trả về totalQuantity, nếu không trả về 0
+        return inventory.map(Inventory::getTotalQuantity).orElse(0);
+    }
+
+
+
 
     public double getAverageUnitValueOfItemInWarehouse(Long itemId, Long warehouseId) {
         // Tìm kiếm Inventory dựa trên itemId và warehouseId
@@ -2590,50 +2701,7 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
     }
 
 
-    private CheckInventoryReceiptResponse buildCheckInventoryReceiptResponse(Receipt receipt, List<InventoryCheckDetail> checkDetails) {
-        List<InventoryCheckDetailResponse> detailResponses = new ArrayList<>();
 
-        List<Inventory> inventories = inventoryRepository.findByWarehouse(receipt.getWarehouse());
-
-        for (int i = 0; i < inventories.size(); i++) {
-            Inventory inventory = inventories.get(i);
-            InventoryCheckDetail detail = checkDetails.get(i); // Giả sử rằng checkDetails được sắp xếp theo cùng thứ tự với inventories
-
-
-            int expectedQuantityBeforeUpdate = inventory.getAvailable();
-
-            // Tạo danh sách LocationQuantityResponse dựa trên danh sách location của item
-            List<LocationQuantityResponse> locationQuantityResponses = getLocationQuantityResponsesForItem(inventory.getItem());
-
-
-            InventoryCheckDetailResponse detailResponse = new InventoryCheckDetailResponse();
-            detailResponse.setItemId(inventory.getItem().getId());
-            detailResponse.setCodeItem(inventory.getItem().getCode());
-            detailResponse.setItemName(inventory.getItem().getSubCategory().getName());
-            detailResponse.setExpectedQuantity(expectedQuantityBeforeUpdate);
-            detailResponse.setActualQuantity(detail.getActualQuantity());
-            detailResponse.setDiscrepancyQuantity(inventory.getDiscrepancyQuantity());
-            detailResponse.setDiscrepancyValue(inventory.getDiscrepancyValue());
-            detailResponse.setNote(detail.getNote()); // Thêm thông tin ghi chú từ InventoryCheckDetail
-            detailResponse.setLocations(locationQuantityResponses);
-            detailResponses.add(detailResponse);
-        }
-
-        return new CheckInventoryReceiptResponse(
-                receipt.getWarehouse().getId(),
-                receipt.getId(),
-                receipt.getCode(),
-                receipt.getType(),
-                receipt.getStatus(),
-                receipt.getDescription(),
-                formatFullName(receipt.getCreatedBy()),
-                receipt.getLastModifiedBy() != null ? formatFullName(receipt.getLastModifiedBy()) : null,
-                //receipt.getReceivedBy() != null ? formatFullName(receipt.getReceivedBy()) : null,
-                receipt.getCreationDate(),
-                receipt.getLastModifiedDate(),
-                detailResponses
-        );
-    }
     private List<LocationQuantityResponse> getLocationQuantityResponsesForItem(Item item) {
         // Lấy ra tất cả locations từ item và loại bỏ những cái có quantity bằng 0
         return item.getLocations().stream()

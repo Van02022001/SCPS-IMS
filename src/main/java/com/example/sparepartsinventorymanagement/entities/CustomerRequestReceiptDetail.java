@@ -29,6 +29,11 @@ public class CustomerRequestReceiptDetail  {
     @Column(name = "unit_name")
     private String unitName;
 
+    @Column(name = "unit_price")
+    private double unitPrice;
+
+    @Column(name = "total_price")
+    private double totalPrice;
 
     @ManyToOne
     @JoinColumn(name = "customer_request_id", nullable = false)

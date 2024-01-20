@@ -14,5 +14,7 @@ public class CustomerRequestReceiptDetailDTO {
     private InfoItemDTO item;
     private int quantity; // The quantity requested
     private String unitName; // Name of the unit for display
+    private double price;
+    private double totalPrice;
 
 }

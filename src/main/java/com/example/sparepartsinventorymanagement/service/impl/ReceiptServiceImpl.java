@@ -2516,45 +2516,44 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         // Nếu Inventory tìm thấy, trả về averageUnitValue
         return inventory.map(Inventory::getAverageUnitValue).orElse(0.0);
     }
-
-
-
-
     @Override
     public List<CheckInventoryReceiptResponse> getAllCheckInventoryReceipts() {
-        // Lấy thông tin người dùng hiện tại
-        User currentUser = getCurrentAuthenticatedUser();
 
+        User currentUser = getCurrentAuthenticatedUser();
+        List<Receipt> receipts = receiptRepository.findByType(ReceiptType.PHIEU_KIEM_KHO);
         List<CheckInventoryReceiptResponse> responses = new ArrayList<>();
 
-        // Truy vấn danh sách các phiếu kiểm kho từ cơ sở dữ liệu
-        List<Receipt> checkInventoryReceipts = receiptRepository.findByType(ReceiptType.PHIEU_KIEM_KHO);
+        for (Receipt receipt : receipts) {
 
 
-        for (Receipt receipt : checkInventoryReceipts) {
-
-            // So sánh id của người dùng hiện tại với inventoryStaffId liên quan đến phiếu nhập kho
             if (currentUser == null || (!currentUser.getRole().getName().equals("MANAGER") && !currentUser.getId().equals(receipt.getCreatedBy().getId()))) {
                 throw new AccessDeniedException("You do not have permission to view this inventory check receipt.");
             }
 
-            List<Inventory> inventories = inventoryRepository.findByWarehouse(receipt.getWarehouse());
-
+            List<Inventory> inventories = inventoryRepository.findByWarehouseId(receipt.getWarehouse().getId());
             List<InventoryCheckDetailResponse> detailResponses = new ArrayList<>();
 
             for (Inventory inventory : inventories) {
-                InventoryCheckDetailResponse detailResponse = new InventoryCheckDetailResponse();
-                detailResponse.setItemId(inventory.getItem().getId());
-                detailResponse.setCodeItem(inventory.getItem().getCode());
-                detailResponse.setItemName(inventory.getItem().getSubCategory().getName());
-                detailResponse.setExpectedQuantity(inventory.getAvailable());
-                detailResponse.setActualQuantity(0); // Thiết lập giá trị mặc định cho actualQuantity
-                detailResponse.setDiscrepancyQuantity(0); // Thiết lập giá trị mặc định cho discrepancyQuantity
-                detailResponse.setDiscrepancyValue(0); // Thiết lập giá trị mặc định cho discrepancyValue
-                detailResponse.setNote(""); // Thiết lập giá trị mặc định cho note
+                Item item = inventory.getItem();
+                List<InventoryDiscrepancyLogs> logsList = inventory.getDiscrepancyLogs();
 
-                // Lấy danh sách các location của item và tạo các LocationQuantityResponse
-                List<LocationQuantityResponse> locationQuantityResponses = getLocationQuantityResponsesForItem(inventory.getItem());
+                // Tìm log gần nhất phù hợp với thời gian của receipt
+                InventoryDiscrepancyLogs latestLog = logsList.stream()
+                        .filter(log -> log.getLogTime().compareTo(receipt.getCreationDate()) <= 0)
+                        .max(Comparator.comparing(InventoryDiscrepancyLogs::getLogTime))
+                        .orElse(null);
+
+                List<LocationQuantityResponse> locationQuantityResponses = getLocationQuantityResponsesForItem(item);
+
+                InventoryCheckDetailResponse detailResponse = new InventoryCheckDetailResponse();
+                detailResponse.setItemId(item.getId());
+                detailResponse.setCodeItem(item.getCode());
+                detailResponse.setItemName(item.getSubCategory().getName());
+                detailResponse.setExpectedQuantity(inventory.getAvailable());
+                detailResponse.setActualQuantity(latestLog != null ? latestLog.getActualQuantity() : 0);
+                detailResponse.setDiscrepancyQuantity(latestLog != null ? latestLog.getDiscrepancyQuantity() : 0);
+                detailResponse.setDiscrepancyValue(latestLog != null ? latestLog.getDiscrepancyValue() : 0);
+                detailResponse.setNote(latestLog != null ? latestLog.getNote() : "");
                 detailResponse.setLocations(locationQuantityResponses);
 
                 detailResponses.add(detailResponse);
@@ -2569,7 +2568,6 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                     receipt.getDescription(),
                     formatFullName(receipt.getCreatedBy()),
                     receipt.getLastModifiedBy() != null ? formatFullName(receipt.getLastModifiedBy()) : null,
-                    //receipt.getReceivedBy() != null ? formatFullName(receipt.getReceivedBy()) : null,
                     receipt.getCreationDate(),
                     receipt.getLastModifiedDate(),
                     detailResponses
@@ -2581,57 +2579,235 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         return responses;
     }
 
+
+//    @Override
+//    @Transactional
+//    public CheckInventoryReceiptResponse getCheckInventoryReceiptById(Long receiptId) {
+//        Receipt receipt = receiptRepository.findById(receiptId)
+//                .orElseThrow(() -> new NotFoundException("Receipt not found with ID: " + receiptId));
+//
+//        List<InventoryCheckDetailResponse> detailResponses = new ArrayList<>();
+//
+//        // Iterate over each ReceiptDetail associated with the Receipt
+//        for (ReceiptDetail receiptDetail : receipt.getDetails()) {
+//            Item item = receiptDetail.getItem();
+//            Long itemId = item.getId();
+//            Inventory inventory = inventoryRepository.findByItemIdAndWarehouseId(itemId, receipt.getWarehouse().getId())
+//                    .orElseThrow(() -> new NotFoundException("Inventory not found for item with ID: " + itemId));
+//
+//            // Fetch the latest InventoryDiscrepancyLog for the item
+//            InventoryDiscrepancyLogs latestLog = inventory.getDiscrepancyLogs().stream()
+//                    .max(Comparator.comparing(InventoryDiscrepancyLogs::getLogTime))
+//                    .orElseThrow(() -> new NotFoundException("Discrepancy log not found for item with ID: " + itemId));
+//
+//            List<LocationQuantityResponse> locationQuantityResponses = getLocationQuantityResponsesForItem(item);
+//
+//            // Create InventoryCheckDetailResponse object and populate it
+//            InventoryCheckDetailResponse detailResponse = InventoryCheckDetailResponse.builder()
+//                    .itemId(itemId)
+//                    .codeItem(item.getCode())
+//                    .itemName(item.getSubCategory().getName())
+//                    .expectedQuantity(latestLog.getRequiredQuantity())
+//                    .actualQuantity(latestLog.getActualQuantity())
+//                    .discrepancyQuantity(latestLog.getDiscrepancyQuantity())
+//                    .discrepancyValue(latestLog.getDiscrepancyValue())
+//                    .note(latestLog.getNote())
+//                    .locations(locationQuantityResponses)
+//                    .build();
+//
+//            detailResponses.add(detailResponse);
+//        }
+//
+//        // Create and return the CheckInventoryReceiptResponse
+//        return CheckInventoryReceiptResponse.builder()
+//                .warehouseId(receipt.getWarehouse().getId())
+//                .id(receipt.getId())
+//                .code(receipt.getCode())
+//                .type(receipt.getType())
+//                .status(receipt.getStatus())
+//                .description(receipt.getDescription())
+//                .createdBy(formatFullName(receipt.getCreatedBy()))
+//                .lastModifiedBy(receipt.getLastModifiedBy() != null ? formatFullName(receipt.getLastModifiedBy()) : null)
+//                .createdAt(receipt.getCreationDate())
+//                .updatedAt(receipt.getLastModifiedDate())
+//                .details(detailResponses)
+//                .build();
+//    }
+
+
+
+//    @Override
+//    public List<CheckInventoryReceiptResponse> getAllCheckInventoryReceipts() {
+//        // Lấy thông tin người dùng hiện tại
+//        User currentUser = getCurrentAuthenticatedUser();
+//
+//        List<CheckInventoryReceiptResponse> responses = new ArrayList<>();
+//
+//        // Truy vấn danh sách các phiếu kiểm kho từ cơ sở dữ liệu
+//        List<Receipt> checkInventoryReceipts = receiptRepository.findByType(ReceiptType.PHIEU_KIEM_KHO);
+//
+//
+//        for (Receipt receipt : checkInventoryReceipts) {
+//
+//            // So sánh id của người dùng hiện tại với inventoryStaffId liên quan đến phiếu nhập kho
+//            if (currentUser == null || (!currentUser.getRole().getName().equals("MANAGER") && !currentUser.getId().equals(receipt.getCreatedBy().getId()))) {
+//                throw new AccessDeniedException("You do not have permission to view this inventory check receipt.");
+//            }
+//
+//            List<Inventory> inventories = inventoryRepository.findByWarehouse(receipt.getWarehouse());
+//
+//            List<InventoryCheckDetailResponse> detailResponses = new ArrayList<>();
+//
+//            for (Inventory inventory : inventories) {
+//                InventoryCheckDetailResponse detailResponse = new InventoryCheckDetailResponse();
+//                detailResponse.setItemId(inventory.getItem().getId());
+//                detailResponse.setCodeItem(inventory.getItem().getCode());
+//                detailResponse.setItemName(inventory.getItem().getSubCategory().getName());
+//                detailResponse.setExpectedQuantity(inventory.getAvailable());
+//                detailResponse.setActualQuantity(0); // Thiết lập giá trị mặc định cho actualQuantity
+//                detailResponse.setDiscrepancyQuantity(0); // Thiết lập giá trị mặc định cho discrepancyQuantity
+//                detailResponse.setDiscrepancyValue(0); // Thiết lập giá trị mặc định cho discrepancyValue
+//                detailResponse.setNote(""); // Thiết lập giá trị mặc định cho note
+//
+//                // Lấy danh sách các location của item và tạo các LocationQuantityResponse
+//                List<LocationQuantityResponse> locationQuantityResponses = getLocationQuantityResponsesForItem(inventory.getItem());
+//                detailResponse.setLocations(locationQuantityResponses);
+//
+//                detailResponses.add(detailResponse);
+//            }
+//
+//            CheckInventoryReceiptResponse checkInventoryReceiptResponse = new CheckInventoryReceiptResponse(
+//                    receipt.getWarehouse().getId(),
+//                    receipt.getId(),
+//                    receipt.getCode(),
+//                    receipt.getType(),
+//                    receipt.getStatus(),
+//                    receipt.getDescription(),
+//                    formatFullName(receipt.getCreatedBy()),
+//                    receipt.getLastModifiedBy() != null ? formatFullName(receipt.getLastModifiedBy()) : null,
+//                    //receipt.getReceivedBy() != null ? formatFullName(receipt.getReceivedBy()) : null,
+//                    receipt.getCreationDate(),
+//                    receipt.getLastModifiedDate(),
+//                    detailResponses
+//            );
+//
+//            responses.add(checkInventoryReceiptResponse);
+//        }
+//
+//        return responses;
+//    }
+
     @Override
     public CheckInventoryReceiptResponse getCheckInventoryReceiptById(Long receiptId) {
-
-        // Lấy thông tin người dùng hiện tại
         User currentUser = getCurrentAuthenticatedUser();
         Receipt receipt = receiptRepository.findById(receiptId)
                 .filter(r -> r.getType() == ReceiptType.PHIEU_KIEM_KHO)
                 .orElseThrow(() -> new NotFoundException("Inventory Check Receipt with ID " + receiptId + " not found or not of type PHIEU_KIEM_KHO"));
-        // So sánh id của người dùng hiện tại với inventoryStaffId liên quan đến phiếu nhập kho
+
         if (currentUser == null || (!currentUser.getRole().getName().equals("MANAGER") && !currentUser.getId().equals(receipt.getCreatedBy().getId()))) {
             throw new AccessDeniedException("You do not have permission to view this inventory check receipt.");
         }
-            List<Inventory> inventories = inventoryRepository.findByWarehouse(receipt.getWarehouse());
-            List<InventoryCheckDetailResponse> detailResponses = new ArrayList<>();
 
-            for (Inventory inventory : inventories) {
+        List<Inventory> inventories = inventoryRepository.findByWarehouseId(receipt.getWarehouse().getId());
+        List<InventoryCheckDetailResponse> detailResponses = new ArrayList<>();
 
-                InventoryCheckDetailResponse detailResponse = new InventoryCheckDetailResponse();
-                detailResponse.setItemId(inventory.getItem().getId());
-                detailResponse.setCodeItem(inventory.getItem().getCode());
-                detailResponse.setItemName(inventory.getItem().getSubCategory().getName());
-                detailResponse.setExpectedQuantity(inventory.getAvailable());
-                detailResponse.setActualQuantity(0); // Thiết lập giá trị mặc định cho actualQuantity
-                detailResponse.setDiscrepancyQuantity(0); // Thiết lập giá trị mặc định cho discrepancyQuantity
-                detailResponse.setDiscrepancyValue(0); // Thiết lập giá trị mặc định cho discrepancyValue
-                detailResponse.setNote(""); // Thiết lập giá trị mặc định cho note
+        for (Inventory inventory : inventories) {
+            Item item = inventory.getItem();
+            List<InventoryDiscrepancyLogs> logsList = inventory.getDiscrepancyLogs();
 
-                // Lấy danh sách các location của item và tạo các LocationQuantityResponse
-                List<LocationQuantityResponse> locationQuantityResponses = getLocationQuantityResponsesForItem(inventory.getItem());
-                detailResponse.setLocations(locationQuantityResponses);
+            // Tìm log gần nhất phù hợp với thời gian của receipt
+            InventoryDiscrepancyLogs latestLog = logsList.stream()
+                    .filter(log -> log.getLogTime().compareTo(receipt.getCreationDate()) <= 0)
+                    .max(Comparator.comparing(InventoryDiscrepancyLogs::getLogTime))
+                    .orElse(null);
 
-                detailResponses.add(detailResponse);
-            }
+            List<LocationQuantityResponse> locationQuantityResponses = getLocationQuantityResponsesForItem(item);
 
-            CheckInventoryReceiptResponse checkInventoryReceiptResponse = new CheckInventoryReceiptResponse(
-                    receipt.getWarehouse().getId(),
-                    receipt.getId(),
-                    receipt.getCode(),
-                    receipt.getType(),
-                    receipt.getStatus(),
-                    receipt.getDescription(),
-                    formatFullName(receipt.getCreatedBy()),
-                    receipt.getLastModifiedBy() != null ? formatFullName(receipt.getLastModifiedBy()) : null,
-                   // receipt.getReceivedBy() != null ? formatFullName(receipt.getReceivedBy()) : null,
-                    receipt.getCreationDate(),
-                    receipt.getLastModifiedDate(),
-                    detailResponses
-            );
+            InventoryCheckDetailResponse detailResponse = new InventoryCheckDetailResponse();
+            detailResponse.setItemId(item.getId());
+            detailResponse.setCodeItem(item.getCode());
+            detailResponse.setItemName(item.getSubCategory().getName());
+            detailResponse.setExpectedQuantity(inventory.getAvailable()); // Lấy số lượng dự kiến từ inventory
+            detailResponse.setActualQuantity(latestLog != null ? latestLog.getActualQuantity() : 0);
+            detailResponse.setDiscrepancyQuantity(latestLog != null ? latestLog.getDiscrepancyQuantity() : 0);
+            detailResponse.setDiscrepancyValue(latestLog != null ? latestLog.getDiscrepancyValue() : 0);
+            detailResponse.setNote(latestLog != null ? latestLog.getNote() : "");
+            detailResponse.setLocations(locationQuantityResponses);
+
+            detailResponses.add(detailResponse);
+        }
+
+        CheckInventoryReceiptResponse checkInventoryReceiptResponse = new CheckInventoryReceiptResponse(
+                receipt.getWarehouse().getId(),
+                receipt.getId(),
+                receipt.getCode(),
+                receipt.getType(),
+                receipt.getStatus(),
+                receipt.getDescription(),
+                formatFullName(receipt.getCreatedBy()),
+                receipt.getLastModifiedBy() != null ? formatFullName(receipt.getLastModifiedBy()) : null,
+                receipt.getCreationDate(),
+                receipt.getLastModifiedDate(),
+                detailResponses
+        );
 
         return checkInventoryReceiptResponse;
     }
+
+
+
+//    @Override
+//    public CheckInventoryReceiptResponse getCheckInventoryReceiptById(Long receiptId) {
+//
+//        // Lấy thông tin người dùng hiện tại
+//        User currentUser = getCurrentAuthenticatedUser();
+//        Receipt receipt = receiptRepository.findById(receiptId)
+//                .filter(r -> r.getType() == ReceiptType.PHIEU_KIEM_KHO)
+//                .orElseThrow(() -> new NotFoundException("Inventory Check Receipt with ID " + receiptId + " not found or not of type PHIEU_KIEM_KHO"));
+//        // So sánh id của người dùng hiện tại với inventoryStaffId liên quan đến phiếu nhập kho
+//        if (currentUser == null || (!currentUser.getRole().getName().equals("MANAGER") && !currentUser.getId().equals(receipt.getCreatedBy().getId()))) {
+//            throw new AccessDeniedException("You do not have permission to view this inventory check receipt.");
+//        }
+//            List<Inventory> inventories = inventoryRepository.findByWarehouse(receipt.getWarehouse());
+//            List<InventoryCheckDetailResponse> detailResponses = new ArrayList<>();
+//
+//            for (Inventory inventory : inventories) {
+//
+//                InventoryCheckDetailResponse detailResponse = new InventoryCheckDetailResponse();
+//                detailResponse.setItemId(inventory.getItem().getId());
+//                detailResponse.setCodeItem(inventory.getItem().getCode());
+//                detailResponse.setItemName(inventory.getItem().getSubCategory().getName());
+//                detailResponse.setExpectedQuantity(inventory.getAvailable());
+//                detailResponse.setActualQuantity(0); // Thiết lập giá trị mặc định cho actualQuantity
+//                detailResponse.setDiscrepancyQuantity(0); // Thiết lập giá trị mặc định cho discrepancyQuantity
+//                detailResponse.setDiscrepancyValue(0); // Thiết lập giá trị mặc định cho discrepancyValue
+//                detailResponse.setNote(""); // Thiết lập giá trị mặc định cho note
+//
+//                // Lấy danh sách các location của item và tạo các LocationQuantityResponse
+//                List<LocationQuantityResponse> locationQuantityResponses = getLocationQuantityResponsesForItem(inventory.getItem());
+//                detailResponse.setLocations(locationQuantityResponses);
+//
+//                detailResponses.add(detailResponse);
+//            }
+//
+//
+//            CheckInventoryReceiptResponse checkInventoryReceiptResponse = new CheckInventoryReceiptResponse(
+//                    receipt.getWarehouse().getId(),
+//                    receipt.getId(),
+//                    receipt.getCode(),
+//                    receipt.getType(),
+//                    receipt.getStatus(),
+//                    receipt.getDescription(),
+//                    formatFullName(receipt.getCreatedBy()),
+//                    receipt.getLastModifiedBy() != null ? formatFullName(receipt.getLastModifiedBy()) : null,
+//                   // receipt.getReceivedBy() != null ? formatFullName(receipt.getReceivedBy()) : null,
+//                    receipt.getCreationDate(),
+//                    receipt.getLastModifiedDate(),
+//                    detailResponses
+//            );
+//
+//        return checkInventoryReceiptResponse;
+//    }
 
     @Override
     public void confirmCheckingInventoryReceipt(Long receiptId) {

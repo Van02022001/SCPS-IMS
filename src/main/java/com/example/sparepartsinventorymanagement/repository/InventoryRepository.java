@@ -15,7 +15,7 @@ import java.util.Optional;
 
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Long> {
-
+    List<Inventory> findByWarehouseId(Long warehouseId);
     Optional<Inventory> findByItem(Item item);
     List<Inventory> findByWarehouse(Warehouse warehouse);
 

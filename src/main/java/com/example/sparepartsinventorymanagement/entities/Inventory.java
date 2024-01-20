@@ -36,7 +36,7 @@ public class Inventory {
     private int outboundQuantity; // Số lượng xuất
 
     @Column(name = "average_unit_value")
-    private int averageUnitValue;
+    private double averageUnitValue;
 
     @Column(name = "outbound_value")
     private double outboundValue; // Giá trị xuất

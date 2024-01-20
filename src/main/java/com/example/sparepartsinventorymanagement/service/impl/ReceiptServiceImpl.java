@@ -776,11 +776,14 @@ public class ReceiptServiceImpl implements ReceiptService {
         Receipt requestReceipt = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found"));
 
-        // Kiểm tra xem tất cả các chi tiết trong requestReceipt đã có số lượng thực tế tương ứng trong actualQuantities chưa
-        for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
-            if (!actualQuantities.containsKey(requestDetail.getId()) || actualQuantities.get(requestDetail.getId()) == null) {
-                throw new IllegalArgumentException("Actual quantity for detail ID " + requestDetail.getId() + " is required");
-            }
+//        // Kiểm tra xem tất cả các chi tiết trong requestReceipt đã có số lượng thực tế tương ứng trong actualQuantities chưa
+//        for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
+//            if (!actualQuantities.containsKey(requestDetail.getId()) || actualQuantities.get(requestDetail.getId()) == null) {
+//                throw new IllegalArgumentException("Actual quantity for detail ID " + requestDetail.getId() + " is required");
+//            }
+//        }
+        if (requestReceipt.getStatus() != ReceiptStatus.IN_PROGRESS) {
+            throw new IllegalStateException("Receipt is not in the approved state for processing");
         }
         requestReceipt.setStatus(ReceiptStatus.Completed);
         receiptRepository.save(requestReceipt);
@@ -801,8 +804,8 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
             int requiredQuantity = requestDetail.getQuantity();
-            int actualQuantity = actualQuantities.get(requestDetail.getId());
-            //int actualQuantity = actualQuantities.getOrDefault(requestDetail.getId(), requiredQuantity);
+            //int actualQuantity = actualQuantities.get(requestDetail.getId());
+            int actualQuantity = actualQuantities.getOrDefault(requestDetail.getId(), requiredQuantity);
             int discrepancyQuantity = actualQuantity - requiredQuantity;
             double unitPrice = requestDetail.getItem().getPurchasePrice().getPrice();
             double totalPriceForItem = unitPrice * actualQuantity;
@@ -1657,10 +1660,13 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .orElseThrow(() -> new NotFoundException("Receipt with Id " + receiptId + " not found"));
 
         // Kiểm tra xem tất cả các chi tiết trong requestReceipt đã có số lượng thực tế tương ứng trong actualQuantities chưa
-        for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
-            if (!actualQuantities.containsKey(requestDetail.getId()) || actualQuantities.get(requestDetail.getId()) == null) {
-                throw new IllegalArgumentException("Actual quantity for detail ID " + requestDetail.getId() + " is required");
-            }
+//        for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
+//            if (!actualQuantities.containsKey(requestDetail.getId()) || actualQuantities.get(requestDetail.getId()) == null) {
+//                throw new IllegalArgumentException("Actual quantity for detail ID " + requestDetail.getId() + " is required");
+//            }
+//        }
+        if (requestReceipt.getStatus() != ReceiptStatus.IN_PROGRESS) {
+            throw new IllegalStateException("Receipt is not in the approved state for processing");
         }
         requestReceipt.setStatus(ReceiptStatus.Completed);
         receiptRepository.save(requestReceipt);
@@ -1681,8 +1687,8 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         for (ReceiptDetail requestDetail : requestReceipt.getDetails()) {
             int requiredQuantity = requestDetail.getQuantity();
-            int actualQuantity = actualQuantities.get(requestDetail.getId());
-            //int actualQuantity = actualQuantities.getOrDefault(requestDetail.getId(), requiredQuantity);
+            //int actualQuantity = actualQuantities.get(requestDetail.getId());
+            int actualQuantity = actualQuantities.getOrDefault(requestDetail.getId(), requiredQuantity);
             int discrepancyQuantity = actualQuantity - requiredQuantity;
             double unitPrice = requestDetail.getItem().getPurchasePrice().getPrice();
             double totalPriceForItem = unitPrice * actualQuantity;
@@ -2037,10 +2043,7 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
                 .build();
         detailResponses.add(detailResponse);
 
-        Item items = new Item();
-        items.setAvailable(items.getAvailable() - actualQuantity);
-        items.setQuantity(items.getQuantity()-  actualQuantity);
-        itemRepository.save(items);
+
 
         //updateInventoryForOutbound(item, actualQuantity, unitPrice, customerRequestReceipt.getLastModifiedBy().getWarehouse().getId());
 
@@ -2400,7 +2403,7 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         Optional<Inventory> inventory = inventoryRepository.findByItemIdAndWarehouseId(itemId, warehouseId);
 
         // Nếu Inventory tìm thấy, trả về averageUnitValue
-        return inventory.map(Inventory::getAverageUnitValue).orElse(0);
+        return inventory.map(Inventory::getAverageUnitValue).orElse(0.0);
     }
 
 
@@ -2859,6 +2862,7 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         int currentOutboundQuantity = inventory.getOutboundQuantity();
         double currentOutboundValue = inventory.getOutboundValue();
         double currentTotalValue = inventory.getTotalValue();
+        double currentAverageUnitValue = inventory.getAverageUnitValue();
 
         // Cập nhật outboundQuantity, outboundValue và totalValue
         inventory.setOutboundQuantity(currentOutboundQuantity + quantity);
@@ -2866,12 +2870,16 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         inventory.setAvailable(inventory.getAvailable() - quantity);
         inventory.setTotalQuantity(inventory.getTotalQuantity() - quantity);
         inventory.setTotalValue(currentTotalValue - (unitPrice * quantity));
+        inventory.setAverageUnitValue(inventory.getTotalValue() / inventory.getTotalQuantity());
+
 
         // Lưu thông tin inventory vào cơ sở dữ liệu
         inventoryRepository.save(inventory);
 
         int currentQuantity = item.getQuantity(); // Assuming there is a getQuantity method in Item
+        int currentAvaible = item.getAvailable();
         item.setQuantity(currentQuantity - quantity); // Update the item's quantity
+        item.setAvailable(currentAvaible - item.getAvailable());
         itemRepository.save(item); // Save the updated item
 
     }
@@ -2905,14 +2913,16 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         inventory.setAvailable(inventory.getAvailable() + quantity);
         inventory.setTotalQuantity(inventory.getTotalQuantity() + quantity);
         inventory.setTotalValue(currentTotalValue + (unitPrice * quantity));
-
+        inventory.setAverageUnitValue(inventory.getTotalValue() / inventory.getTotalQuantity());
         // Lưu thông tin inventory vào cơ sở dữ liệu
         inventoryRepository.save(inventory);
 
         // Updating the total quantity of the item
         int currentQuantity = item.getQuantity(); // Assuming there is a getQuantity method in Item
+        int currentAvaible = item.getAvailable();
         item.setQuantity(currentQuantity + quantity); // Update the item's quantity
         item.setStatus(ItemStatus.Active);
+        item.setAvailable(currentAvaible + quantity);
         itemRepository.save(item); // Save the updated item
     }
 

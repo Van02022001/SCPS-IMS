@@ -15,6 +15,6 @@ public interface InventoryDiscrepancyLogsRepository extends JpaRepository<Invent
     @Query("SELECT idl FROM InventoryDiscrepancyLogs idl WHERE idl.inventory.item.id = :itemId AND idl.inventory.warehouse.id = :warehouseId ORDER BY idl.logTime DESC")
     Optional<InventoryDiscrepancyLogs> findTopByItemIdAndWarehouseIdOrderByLogTimeDesc(@Param("itemId") Long itemId, @Param("warehouseId") Long warehouseId);
 
-
+    List<InventoryDiscrepancyLogs> findByInventoryId(Long inventoryId);
 
 }

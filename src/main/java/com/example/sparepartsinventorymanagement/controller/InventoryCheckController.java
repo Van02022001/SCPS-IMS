@@ -3,6 +3,7 @@ package com.example.sparepartsinventorymanagement.controller;
 import com.example.sparepartsinventorymanagement.dto.request.CheckInventoryReceiptForm;
 import com.example.sparepartsinventorymanagement.dto.request.InventoryCheckDetail;
 import com.example.sparepartsinventorymanagement.dto.response.CheckInventoryReceiptResponse;
+import com.example.sparepartsinventorymanagement.exception.InvalidInventoryDataException;
 import com.example.sparepartsinventorymanagement.exception.NotFoundException;
 import com.example.sparepartsinventorymanagement.exception.QuantityExceedsInventoryException;
 import com.example.sparepartsinventorymanagement.service.ReceiptService;
@@ -49,7 +50,15 @@ public class InventoryCheckController {
                     e.getMessage(),
                     null
             ));
-        } catch (Exception e) {
+        }catch (InvalidInventoryDataException e) {
+            // Handle the specific case where the requested quantity exceeds inventory availability
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject(
+                    HttpStatus.BAD_REQUEST.toString(),
+                    e.getMessage(),
+                    null
+            ));
+        }
+        catch (Exception e) {
             // Log the exception details here
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject(
                     HttpStatus.INTERNAL_SERVER_ERROR.toString(),

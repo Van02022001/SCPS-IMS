@@ -2370,8 +2370,8 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         validateStatusQuantities(statusQuantities, actualQuantity);
 
         // Tính toán discrepancyQuantity và discrepancyValue
-        int discrepancyQuantity = actualQuantity - inventory.getAvailable();
-
+       // int discrepancyQuantity = actualQuantity - inventory.getAvailable();
+        int discrepancyQuantity = actualQuantity - expectedQuantity;
         double discrepancyValue = calculateDiscrepancyValue(inventory.getItem().getId(), inventory.getWarehouse().getId(), inventory,statusQuantities);
 
         // Nếu có sự chênh lệch, đánh dấu hasDiscrepancy và tạo log

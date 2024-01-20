@@ -27,7 +27,7 @@ public class ItemDTO {
 
     private int quantity;
 
-    private int sold;
+    private int lost;
 
     private int available;
 

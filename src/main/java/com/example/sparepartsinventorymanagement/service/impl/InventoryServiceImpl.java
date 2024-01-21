@@ -114,7 +114,7 @@ public class InventoryServiceImpl implements InventoryService {
 
     // ... existing methods ...
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 60000000)
     public void checkAndNotifyHighStock() {
         List<Item> allItems = itemRepository.findAll();
         Map<Long, Integer> totalQuantities = getTotalQuantitiesByItem();
@@ -169,7 +169,7 @@ public class InventoryServiceImpl implements InventoryService {
 
 
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 60000000)
     public void checkAndNotifyLowStock() {
         List<Item> allItems = itemRepository.findAll();
         Map<Long, Integer> totalQuantities = getTotalQuantitiesByItem();

@@ -49,5 +49,5 @@ jobs:
         with:
           app-name: 'phu-tung-bom-be-tong-sg-1'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C1C589C6670847ECB135F69853E31727 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B977F9A1F66A486083E1B282D37F3E6F }}
           package: '*.jar'

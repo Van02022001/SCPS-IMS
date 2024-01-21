@@ -320,6 +320,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                                         .code(detail.getItem().getCode())
                                         .imageUrl(detail.getItem().getSubCategory().getImages().get(0).getUrl())
                                         .build());
+
                                 return detailResponse;
                             })
                             .collect(Collectors.toList());

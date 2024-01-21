@@ -2263,32 +2263,56 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
 
             int totalLocationQuantity = 0;
 
-            List<LocationQuantityDetail> locationQuantities = detail.getLocationQuantities();
-            Iterator<LocationQuantityDetail> iterator = locationQuantities.iterator();
-
-
-            while (iterator.hasNext()) {
-                LocationQuantityDetail locationQuantityDetail = iterator.next();
+            for (LocationQuantityDetail locationQuantityDetail : detail.getLocationQuantities()) {
                 Location location = locationRepository.findById(locationQuantityDetail.getLocationId())
                         .orElseThrow(() -> new NotFoundException("Location not found with ID: " + locationQuantityDetail.getLocationId()));
 
-                // Cập nhật số lượng mới cho location từ form, ngay cả khi nó là 0
+                // Kiểm tra xem vị trí có thuộc kho của người dùng hiện tại không
+                if (!location.getWarehouse().equals(warehouse)) {
+                    throw new NotFoundException("Location " + locationQuantityDetail.getLocationId() + " does not belong to current user's warehouse");
+                }
+
+                // Cập nhật số lượng mới cho location
                 location.setItem_quantity(locationQuantityDetail.getQuantity());
                 locationRepository.save(location);
 
-                // Nếu số lượng mới là 0, xóa location
+                                // Nếu số lượng mới là 0, xóa location
                 if (locationQuantityDetail.getQuantity() == 0) {
                     location.setItem(null);
                     locationRepository.save(location);
-                    // Sử dụng phương thức tùy chỉnh để xóa location
-                   // locationRepository.deleteLocationById(locationQuantityDetail.getLocationId());
-                   // iterator.remove();
+
                 } else {
 
 
                     totalLocationQuantity += locationQuantityDetail.getQuantity();
                 }
+
             }
+
+//            List<LocationQuantityDetail> locationQuantities = detail.getLocationQuantities();
+//            Iterator<LocationQuantityDetail> iterator = locationQuantities.iterator();
+//
+//
+//            while (iterator.hasNext()) {
+//                LocationQuantityDetail locationQuantityDetail = iterator.next();
+//                Location location = locationRepository.findById(locationQuantityDetail.getLocationId())
+//                        .orElseThrow(() -> new NotFoundException("Location not found with ID: " + locationQuantityDetail.getLocationId()));
+//
+//                // Cập nhật số lượng mới cho location từ form, ngay cả khi nó là 0
+//                location.setItem_quantity(locationQuantityDetail.getQuantity());
+//                locationRepository.save(location);
+//
+//                // Nếu số lượng mới là 0, xóa location
+//                if (locationQuantityDetail.getQuantity() == 0) {
+//                    location.setItem(null);
+//                    locationRepository.save(location);
+//
+//                } else {
+//
+//
+//                    totalLocationQuantity += locationQuantityDetail.getQuantity();
+//                }
+//            }
 
             if (totalLocationQuantity != detail.getActualQuantity()) {
                 throw new QuantityExceedsInventoryException("The total quantity at locations does not match the actual quantity for item with ID: " + item.getId());
@@ -2317,13 +2341,7 @@ public ExportReceiptResponse createExportReceipt(Long receiptId, Map<Long, Integ
         if (statusQuantities.containsKey(InventoryStatus.ENOUGH) && statusQuantities.size() > 1) {
             throw new InvalidInventoryDataException("Cannot have other statuses when ENOUGH is selected");
         }
-//        int totalStatusQuantity = 0;
-//        for (Map.Entry<InventoryStatus, Integer> entry : statusQuantities.entrySet()) {
-//            if (entry.getValue() < 0) {
-//                throw new InvalidInventoryDataException("Quantities for " + entry.getKey() + " cannot be negative");
-//            }
-//            totalStatusQuantity += entry.getValue();
-//        }
+
         int totalStatusQuantity = 0;
         for (Map.Entry<InventoryStatus, Integer> entry : statusQuantities.entrySet()) {
             if (entry.getKey() != InventoryStatus.ENOUGH) {

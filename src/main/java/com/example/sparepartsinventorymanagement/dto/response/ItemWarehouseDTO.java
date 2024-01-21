@@ -17,4 +17,5 @@ public class ItemWarehouseDTO {
     private String originName;
     private String imageUrl;
     private int availableQuantity;
+
 }

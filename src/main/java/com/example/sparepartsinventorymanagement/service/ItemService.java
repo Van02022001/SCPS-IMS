@@ -12,6 +12,7 @@ import com.example.sparepartsinventorymanagement.entities.ItemStatus;
 import java.util.List;
 
 public interface ItemService {
+
     List<ItemDTO> getAll();
     ItemDTO getItemById(Long id);
     List<ItemDTO> getItemBySubCategory(Long productId);

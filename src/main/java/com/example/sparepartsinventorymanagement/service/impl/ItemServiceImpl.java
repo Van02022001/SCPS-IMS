@@ -1,10 +1,7 @@
 package com.example.sparepartsinventorymanagement.service.impl;
 
 import com.example.sparepartsinventorymanagement.dto.request.*;
-import com.example.sparepartsinventorymanagement.dto.response.ItemDTO;
-import com.example.sparepartsinventorymanagement.dto.response.ItemWarehouseDTO;
-import com.example.sparepartsinventorymanagement.dto.response.PricingAuditDTO;
-import com.example.sparepartsinventorymanagement.dto.response.PurchasePriceAuditDTO;
+import com.example.sparepartsinventorymanagement.dto.response.*;
 import com.example.sparepartsinventorymanagement.entities.*;
 import com.example.sparepartsinventorymanagement.exception.DuplicateResourceException;
 import com.example.sparepartsinventorymanagement.exception.InvalidResourceException;
@@ -570,36 +567,82 @@ public class ItemServiceImpl implements ItemService {
             return false;
         }
     }
-
     @Override
     public List<ItemDTO> getItemsByThisWarehouse() {
-        Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
-                ()-> new NotFoundException("Không tìm thấy người dùng.")
+        Principal userPrincipal = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findById(userPrincipal.getId()).orElseThrow(
+                () -> new NotFoundException("Không tìm thấy người dùng.")
         );
 
-        if(user.getWarehouse() == null){
+        if (user.getWarehouse() == null) {
             throw new AccessDeniedException("Người dùng không có quyền thao tác với kho này.");
         }
+
         List<Location> locations = locationRepository.findByWarehouse(user.getWarehouse());
         Set<Item> items = new HashSet<>();
-        for (Location location: locations
-             ) {
-            if(location.getItem() != null){
+        for (Location location : locations) {
+            if (location.getItem() != null) {
                 items.add(location.getItem());
             }
         }
-        for (Item item: items
-             ) {
-            Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, user.getWarehouse()).orElseThrow(
-                    ()-> new NotFoundException("Sản phẩm không có tồn kho.")
-            );
+
+        return items.stream().map(item -> {
+            Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, user.getWarehouse())
+                    .orElseThrow(() -> new NotFoundException("Sản phẩm không có tồn kho."));
             item.setAvailable(inventory.getAvailable());
             item.setQuantity(inventory.getTotalQuantity());
             item.setDefective(inventory.getDefective());
-        }
-        return modelMapper.map(items, new TypeToken<List<ItemDTO>>(){}.getType());
+
+            // Lọc các vị trí thuộc kho của người dùng
+            List<LocationDTO> filteredLocations = item.getLocations().stream()
+                    .filter(location -> location.getWarehouse().getId().equals(user.getWarehouse().getId()))
+                    .map(location -> modelMapper.map(location, LocationDTO.class))
+                    .collect(Collectors.toList());
+
+            ItemDTO itemDTO = modelMapper.map(item, ItemDTO.class);
+            itemDTO.setLocations(filteredLocations);
+            return itemDTO;
+        }).collect(Collectors.toList());
     }
+
+//    @Override
+//    public List<ItemDTO> getItemsByThisWarehouse() {
+//        Principal userPrinciple = (Principal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//        User user = userRepository.findById(userPrinciple.getId()).orElseThrow(
+//                ()-> new NotFoundException("Không tìm thấy người dùng.")
+//        );
+//
+//        if(user.getWarehouse() == null){
+//            throw new AccessDeniedException("Người dùng không có quyền thao tác với kho này.");
+//        }
+//        List<Location> locations = locationRepository.findByWarehouse(user.getWarehouse());
+//        Set<Item> items = new HashSet<>();
+//        for (Location location: locations
+//             ) {
+//            if(location.getItem() != null){
+//                items.add(location.getItem());
+//            }
+//        }
+//        for (Item item: items
+//             ) {
+//            if(!item.getLocations().isEmpty()){
+//                for (Location location: item.getLocations()
+//                ) {
+//                    if(!Objects.equals(location.getWarehouse().getId(), user.getWarehouse().getId())){
+//                        item.getLocations().remove(location);
+//                    }
+//                    if(item.getLocations().isEmpty()) break;
+//                }
+//            }
+//            Inventory inventory = inventoryRepository.findByItemAndWarehouse(item, user.getWarehouse()).orElseThrow(
+//                    ()-> new NotFoundException("Sản phẩm không có tồn kho.")
+//            );
+//            item.setAvailable(inventory.getAvailable());
+//            item.setQuantity(inventory.getTotalQuantity());
+//            item.setDefective(inventory.getDefective());
+//        }
+//        return modelMapper.map(items, new TypeToken<List<ItemDTO>>(){}.getType());
+//    }
 
     @Override
     public List<ItemWarehouseDTO> getAllItemsWithDetailsByWarehouse(Long warehouseId) {
